@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kafé — Votre carte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg: #f5f1ea;
+    --surface: #ffffff;
+    --border: #e2ddd5;
+    --text: #1a1916;
+    --muted: #8a857c;
+    --silver: #6e6b66;
+    --gold: #9a7a2a;
+    --black-tier: #1a1916;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 20px;
+  }
+
+  .logo {
+    font-family: 'Instrument Serif', serif;
+    font-size: 28px;
+    margin-bottom: 48px;
+    letter-spacing: -0.3px;
+    color: var(--text);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 16px;
+  }
+
+  .state-loading, .state-error, .state-already, .state-form, .state-success {
+    display: none;
+  }
+
+  .state-loading.active, .state-error.active, .state-already.active,
+  .state-form.active, .state-success.active {
+    display: block;
+  }
+
+  /* LOADING */
+  .spinner {
+    text-align: center;
+    padding: 20px 0;
+    color: var(--muted);
+  }
+
+  /* ERROR */
+  .error-icon { font-size: 32px; margin-bottom: 12px; }
+  .error-title { font-family: 'Instrument Serif', serif; font-size: 22px; margin-bottom: 8px; }
+  .error-msg { color: var(--muted); line-height: 1.6; }
+
+  /* FORM */
+  .card-preview {
+    background: var(--text);
+    color: #f0ece4;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-preview::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    opacity: 0.06;
+  }
+
+  .card-preview.silver::before { background: var(--silver); }
+  .card-preview.gold::before { background: #c9a84c; }
+  .card-preview.black::before { background: #fff; }
+
+  .card-preview .c-logo {
+    font-family: 'Instrument Serif', serif;
+    font-size: 16px;
+    margin-bottom: 20px;
+    opacity: 0.7;
+  }
+
+  .card-preview .c-tier {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .card-preview.silver .c-tier { color: #c8c4bc; }
+  .card-preview.gold .c-tier { color: #c9a84c; }
+  .card-preview.black .c-tier { color: #e8e0d0; }
+
+  .card-preview .c-discount {
+    font-family: 'Instrument Serif', serif;
+    font-size: 36px;
+    line-height: 1;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .form-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    padding: 12px 14px;
+    border-radius: 6px;
+    outline: none;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+  }
+
+  .form-input:focus { border-color: var(--text); }
+  .form-input::placeholder { color: var(--muted); }
+
+  .btn-submit {
+    width: 100%;
+    background: var(--text);
+    color: #f0ece4;
+    border: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: opacity 0.2s;
+    margin-top: 4px;
+  }
+
+  .btn-submit:hover { opacity: 0.8; }
+  .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* SUCCESS */
+  .success-card {
+    background: var(--text);
+    color: #f0ece4;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  .success-card .s-logo {
+    font-family: 'Instrument Serif', serif;
+    font-size: 18px;
+    opacity: 0.6;
+    margin-bottom: 16px;
+  }
+
+  .success-card .s-tier {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .success-card.silver .s-tier { color: #c8c4bc; }
+  .success-card.gold .s-tier { color: #c9a84c; }
+  .success-card.black .s-tier { color: #e8e0d0; }
+
+  .success-card .s-name {
+    font-family: 'Instrument Serif', serif;
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+
+  .success-card .s-discount {
+    font-family: 'Instrument Serif', serif;
+    font-size: 48px;
+    line-height: 1;
+    margin: 16px 0;
+  }
+
+  .success-card .s-instruction {
+    font-size: 11px;
+    opacity: 0.5;
+    margin-top: 12px;
+  }
+
+  #success-qr {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+  }
+
+  .wallet-btn {
+    display: block;
+    width: 100%;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 20px;
+    cursor: pointer;
+    text-align: left;
+    margin-bottom: 10px;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .wallet-btn:hover { background: var(--border); }
+
+  .wallet-btn .wb-icon { font-size: 20px; }
+  .wallet-btn .wb-text { flex: 1; }
+  .wallet-btn .wb-label { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  .note {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.6;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<script>
+  const SUPABASE_URL = 'https://hnnqbcfmoppcspewchxh.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhubnFiY2Ztb3BwY3NwZXdjaHhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1OTEwMzksImV4cCI6MjA4OTE2NzAzOX0.7TC5CA3TFKPAY_9NF5xhxJTLUKql1ZIz3ZehmnokK20';
+  const WALLETWALLET_API_KEY = 'YOUR_WALLETWALLET_API_KEY'; // ww_live_xxxx
+</script>
+
+<div class="logo">Kafé</div>
+
+<div class="card">
+  <!-- Loading -->
+  <div class="state-loading active" id="s-loading">
+    <div class="spinner">Chargement...</div>
+  </div>
+
+  <!-- Error -->
+  <div class="state-error" id="s-error">
+    <div class="error-icon">✗</div>
+    <div class="error-title">Carte invalide</div>
+    <div class="error-msg" id="error-msg">Ce lien n'est pas valide ou a déjà été utilisé.</div>
+  </div>
+
+  <!-- Already activated -->
+  <div class="state-already" id="s-already">
+    <div class="error-icon">✓</div>
+    <div class="error-title">Carte déjà activée</div>
+    <div class="error-msg">Cette carte a déjà été enregistrée. Retrouvez votre lien dans vos emails.</div>
+  </div>
+
+  <!-- Form -->
+  <div class="state-form" id="s-form">
+    <div class="card-preview" id="card-preview">
+      <div class="c-logo">Kafé</div>
+      <div class="c-tier" id="form-tier">GOLD</div>
+      <div class="c-discount" id="form-discount">−10%</div>
+    </div>
+
+    <label class="form-label">Prénom</label>
+    <input class="form-input" type="text" id="firstname" placeholder="Marie" autocomplete="given-name">
+
+    <label class="form-label">Nom</label>
+    <input class="form-input" type="text" id="lastname" placeholder="Laurent" autocomplete="family-name">
+
+    <button class="btn-submit" id="submit-btn" onclick="activateCard()">
+      Obtenir ma carte →
+    </button>
+  </div>
+
+  <!-- Success -->
+  <div class="state-success" id="s-success">
+    <div class="success-card" id="success-card">
+      <div class="s-logo">Kafé</div>
+      <div class="s-tier" id="s-tier-label">GOLD</div>
+      <div class="s-name" id="s-name">Marie Laurent</div>
+      <div class="s-discount" id="s-discount">−10%</div>
+      <div id="success-qr"></div>
+      <div class="s-instruction">Présentez cette carte à chaque passage en caisse</div>
+    </div>
+
+    <a class="wallet-btn" id="apple-wallet-btn" href="#" style="display:none;">
+      <span class="wb-icon">🍎</span>
+      <span class="wb-text">
+        <div class="wb-label">Ajouter à</div>
+        Apple Wallet
+      </span>
+    </a>
+
+    <a class="wallet-btn" id="google-wallet-btn" href="#" style="display:none;">
+      <span class="wb-icon">G</span>
+      <span class="wb-text">
+        <div class="wb-label">Ajouter à</div>
+        Google Wallet
+      </span>
+    </a>
+  </div>
+</div>
+
+<div class="note">12 rue Martel · Paris 10e</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  let cardData = null;
+
+  function showState(id) {
+    ['s-loading','s-error','s-already','s-form','s-success'].forEach(s => {
+      document.getElementById(s).classList.toggle('active', s === id);
+    });
+  }
+
+  async function init() {
+    if (!code) { showState('s-error'); document.getElementById('error-msg').textContent = 'Lien invalide — code manquant.'; return; }
+
+    const { data, error } = await sb.from('loyalty_cards').select('*').eq('code', code).single();
+
+    if (error || !data) { showState('s-error'); return; }
+    if (data.status === 'active') { showState('s-already'); return; }
+    if (data.status === 'disabled') { showState('s-error'); document.getElementById('error-msg').textContent = 'Cette carte a été désactivée.'; return; }
+
+    cardData = data;
+
+    // Setup form
+    const preview = document.getElementById('card-preview');
+    preview.className = `card-preview ${data.tier}`;
+    document.getElementById('form-tier').textContent = data.tier.toUpperCase();
+    document.getElementById('form-discount').textContent = `−${data.discount}%`;
+
+    showState('s-form');
+  }
+
+  async function activateCard() {
+    const firstname = document.getElementById('firstname').value.trim();
+    const lastname = document.getElementById('lastname').value.trim();
+    if (!firstname || !lastname) { alert('Merci de renseigner votre prénom et nom.'); return; }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Génération en cours...';
+
+    // 1. Update Supabase
+    const { error } = await sb.from('loyalty_cards').update({
+      client_firstname: firstname,
+      client_lastname: lastname,
+      status: 'active',
+      activated_at: new Date().toISOString()
+    }).eq('code', code).eq('status', 'pending');
+
+    if (error) { btn.disabled = false; btn.textContent = 'Obtenir ma carte →'; alert('Erreur: ' + error.message); return; }
+
+    // 2. Generate Wallet pass via WalletWallet API
+    let passUrl = null;
+    try {
+      const tierLabels = { silver: 'Silver −5%', gold: 'Gold −10%', black: 'Black −20%' };
+      const colors = { silver: 'light', gold: 'dark', black: 'dark' };
+
+      const resp = await fetch('https://api.walletwallet.dev/api/pkpass', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${WALLETWALLET_API_KEY}`
+        },
+        body: JSON.stringify({
+          barcodeValue: code,
+          barcodeFormat: 'QR',
+          title: 'Kafé — Carte de fidélité',
+          label: `${firstname} ${lastname}`,
+          value: tierLabels[cardData.tier],
+          colorPreset: colors[cardData.tier],
+          expirationDays: 730
+        })
+      });
+
+      if (resp.ok) {
+        const blob = await resp.blob();
+        passUrl = URL.createObjectURL(blob);
+      }
+    } catch(e) {
+      console.warn('WalletWallet API error:', e);
+      // Continue without wallet pass — card still works via browser
+    }
+
+    // 3. Show success
+    const successCard = document.getElementById('success-card');
+    successCard.className = `success-card ${cardData.tier}`;
+    document.getElementById('s-tier-label').textContent = cardData.tier.toUpperCase();
+    document.getElementById('s-name').textContent = `${firstname} ${lastname}`;
+    document.getElementById('s-discount').textContent = `−${cardData.discount}%`;
+
+    // QR code for in-store verification
+    document.getElementById('success-qr').innerHTML = '';
+    new QRCode(document.getElementById('success-qr'), {
+      text: `${window.location.origin}/verify.html?code=${code}`,
+      width: 120,
+      height: 120,
+      colorDark: '#f0ece4',
+      colorLight: '#1a1916',
+    });
+
+    // Wallet buttons
+    if (passUrl) {
+      const appleBtn = document.getElementById('apple-wallet-btn');
+      appleBtn.href = passUrl;
+      appleBtn.download = `kafe-${cardData.tier}.pkpass`;
+      appleBtn.style.display = 'flex';
+    }
+
+    showState('s-success');
+  }
+
+  init();
+</script>
+</body>
+</html>

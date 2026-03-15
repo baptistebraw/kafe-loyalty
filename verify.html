@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kafé — Vérification</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg: #0e0e0d;
+    --surface: #161614;
+    --border: #2a2a26;
+    --text: #f0ece4;
+    --muted: #6b6960;
+    --silver: #c8c4bc;
+    --gold: #c9a84c;
+    --black-tier: #e8e0d0;
+    --green: #5dbe8a;
+    --red: #e06c6c;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+  }
+
+  .logo {
+    font-family: 'Instrument Serif', serif;
+    font-size: 24px;
+    margin-bottom: 40px;
+    color: var(--text);
+    opacity: 0.5;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+  }
+
+  /* Loading */
+  .state-loading { display: none; }
+  .state-loading.active { display: block; color: var(--muted); }
+
+  /* Valid */
+  .state-valid { display: none; }
+  .state-valid.active { display: block; }
+
+  .check-icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: rgba(93,190,138,0.1);
+    border: 1px solid rgba(93,190,138,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 22px;
+    color: var(--green);
+  }
+
+  .valid-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 4px;
+  }
+
+  .client-name {
+    font-family: 'Instrument Serif', serif;
+    font-size: 28px;
+    margin-bottom: 24px;
+    line-height: 1.2;
+  }
+
+  .tier-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    border: 1px solid;
+  }
+
+  .tier-badge.silver { color: var(--silver); border-color: rgba(200,196,188,0.3); background: rgba(200,196,188,0.05); }
+  .tier-badge.gold { color: var(--gold); border-color: rgba(201,168,76,0.3); background: rgba(201,168,76,0.05); }
+  .tier-badge.black { color: var(--black-tier); border-color: rgba(232,224,208,0.3); background: rgba(232,224,208,0.05); }
+
+  .discount-display {
+    font-family: 'Instrument Serif', serif;
+    font-size: 64px;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .discount-display.silver { color: var(--silver); }
+  .discount-display.gold { color: var(--gold); }
+  .discount-display.black { color: var(--black-tier); }
+
+  .discount-label {
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 28px;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
+
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+  }
+
+  .meta-key { color: var(--muted); font-size: 11px; }
+  .meta-val { font-size: 11px; }
+
+  /* Invalid */
+  .state-invalid { display: none; }
+  .state-invalid.active { display: block; }
+
+  .x-icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: rgba(224,108,108,0.1);
+    border: 1px solid rgba(224,108,108,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 22px;
+    color: var(--red);
+  }
+
+  .invalid-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+
+  .invalid-msg { color: var(--muted); line-height: 1.6; }
+
+  .scan-another {
+    margin-top: 32px;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: block;
+    width: 100%;
+  }
+
+  .scan-another:hover { color: var(--text); border-color: var(--text); }
+</style>
+</head>
+<body>
+
+<script>
+  const SUPABASE_URL = 'https://hnnqbcfmoppcspewchxh.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhubnFiY2Ztb3BwY3NwZXdjaHhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1OTEwMzksImV4cCI6MjA4OTE2NzAzOX0.7TC5CA3TFKPAY_9NF5xhxJTLUKql1ZIz3ZehmnokK20';
+</script>
+
+<div class="logo">Kafé</div>
+
+<div class="card">
+  <div class="state-loading active" id="s-loading">Vérification...</div>
+
+  <div class="state-valid" id="s-valid">
+    <div class="check-icon">✓</div>
+    <div class="valid-label">Carte authentique</div>
+    <div class="client-name" id="v-name">—</div>
+    <div class="tier-badge" id="v-tier-badge">Gold</div>
+    <div class="discount-display" id="v-discount">−10%</div>
+    <div class="discount-label">à appliquer en caisse</div>
+    <hr class="divider">
+    <div class="meta-row">
+      <span class="meta-key">Code</span>
+      <span class="meta-val" id="v-code">—</span>
+    </div>
+    <div class="meta-row">
+      <span class="meta-key">Activée le</span>
+      <span class="meta-val" id="v-date">—</span>
+    </div>
+    <div class="meta-row">
+      <span class="meta-key">Statut</span>
+      <span class="meta-val" style="color:var(--green)">Active ✓</span>
+    </div>
+  </div>
+
+  <div class="state-invalid" id="s-invalid">
+    <div class="x-icon">✗</div>
+    <div class="invalid-title" id="inv-title">Carte invalide</div>
+    <div class="invalid-msg" id="inv-msg">Cette carte n'est pas reconnue.</div>
+    <button class="scan-another" onclick="window.history.back()">← Retour</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+
+  function showState(id) {
+    ['s-loading','s-valid','s-invalid'].forEach(s => {
+      document.getElementById(s).classList.toggle('active', s === id);
+    });
+  }
+
+  function showInvalid(title, msg) {
+    document.getElementById('inv-title').textContent = title;
+    document.getElementById('inv-msg').textContent = msg;
+    showState('s-invalid');
+  }
+
+  async function verify() {
+    if (!code) { showInvalid('Lien invalide', 'Aucun code dans l\'URL.'); return; }
+
+    const { data, error } = await sb.from('loyalty_cards').select('*').eq('code', code).single();
+
+    if (error || !data) { showInvalid('Carte inconnue', 'Ce code ne correspond à aucune carte Kafé.'); return; }
+
+    if (data.status === 'pending') {
+      showInvalid('Carte non activée', 'Cette carte n\'a pas encore été enregistrée par un client.');
+      return;
+    }
+
+    if (data.status === 'disabled') {
+      showInvalid('Carte désactivée', 'Cette carte a été désactivée. Ne pas appliquer la réduction.');
+      return;
+    }
+
+    // Valid — show info
+    document.getElementById('v-name').textContent = `${data.client_firstname} ${data.client_lastname}`;
+
+    const tierBadge = document.getElementById('v-tier-badge');
+    tierBadge.textContent = data.tier.charAt(0).toUpperCase() + data.tier.slice(1);
+    tierBadge.className = `tier-badge ${data.tier}`;
+
+    const discountEl = document.getElementById('v-discount');
+    discountEl.textContent = `−${data.discount}%`;
+    discountEl.className = `discount-display ${data.tier}`;
+
+    document.getElementById('v-code').textContent = data.code;
+    document.getElementById('v-date').textContent = data.activated_at
+      ? new Date(data.activated_at).toLocaleDateString('fr-FR')
+      : '—';
+
+    // Log the scan
+    await sb.from('scan_logs').insert({ card_code: code });
+
+    showState('s-valid');
+  }
+
+  verify();
+</script>
+</body>
+</html>
