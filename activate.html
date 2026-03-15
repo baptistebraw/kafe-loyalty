@@ -388,35 +388,36 @@
 
     if (error) { btn.disabled = false; btn.textContent = 'Obtenir ma carte →'; alert('Erreur: ' + error.message); return; }
 
-    // 2. Generate Wallet pass via WalletWallet API
+    // 2. Generate Wallet pass via Supabase Edge Function (avoids CORS)
     let passUrl = null;
     try {
-      const tierLabels = { silver: 'Silver −5%', gold: 'Gold −10%', black: 'Black −20%' };
-      const colors = { silver: 'light', gold: 'dark', black: 'dark' };
-
-      const resp = await fetch('https://api.walletwallet.dev/api/pkpass', {
+      const resp = await fetch(`${SUPABASE_URL}/functions/v1/generate-pass`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${WALLETWALLET_API_KEY}`
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
         },
         body: JSON.stringify({
-          barcodeValue: code,
-          barcodeFormat: 'QR',
-          title: 'Kafé — Carte de fidélité',
-          label: `${firstname} ${lastname}`,
-          value: tierLabels[cardData.tier],
-          colorPreset: colors[cardData.tier],
-          expirationDays: 730
+          code,
+          tier: cardData.tier,
+          discount: cardData.discount,
+          firstname,
+          lastname
         })
       });
 
       if (resp.ok) {
-        const blob = await resp.blob();
-        passUrl = URL.createObjectURL(blob);
+        const { pkpass } = await resp.json();
+        if (pkpass) {
+          const binary = atob(pkpass);
+          const bytes = new Uint8Array(binary.length);
+          for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+          const blob = new Blob([bytes], { type: 'application/vnd.apple.pkpass' });
+          passUrl = URL.createObjectURL(blob);
+        }
       }
     } catch(e) {
-      console.warn('WalletWallet API error:', e);
+      console.warn('Edge function error:', e);
       // Continue without wallet pass — card still works via browser
     }
 
