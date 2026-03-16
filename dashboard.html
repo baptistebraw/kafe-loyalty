@@ -462,6 +462,85 @@
     color: var(--muted);
   }
 
+
+  /* CSV IMPORT */
+  .csv-section {
+    margin-bottom: 40px;
+  }
+
+  .csv-drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: var(--surface);
+  }
+
+  .csv-drop-zone:hover, .csv-drop-zone.drag-over {
+    border-color: var(--accent);
+    background: var(--surface2);
+  }
+
+  .csv-drop-zone .drop-icon { font-size: 24px; margin-bottom: 10px; }
+  .csv-drop-zone .drop-title { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+  .csv-drop-zone .drop-hint { font-size: 11px; color: var(--muted); }
+
+  .csv-preview {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 16px;
+    display: none;
+  }
+
+  .csv-preview.visible { display: block; }
+
+  .csv-preview-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .csv-preview-title { font-size: 12px; color: var(--muted); }
+  .csv-count { font-size: 12px; }
+
+  .csv-preview-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 100px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    align-items: center;
+  }
+
+  .csv-preview-row:last-child { border-bottom: none; }
+  .csv-preview-row.header { color: var(--muted); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .csv-preview-row.error-row { background: rgba(224,108,108,0.05); }
+
+  .csv-error-msg { color: #e06c6c; font-size: 11px; }
+
+  .import-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    align-items: center;
+  }
+
+  .import-result {
+    margin-top: 12px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    display: none;
+  }
+
+  .import-result.success { background: rgba(93,190,138,0.1); color: #3a9e6a; border: 1px solid rgba(93,190,138,0.3); }
+  .import-result.error { background: rgba(224,108,108,0.1); color: #e06c6c; border: 1px solid rgba(224,108,108,0.3); }
   @media (max-width: 768px) {
     header { padding: 14px 16px; }
     .main { padding: 24px 16px; }
@@ -550,6 +629,41 @@
         <div class="tier-name">Black</div>
         <div class="tier-discount">−20% à chaque passage</div>
       </button>
+    </div>
+
+
+    <!-- CSV Import -->
+    <div class="section-title csv-section" style="margin-bottom:12px;">Import en masse</div>
+    <div class="csv-section">
+      <div class="csv-drop-zone" id="csv-drop-zone" onclick="document.getElementById('csv-input').click()">
+        <div class="drop-icon">↑</div>
+        <div class="drop-title">Cliquez ou glissez un fichier CSV</div>
+        <div class="drop-hint">Format : email,tier — ex: baptiste@hexa.com,gold</div>
+        <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="handleCSV(this.files[0])">
+      </div>
+
+      <div class="csv-preview" id="csv-preview">
+        <div class="csv-preview-header">
+          <span class="csv-preview-title">Aperçu</span>
+          <span class="csv-count" id="csv-count">0 lignes</span>
+        </div>
+        <div class="csv-preview-row header">
+          <span>Email</span>
+          <span>Tier</span>
+          <span>Statut</span>
+        </div>
+        <div id="csv-rows"></div>
+      </div>
+
+      <div class="import-actions" id="import-actions" style="display:none;">
+        <button class="btn-primary" style="width:auto;margin-top:0;" onclick="importCSV()" id="import-btn">
+          Importer
+        </button>
+        <button class="btn-secondary" onclick="resetCSV()">Annuler</button>
+        <span id="import-progress" style="color:var(--muted);font-size:12px;"></span>
+      </div>
+
+      <div class="import-result" id="import-result"></div>
     </div>
 
     <!-- Cards list -->
@@ -744,6 +858,109 @@
       </div>
     `).join('');
   }
+
+
+  // ---- CSV IMPORT ----
+  let csvData = [];
+
+  function handleCSV(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const lines = e.target.result.trim().split('\n');
+      csvData = [];
+      const rowsEl = document.getElementById('csv-rows');
+      rowsEl.innerHTML = '';
+
+      lines.forEach((line, i) => {
+        const parts = line.split(',').map(s => s.trim().toLowerCase());
+        const email = parts[0];
+        const tier = parts[1];
+        const validTiers = ['silver', 'gold', 'black'];
+        const isValid = email && email.includes('@') && validTiers.includes(tier);
+
+        csvData.push({ email, tier, valid: isValid });
+
+        const row = document.createElement('div');
+        row.className = 'csv-preview-row' + (isValid ? '' : ' error-row');
+        row.innerHTML = `
+          <span>${email || '—'}</span>
+          <span>${tier || '—'}</span>
+          <span class="${isValid ? '' : 'csv-error-msg'}">${isValid ? '✓ Valide' : '✗ Invalide'}</span>
+        `;
+        rowsEl.appendChild(row);
+      });
+
+      const validCount = csvData.filter(r => r.valid).length;
+      document.getElementById('csv-count').textContent = `${validCount} valides / ${csvData.length} lignes`;
+      document.getElementById('csv-preview').classList.add('visible');
+      document.getElementById('import-actions').style.display = 'flex';
+      document.getElementById('import-result').style.display = 'none';
+    };
+    reader.readAsText(file);
+  }
+
+  async function importCSV() {
+    const validRows = csvData.filter(r => r.valid);
+    if (!validRows.length) return;
+
+    const btn = document.getElementById('import-btn');
+    const progress = document.getElementById('import-progress');
+    btn.disabled = true;
+
+    const tierDiscounts = { silver: 5, gold: 10, black: 20 };
+    let success = 0, errors = 0;
+
+    for (let i = 0; i < validRows.length; i++) {
+      const { email, tier } = validRows[i];
+      progress.textContent = `${i + 1}/${validRows.length} en cours...`;
+
+      const discount = tierDiscounts[tier];
+      const count = allCards.filter(c => c.tier === tier).length + success + 1;
+      const code = `KAFE-${tier.toUpperCase()}-${String(count).padStart(3,'0')}-${Date.now().toString(36).toUpperCase()}`;
+
+      const { error } = await sb.from('loyalty_cards').insert({
+        code, tier, discount, notes: email
+      });
+
+      if (error) errors++;
+      else success++;
+
+      // Small delay to avoid rate limits
+      await new Promise(r => setTimeout(r, 100));
+    }
+
+    await loadCards();
+    btn.disabled = false;
+    progress.textContent = '';
+
+    const resultEl = document.getElementById('import-result');
+    resultEl.className = 'import-result ' + (errors ? 'error' : 'success');
+    resultEl.textContent = errors
+      ? `${success} cartes créées, ${errors} erreurs.`
+      : `✓ ${success} cartes créées avec succès.`;
+    resultEl.style.display = 'block';
+
+    resetCSV();
+  }
+
+  function resetCSV() {
+    csvData = [];
+    document.getElementById('csv-preview').classList.remove('visible');
+    document.getElementById('import-actions').style.display = 'none';
+    document.getElementById('csv-input').value = '';
+  }
+
+  // Drag and drop
+  const dropZone = document.getElementById('csv-drop-zone');
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) handleCSV(file);
+  });
 
   // Close modal on overlay click
   document.getElementById('modal').addEventListener('click', function(e) {
