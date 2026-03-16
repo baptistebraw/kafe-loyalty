@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Kafé — Scanner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+  <style>
+    :root {
+      --bg:      #f5f1ea;
+      --surface: #ffffff;
+      --border:  #e2ddd5;
+      --text:    #1a1916;
+      --muted:   #8a857c;
+      --green:   #2d7a4f;
+      --red:     #c0392b;
+      --sage:    #7a9e8f;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      min-height: 100svh;
+    }
+
+    /* ── LOGIN ── */
+    #login-screen {
+      min-height: 100svh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .login-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .login-logo {
+      font-family: 'Instrument Serif', serif;
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+
+    .login-sub {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 28px;
+    }
+
+    .login-box label {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .login-box input {
+      display: block;
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--bg);
+      margin-bottom: 14px;
+      outline: none;
+    }
+
+    .login-box input:focus { border-color: var(--text); }
+
+    .btn-primary {
+      width: 100%;
+      padding: 11px;
+      background: var(--text);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+    }
+
+    .login-error {
+      color: var(--red);
+      font-size: 12px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* ── APP ── */
+    #app { display: none; }
+
+    .app-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .app-header .logo {
+      font-family: 'Instrument Serif', serif;
+      font-size: 20px;
+    }
+
+    .app-header .subtitle {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .btn-logout {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    /* ── SCANNER AREA ── */
+    .scanner-wrap {
+      padding: 20px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    #reader {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid var(--border);
+      background: #000;
+      width: 100% !important;
+    }
+
+    /* Override html5-qrcode default styles */
+    #reader video { width: 100% !important; }
+    #reader img[alt="Info icon"] { display: none; }
+
+    .scan-hint {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 12px;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── RESULT CARD ── */
+    #result {
+      margin-top: 20px;
+      display: none;
+    }
+
+    .result-card {
+      border-radius: 12px;
+      padding: 20px 24px;
+      border: 2px solid transparent;
+    }
+
+    .result-card.valid {
+      background: #f0faf4;
+      border-color: var(--green);
+    }
+
+    .result-card.invalid {
+      background: #fdf2f2;
+      border-color: var(--red);
+    }
+
+    .result-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .valid .status-dot  { background: var(--green); }
+    .invalid .status-dot { background: var(--red); }
+
+    .status-label {
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+    }
+
+    .valid .status-label  { color: var(--green); }
+    .invalid .status-label { color: var(--red); }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .result-row:last-child { border-bottom: none; }
+
+    .result-key {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .result-val {
+      font-size: 14px;
+      color: var(--text);
+      font-weight: 500;
+      text-align: right;
+    }
+
+    .discount-big {
+      font-family: 'Instrument Serif', serif;
+      font-size: 32px;
+      color: var(--green);
+      display: block;
+      text-align: center;
+      margin: 12px 0 4px;
+    }
+
+    /* ── SCAN AGAIN ── */
+    .btn-scan-again {
+      display: block;
+      width: 100%;
+      margin-top: 16px;
+      padding: 11px;
+      background: var(--text);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      text-align: center;
+    }
+
+    /* ── LOADING ── */
+    .scanning-msg {
+      text-align: center;
+      padding: 20px;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     LOGIN
+══════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Kafé</div>
+    <div class="login-sub">Scanner — Accès Staff</div>
+    <label>Email</label>
+    <input type="email" id="email" placeholder="hello@kafe.paris" autocomplete="username">
+    <label>Mot de passe</label>
+    <input type="password" id="password" autocomplete="current-password">
+    <button class="btn-primary" onclick="login()">Accéder au scanner</button>
+    <div class="login-error" id="login-error">Email ou mot de passe incorrect.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     APP
+══════════════════════════════════════ -->
+<div id="app">
+
+  <div class="app-header">
+    <div>
+      <div class="logo">Kafé</div>
+      <div class="subtitle">Scanner cartes</div>
+    </div>
+    <button class="btn-logout" onclick="logout()">← Déconnexion</button>
+  </div>
+
+  <div class="scanner-wrap">
+
+    <!-- Caméra QR -->
+    <div id="reader"></div>
+    <p class="scan-hint" id="scan-hint">Pointez la caméra sur le QR code de la carte</p>
+
+    <!-- Résultat -->
+    <div id="result">
+      <div id="result-card" class="result-card">
+        <div class="result-status">
+          <div class="status-dot"></div>
+          <span class="status-label" id="status-label"></span>
+        </div>
+        <span class="discount-big" id="result-discount"></span>
+        <div class="result-row">
+          <span class="result-key">Client</span>
+          <span class="result-val" id="result-name"></span>
+        </div>
+        <div class="result-row">
+          <span class="result-key">Tier</span>
+          <span class="result-val" id="result-tier"></span>
+        </div>
+        <div class="result-row">
+          <span class="result-key">Code</span>
+          <span class="result-val" id="result-code" style="font-size:11px;"></span>
+        </div>
+        <div class="result-row" id="result-date-row">
+          <span class="result-key">Activée le</span>
+          <span class="result-val" id="result-date"></span>
+        </div>
+      </div>
+      <button class="btn-scan-again" onclick="scanAgain()">📷 &nbsp;Scanner une autre carte</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  /* ── CONFIG ── */
+  const SUPABASE_URL  = 'https://hnnqbcfmoppcspewchxh.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhubnFiY2Ztb3BwY3NwZXdjaHhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1OTEwMzksImV4cCI6MjA4OTE2NzAzOX0.7TC5CA3TFKPAY_9NF5xhxJTLUKql1ZIz3ZehmnokK20';
+  const MERCHANT_EMAIL    = 'hello@kafe.paris';
+  const MERCHANT_PASSWORD = 'KafeParis2026';
+
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  let scanner = null;
+  let scanning = true;
+
+  /* ── AUTH ── */
+  function login() {
+    const email = document.getElementById('email').value;
+    const pass  = document.getElementById('password').value;
+    if (email === MERCHANT_EMAIL && pass === MERCHANT_PASSWORD) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      startScanner();
+    } else {
+      document.getElementById('login-error').style.display = 'block';
+    }
+  }
+
+  document.getElementById('password').addEventListener('keydown', e => {
+    if (e.key === 'Enter') login();
+  });
+
+  function logout() {
+    if (scanner) scanner.stop().catch(() => {});
+    scanner = null;
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('reader').innerHTML = '';
+  }
+
+  /* ── SCANNER ── */
+  function startScanner() {
+    scanning = true;
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('scan-hint').textContent = 'Pointez la caméra sur le QR code de la carte';
+
+    scanner = new Html5Qrcode('reader');
+    scanner.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 240, height: 240 } },
+      onScanSuccess,
+      () => {} // ignore frame errors
+    ).catch(err => {
+      document.getElementById('scan-hint').textContent = '⚠️ Impossible d\'accéder à la caméra';
+      console.error(err);
+    });
+  }
+
+  async function onScanSuccess(code) {
+    if (!scanning) return;
+    scanning = false;
+
+    // Pause scanner
+    scanner.pause();
+    document.getElementById('scan-hint').textContent = 'Vérification en cours…';
+
+    await verifyCard(code);
+  }
+
+  /* ── VERIFY ── */
+  async function verifyCard(code) {
+    const { data, error } = await sb
+      .from('loyalty_cards')
+      .select('*')
+      .eq('code', code)
+      .maybeSingle();
+
+    const resultEl = document.getElementById('result');
+    const cardEl   = document.getElementById('result-card');
+    resultEl.style.display = 'block';
+
+    if (error || !data) {
+      // Carte inconnue
+      cardEl.className = 'result-card invalid';
+      document.getElementById('status-label').textContent = 'Carte invalide';
+      document.getElementById('result-discount').textContent = '';
+      document.getElementById('result-name').textContent = '—';
+      document.getElementById('result-tier').textContent = '—';
+      document.getElementById('result-code').textContent = code;
+      document.getElementById('result-date-row').style.display = 'none';
+      document.getElementById('scan-hint').textContent = '';
+      return;
+    }
+
+    const isActive = data.status === 'active';
+    cardEl.className = `result-card ${isActive ? 'valid' : 'invalid'}`;
+
+    document.getElementById('status-label').textContent =
+      isActive ? '✓ Carte valide' :
+      data.status === 'pending' ? 'Carte non activée' : 'Carte désactivée';
+
+    document.getElementById('result-discount').textContent =
+      isActive ? `−${data.discount}%` : '';
+
+    const name = [data.client_firstname, data.client_lastname]
+      .filter(Boolean).join(' ') || '—';
+    document.getElementById('result-name').textContent = name;
+    document.getElementById('result-tier').textContent =
+      data.tier ? data.tier.toUpperCase() : '—';
+    document.getElementById('result-code').textContent = data.code;
+
+    if (data.activated_at) {
+      document.getElementById('result-date-row').style.display = 'flex';
+      document.getElementById('result-date').textContent =
+        new Date(data.activated_at).toLocaleDateString('fr-FR', {
+          day: 'numeric', month: 'long', year: 'numeric'
+        });
+    } else {
+      document.getElementById('result-date-row').style.display = 'none';
+    }
+
+    document.getElementById('scan-hint').textContent = '';
+  }
+
+  /* ── SCAN AGAIN ── */
+  function scanAgain() {
+    document.getElementById('result').style.display = 'none';
+    scanning = true;
+    if (scanner) {
+      scanner.resume();
+      document.getElementById('scan-hint').textContent = 'Pointez la caméra sur le QR code de la carte';
+    } else {
+      startScanner();
+    }
+  }
+</script>
+
+</body>
+</html>
