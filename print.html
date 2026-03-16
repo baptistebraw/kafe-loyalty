@@ -222,7 +222,10 @@
     line-height: 0;
   }
 
-  .card-qr canvas,
+  /* QRCode.js génère canvas + img : on cache le canvas, on garde l'img */
+  .card-qr canvas {
+    display: none !important;
+  }
   .card-qr img {
     display: block !important;
     width: 14mm !important;
