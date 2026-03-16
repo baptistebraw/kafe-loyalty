@@ -463,6 +463,113 @@
   }
 
 
+  /* PRINT BATCH */
+  .print-batch-section {
+    margin-bottom: 40px;
+  }
+
+  .print-batch-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .print-tier-card {
+    flex: 1;
+    min-width: 200px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .print-tier-card .tier-accent {
+    position: absolute;
+    top: 0; right: 0;
+    width: 3px;
+    height: 100%;
+  }
+
+  .print-tier-card[data-tier="silver"] .tier-accent { background: var(--silver); }
+  .print-tier-card[data-tier="gold"] .tier-accent { background: var(--gold); }
+  .print-tier-card[data-tier="black"] .tier-accent { background: var(--black-tier); }
+
+  .print-tier-card .tier-name {
+    font-family: 'Instrument Serif', serif;
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+
+  .print-tier-card[data-tier="silver"] .tier-name { color: var(--silver); }
+  .print-tier-card[data-tier="gold"] .tier-name { color: var(--gold); }
+  .print-tier-card[data-tier="black"] .tier-name { color: var(--black-tier); }
+
+  .print-tier-card .tier-discount {
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 16px;
+  }
+
+  .print-qty-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .print-qty-input {
+    width: 70px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    outline: none;
+    text-align: center;
+  }
+
+  .print-qty-input:focus { border-color: var(--accent); }
+
+  .btn-print {
+    flex: 1;
+    background: var(--text);
+    color: #ffffff;
+    border: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-print:hover { opacity: 0.8; }
+  .btn-print:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .print-hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  .print-progress {
+    margin-top: 12px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    background: rgba(154,122,42,0.08);
+    color: var(--gold);
+    border: 1px solid rgba(154,122,42,0.2);
+    display: none;
+  }
+
   /* CSV IMPORT */
   .csv-section {
     margin-bottom: 40px;
@@ -631,6 +738,42 @@
       </button>
     </div>
 
+
+    <!-- Print Batch -->
+    <div class="section-title" style="margin-bottom:8px;">Imprimer en masse</div>
+    <div class="print-batch-section">
+      <p class="print-hint">Générez des cartes physiques avec QR code. Distribuez-les, et les clients scannent le QR pour activer leur carte Apple / Google Wallet.</p>
+      <div class="print-batch-row">
+        <div class="print-tier-card" data-tier="silver">
+          <div class="tier-accent"></div>
+          <div class="tier-name">Silver</div>
+          <div class="tier-discount">−5% à chaque passage</div>
+          <div class="print-qty-row">
+            <input type="number" class="print-qty-input" id="qty-silver" value="10" min="1" max="200">
+            <button class="btn-print" id="print-btn-silver" onclick="generatePrintBatch('silver', 5)">Générer + Imprimer</button>
+          </div>
+        </div>
+        <div class="print-tier-card" data-tier="gold">
+          <div class="tier-accent"></div>
+          <div class="tier-name">Gold</div>
+          <div class="tier-discount">−10% à chaque passage</div>
+          <div class="print-qty-row">
+            <input type="number" class="print-qty-input" id="qty-gold" value="10" min="1" max="200">
+            <button class="btn-print" id="print-btn-gold" onclick="generatePrintBatch('gold', 10)">Générer + Imprimer</button>
+          </div>
+        </div>
+        <div class="print-tier-card" data-tier="black">
+          <div class="tier-accent"></div>
+          <div class="tier-name">Black</div>
+          <div class="tier-discount">−20% à chaque passage</div>
+          <div class="print-qty-row">
+            <input type="number" class="print-qty-input" id="qty-black" value="10" min="1" max="200">
+            <button class="btn-print" id="print-btn-black" onclick="generatePrintBatch('black', 20)">Générer + Imprimer</button>
+          </div>
+        </div>
+      </div>
+      <div class="print-progress" id="print-progress"></div>
+    </div>
 
     <!-- CSV Import -->
     <div class="section-title csv-section" style="margin-bottom:12px;">Import en masse</div>
@@ -859,6 +1002,47 @@
     `).join('');
   }
 
+
+  // ---- PRINT BATCH ----
+  async function generatePrintBatch(tier, discount) {
+    const qty = parseInt(document.getElementById(`qty-${tier}`).value) || 10;
+    if (qty < 1 || qty > 200) { alert('Quantité doit être entre 1 et 200.'); return; }
+
+    const btn = document.getElementById(`print-btn-${tier}`);
+    const progress = document.getElementById('print-progress');
+    btn.disabled = true;
+    progress.style.display = 'block';
+
+    const codes = [];
+    let errors = 0;
+
+    for (let i = 0; i < qty; i++) {
+      progress.textContent = `Génération ${i + 1}/${qty}...`;
+      const count = allCards.filter(c => c.tier === tier).length + codes.length + errors + 1;
+      const code = `KAFE-${tier.toUpperCase()}-${String(count).padStart(3,'0')}-${Date.now().toString(36).toUpperCase()}`;
+
+      const { error } = await sb.from('loyalty_cards').insert({
+        code, tier, discount,
+        notes: `Lot impression ${new Date().toLocaleDateString('fr-FR')}`
+      });
+
+      if (!error) codes.push({ code, tier, discount });
+      else errors++;
+
+      await new Promise(r => setTimeout(r, 80));
+    }
+
+    await loadCards();
+    btn.disabled = false;
+    progress.style.display = 'none';
+
+    if (errors > 0) alert(`${codes.length} cartes générées, ${errors} erreurs.`);
+
+    if (codes.length > 0) {
+      localStorage.setItem('kafePrintBatch', JSON.stringify({ baseUrl: APP_BASE_URL, cards: codes }));
+      window.open('print.html', '_blank');
+    }
+  }
 
   // ---- CSV IMPORT ----
   let csvData = [];
