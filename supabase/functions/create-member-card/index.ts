@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
       .insert({
         code,
         tier: 'member',
-        discount: 5,
+        discount: 10,
         status: 'active',
         client_firstname: firstname,
         client_lastname: lastname,
@@ -77,6 +77,7 @@ Deno.serve(async (req) => {
 
     // Générer le pass Apple Wallet via WalletWallet
     let pkpass: string | null = null;
+    let walletError: string | null = null;
     try {
       const passResp = await fetch('https://api.walletwallet.dev/api/pkpass', {
         method: 'POST',
@@ -87,24 +88,39 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           barcodeValue: code,
           barcodeFormat: 'QR',
-          title: 'Kafé — Carte de fidélité',
+          title: 'member',
           label: `${firstname} ${lastname}`,
-          value: 'Member −5%',
-          color: '#1a1916',
+          value: '10% discount',
+          color: '#7a9e8f',
           logoURL: LOGO_BASE64,
           expirationDays: 365,
         }),
       });
 
       if (passResp.ok) {
-        const json = await passResp.json();
-        pkpass = json.pkpass ?? null;
+        const contentType = passResp.headers.get('content-type') ?? '';
+        if (contentType.includes('application/json')) {
+          // Certaines versions retournent { pkpass: "base64..." }
+          const json = await passResp.json();
+          pkpass = json.pkpass ?? null;
+        } else {
+          // WalletWallet retourne le binaire .pkpass directement
+          const buffer = await passResp.arrayBuffer();
+          const bytes = new Uint8Array(buffer);
+          let binary = '';
+          bytes.forEach(b => binary += String.fromCharCode(b));
+          pkpass = btoa(binary);
+        }
+      } else {
+        walletError = `HTTP ${passResp.status}: ${await passResp.text()}`;
+        console.error('WalletWallet error:', walletError);
       }
     } catch (e) {
-      console.warn('WalletWallet error (non-bloquant):', e);
+      walletError = String(e);
+      console.warn('WalletWallet fetch error:', e);
     }
 
-    return new Response(JSON.stringify({ success: true, code, pkpass }), {
+    return new Response(JSON.stringify({ success: true, code, pkpass, walletError }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
