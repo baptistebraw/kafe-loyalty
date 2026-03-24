@@ -161,14 +161,24 @@
     gap: 3mm;
   }
 
-  .card-top-left { flex-shrink: 0; }
+  .card-top-left {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1mm;
+  }
+
+  .card-logo-row {
+    display: flex;
+    align-items: center;
+    gap: 2.5mm;
+  }
 
   .card-logo {
     height: 5.5mm;
     width: auto;
     display: block;
     filter: brightness(0) invert(1);
-    margin-bottom: 1.5mm;
   }
 
   .card-tier-label {
@@ -178,6 +188,14 @@
     font-weight: 400;
     color: rgba(255,255,255,0.85);
     letter-spacing: 0.01em;
+  }
+
+  .card-address {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 5.5pt;
+    line-height: 1.45;
+    color: rgba(255,255,255,0.7);
+    font-weight: 400;
   }
 
   .card-promo {
@@ -342,8 +360,11 @@
         <div class="card-inner">
           <div class="card-header">
             <div class="card-top-left">
-              <img class="card-logo" src="${LOGO_B64}" alt="Kafé">
-              <span class="card-tier-label">member</span>
+              <div class="card-logo-row">
+                <img class="card-logo" src="${LOGO_B64}" alt="Kafé">
+                <span class="card-tier-label">member</span>
+              </div>
+              <p class="card-address">Coffee &amp; Triangles<br>12 rue Martel, Paris 10ème</p>
             </div>
             <p class="card-promo">1 free coffee at opening<br>&amp; ${discount}% discount for life&nbsp;=)</p>
           </div>
@@ -353,6 +374,20 @@
             </div>
           </div>
         </div>
+        <svg class="card-arrow" viewBox="0 0 85.6 54" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;">
+          <defs>
+            <marker id="arrowhead-${code.replace(/[^a-zA-Z0-9]/g, '-')}" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L6,3 Z" fill="rgba(255,255,255,0.75)"/>
+            </marker>
+          </defs>
+          <path d="M 69,21 Q 76,38 55,44"
+            fill="none"
+            stroke="rgba(255,255,255,0.75)"
+            stroke-width="0.9"
+            stroke-dasharray="2.5,1.5"
+            marker-end="url(#arrowhead-${code.replace(/[^a-zA-Z0-9]/g, '-')})"
+          />
+        </svg>
       `;
       grid.appendChild(cardEl);
 
