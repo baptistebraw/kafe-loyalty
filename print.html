@@ -125,21 +125,19 @@
     flex-shrink: 0;
     box-shadow: 0 4px 20px rgba(0,0,0,0.18);
     color: #ffffff;
+    background-color: #7a9e8f;
   }
 
-  /* Tier background colors */
-  .loyalty-card.member { background-color: #7a9e8f; }
-  .loyalty-card.silver { background-color: #8a9aaa; }
-  .loyalty-card.gold   { background-color: #b89a45; }
-  .loyalty-card.black  { background-color: #2a2926; }
-
-  /* KAFÉ watermark pattern */
+  /* Logo pattern — hosted PNG inverted + tiled */
   .loyalty-card::before {
     content: '';
     position: absolute;
     inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='80'%3E%3Ctext x='4' y='52' font-family='sans-serif' font-weight='900' font-size='46' fill='rgba(255,255,255,0.07)' letter-spacing='-2'%3EKAF%C3%89%3C/text%3E%3C/svg%3E");
-    background-size: 120px 80px;
+    background-image: url('https://loyalty.kafe.paris/assets/kafe-wordmark.png');
+    background-size: 28mm;
+    background-repeat: repeat;
+    filter: invert(1);
+    opacity: 0.11;
     pointer-events: none;
     z-index: 0;
   }
@@ -150,7 +148,7 @@
     z-index: 1;
     width: 100%;
     height: 100%;
-    padding: 4.5mm 5.5mm;
+    padding: 4mm 5.5mm 3.5mm;
     display: grid;
     grid-template-rows: 1fr auto;
   }
@@ -166,7 +164,7 @@
   .card-top-left { flex-shrink: 0; }
 
   .card-logo {
-    height: 5mm;
+    height: 5.5mm;
     width: auto;
     display: block;
     filter: brightness(0) invert(1);
@@ -174,21 +172,22 @@
   }
 
   .card-tier-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 6.5pt;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.75);
+    font-family: 'DM Sans', sans-serif;
+    font-style: italic;
+    font-size: 7pt;
+    font-weight: 400;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 0.01em;
   }
 
   .card-promo {
-    font-family: 'DM Mono', monospace;
+    font-family: 'DM Sans', sans-serif;
     font-style: italic;
-    font-size: 6pt;
+    font-size: 7.5pt;
     line-height: 1.5;
-    color: rgba(255,255,255,0.9);
+    color: rgba(255,255,255,0.95);
     text-align: right;
-    font-weight: 500;
+    font-weight: 600;
   }
 
   /* Footer: QR code centered */
@@ -196,7 +195,7 @@
     display: flex;
     justify-content: center;
     align-items: flex-end;
-    padding-bottom: 1.5mm;
+    padding-bottom: 2mm;
   }
 
   .card-qr-wrap {
@@ -212,8 +211,8 @@
   }
   .card-qr img {
     display: block !important;
-    width: 14mm !important;
-    height: 14mm !important;
+    width: 18mm !important;
+    height: 18mm !important;
   }
 
   /* ── PRINT STYLES ── */
@@ -282,8 +281,8 @@
 
   /* Loading state */
   .loading-qr {
-    width: 14mm;
-    height: 14mm;
+    width: 18mm;
+    height: 18mm;
     background: rgba(0,0,0,0.15);
     border-radius: 1.5mm;
   }
@@ -344,7 +343,7 @@
           <div class="card-header">
             <div class="card-top-left">
               <img class="card-logo" src="${LOGO_B64}" alt="Kafé">
-              <span class="card-tier-label">${tier}</span>
+              <span class="card-tier-label">member</span>
             </div>
             <p class="card-promo">1 free coffee at opening<br>&amp; ${discount}% discount for life&nbsp;=)</p>
           </div>
@@ -367,8 +366,8 @@
         if (qrEl) {
           new QRCode(qrEl, {
             text: activationUrl,
-            width: 53,
-            height: 53,
+            width: 68,
+            height: 68,
             colorDark: '#1a1916',
             colorLight: '#ffffff',
             correctLevel: QRCode.CorrectLevel.M
