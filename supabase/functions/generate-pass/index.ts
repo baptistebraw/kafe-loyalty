@@ -32,14 +32,15 @@ Deno.serve(async (req) => {
         'Authorization': `Bearer ${WALLETWALLET_API_KEY}`,
       },
       body: JSON.stringify({
-        barcodeValue: code,
-        barcodeFormat: 'QR',
-        title:         'Kafé',
-        label:         `${firstname} ${lastname}`,
-        value:         `−${discount}% sur vos achats`,
-        color:         '#7a9e8f',
-        logoURL:       'https://loyalty.kafe.paris/assets/kafe-wordmark.png',
-        expirationDays: 365,
+        barcodeValue:     code,
+        barcodeFormat:    'QR',
+        organizationName: 'Coffee & Triangles',
+        title:            'Member',
+        label:            `${firstname} ${lastname}`,
+        value:            `${discount}% discount`,
+        color:            '#7a9e8f',
+        logoURL:          'https://loyalty.kafe.paris/assets/kafe-wordmark.png',
+        expirationDays:   365,
       }),
     });
 
