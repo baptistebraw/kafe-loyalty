@@ -61,8 +61,12 @@ Deno.serve(async (req) => {
     }
 
     // Return the .pkpass file as base64
+    // Note: spread (...) crashes on large buffers — use a loop instead
     const buffer = await resp.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    const base64 = btoa(binary);
 
     return new Response(JSON.stringify({ pkpass: base64 }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
