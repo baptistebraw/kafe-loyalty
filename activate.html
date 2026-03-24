@@ -314,6 +314,14 @@
   .wb-text  { flex: 1; }
   .wb-label { font-size: 10px; font-weight: 400; opacity: 0.6; letter-spacing: 0.08em; text-transform: uppercase; display: block; margin-bottom: 1px; }
 
+  .wallet-note {
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.5;
+    padding: 12px 0 4px;
+  }
+
   .footer-note {
     font-family: var(--f-mono);
     font-size: 11px;
@@ -412,7 +420,7 @@
     </div>
 
     <p class="success-heading">Carte activée !</p>
-    <p class="success-sub">Ajoutez-la à votre wallet — elle sera toujours dans votre poche.</p>
+    <p class="success-sub" id="success-sub">Ajoutez-la à votre wallet — elle sera toujours dans votre poche.</p>
 
     <a class="wallet-btn apple" id="apple-wallet-btn" href="#" style="display:none;">
       <span class="wb-icon">🍎</span>
@@ -429,6 +437,8 @@
         Google Wallet
       </span>
     </a>
+
+    <p class="wallet-note" id="wallet-note" style="display:none;"></p>
   </div>
 
 </div>
@@ -542,30 +552,36 @@
     // Detect device
     const isIOS     = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const isAndroid = /Android/i.test(navigator.userAgent);
+    const note      = document.getElementById('wallet-note');
 
     if (isIOS) {
-      // Apple Wallet only
       if (passUrl) {
         const appleBtn = document.getElementById('apple-wallet-btn');
         appleBtn.href = passUrl;
         appleBtn.download = 'kafe-membre.pkpass';
         appleBtn.style.display = 'flex';
+      } else {
+        note.textContent = "La génération Apple Wallet a échoué. Montrez le QR code ci-dessus au comptoir.";
+        note.style.display = 'block';
       }
     } else if (isAndroid) {
-      // Google Wallet only (coming soon)
       const googleBtn = document.getElementById('google-wallet-btn');
       googleBtn.style.display = 'flex';
       googleBtn.style.opacity = '0.5';
-      googleBtn.style.cursor = 'default';
-      googleBtn.querySelector('.wb-label').textContent = 'Bientôt disponible';
-      googleBtn.querySelector('.wb-text').lastChild.textContent = ' Google Wallet';
+      googleBtn.style.pointerEvents = 'none';
+      googleBtn.querySelector('.wb-label').textContent = 'Bientôt disponible —';
+      note.textContent = "Google Wallet arrive prochainement. En attendant, montrez le QR code ci-dessus au comptoir.";
+      note.style.display = 'block';
     } else {
-      // Desktop — show both for testing
+      // Desktop
       if (passUrl) {
         const appleBtn = document.getElementById('apple-wallet-btn');
         appleBtn.href = passUrl;
         appleBtn.download = 'kafe-membre.pkpass';
         appleBtn.style.display = 'flex';
+      } else {
+        note.textContent = "📱 Ouvrez ce lien depuis votre iPhone pour ajouter la carte à Apple Wallet, ou depuis votre Android pour Google Wallet.";
+        note.style.display = 'block';
       }
     }
 
