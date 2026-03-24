@@ -227,9 +227,11 @@
   .card-top-left { display: flex; flex-direction: column; gap: 6px; }
 
   .card-logo-img {
-    height: 18px;
+    height: 16px;
+    max-width: 72px;
     width: auto;
     display: block;
+    object-fit: contain;
     filter: brightness(0) invert(1);
   }
 
@@ -537,11 +539,34 @@
       correctLevel: QRCode.CorrectLevel.M
     });
 
-    if (passUrl) {
-      const appleBtn = document.getElementById('apple-wallet-btn');
-      appleBtn.href = passUrl;
-      appleBtn.download = `kafe-membre.pkpass`;
-      appleBtn.style.display = 'flex';
+    // Detect device
+    const isIOS     = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isAndroid = /Android/i.test(navigator.userAgent);
+
+    if (isIOS) {
+      // Apple Wallet only
+      if (passUrl) {
+        const appleBtn = document.getElementById('apple-wallet-btn');
+        appleBtn.href = passUrl;
+        appleBtn.download = 'kafe-membre.pkpass';
+        appleBtn.style.display = 'flex';
+      }
+    } else if (isAndroid) {
+      // Google Wallet only (coming soon)
+      const googleBtn = document.getElementById('google-wallet-btn');
+      googleBtn.style.display = 'flex';
+      googleBtn.style.opacity = '0.5';
+      googleBtn.style.cursor = 'default';
+      googleBtn.querySelector('.wb-label').textContent = 'Bientôt disponible';
+      googleBtn.querySelector('.wb-text').lastChild.textContent = ' Google Wallet';
+    } else {
+      // Desktop — show both for testing
+      if (passUrl) {
+        const appleBtn = document.getElementById('apple-wallet-btn');
+        appleBtn.href = passUrl;
+        appleBtn.download = 'kafe-membre.pkpass';
+        appleBtn.style.display = 'flex';
+      }
     }
 
     showState('s-success');
