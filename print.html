@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -239,13 +241,14 @@
   /* ── PRINT STYLES ── */
   @media print {
     @page {
-      size: A4 portrait;
-      margin: 12mm 10mm;
+      size: 85.6mm 54mm;
+      margin: 0;
     }
 
     body {
       background: white;
-      font-family: 'DM Mono', monospace;
+      margin: 0;
+      padding: 0;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
       color-adjust: exact;
@@ -259,20 +262,23 @@
 
     .page-wrapper {
       padding: 0;
+      margin: 0;
     }
 
     .cards-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5mm;
-      width: 100%;
+      display: block;
+      margin: 0;
+      padding: 0;
     }
 
     .loyalty-card {
+      width: 85.6mm;
+      height: 54mm;
+      border-radius: 0;
       box-shadow: none;
-      border: 0.3mm solid rgba(0,0,0,0.1);
-      page-break-inside: avoid;
-      break-inside: avoid;
+      page-break-after: always;
+      break-after: page;
+      margin: 0;
     }
 
     /* Cut guides */
@@ -316,7 +322,8 @@
   <span class="controls-logo">Kafé</span>
   <span class="controls-info" id="controls-info">Chargement...</span>
   <button class="btn-secondary-action" onclick="window.close()">← Retour</button>
-  <button class="btn-action" onclick="window.print()">🖨 Imprimer</button>
+  <button class="btn-secondary-action" onclick="window.print()">🖨 Aperçu impression</button>
+  <button class="btn-action" id="btn-export" onclick="exportPDF()">⬇ Exporter PDF print</button>
 </div>
 
 <div class="page-wrapper">
@@ -423,6 +430,81 @@
     document.fonts.ready.then(init);
   } else {
     window.addEventListener('load', init);
+  }
+
+  // ── PDF EXPORT FOR PRINT (with bleed + crop marks) ──────────────────
+  async function exportPDF() {
+    const cards = Array.from(document.querySelectorAll('.loyalty-card'));
+    if (!cards.length) return alert('Aucune carte à exporter.');
+
+    const btn = document.getElementById('btn-export');
+    btn.textContent = 'Génération en cours…';
+    btn.disabled = true;
+
+    const { jsPDF } = window.jspdf;
+
+    // Dimensions en mm
+    const cardW  = 85.6;
+    const cardH  = 54;
+    const bleed  = 3;          // fond perdu 3mm de chaque côté
+    const pageW  = cardW + bleed * 2;  // 91.6mm
+    const pageH  = cardH + bleed * 2;  // 60mm
+    const markGap = 0.5;       // espace entre bord carte et début du trait de coupe
+    const markLen = 3;         // longueur du trait de coupe
+
+    const pdf = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: [pageW, pageH],
+    });
+
+    for (let i = 0; i < cards.length; i++) {
+      if (i > 0) pdf.addPage([pageW, pageH], 'landscape');
+
+      // Rendre la carte en canvas haute résolution (scale 4 ≈ 300 dpi)
+      const canvas = await html2canvas(cards[i], {
+        scale: 4,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#7a9e8f',
+        logging: false,
+        imageTimeout: 5000,
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+      // Placer l'image de la carte (fond perdu : déborde de 3mm de chaque côté)
+      pdf.addImage(imgData, 'JPEG', 0, 0, pageW, pageH);
+
+      // ── Traits de coupe (crop marks) ──
+      pdf.setDrawColor(0, 0, 0);
+      pdf.setLineWidth(0.1);
+
+      const x1 = bleed; // bord gauche carte
+      const x2 = bleed + cardW; // bord droit carte
+      const y1 = bleed; // bord haut carte
+      const y2 = bleed + cardH; // bord bas carte
+
+      // Coin haut-gauche
+      pdf.line(0,             y1, x1 - markGap, y1);  // horizontal
+      pdf.line(x1,            0,  x1,            y1 - markGap); // vertical
+
+      // Coin haut-droit
+      pdf.line(x2 + markGap, y1, pageW,          y1);
+      pdf.line(x2,            0,  x2,             y1 - markGap);
+
+      // Coin bas-gauche
+      pdf.line(0,             y2, x1 - markGap,  y2);
+      pdf.line(x1,            y2 + markGap, x1,  pageH);
+
+      // Coin bas-droit
+      pdf.line(x2 + markGap, y2, pageW,           y2);
+      pdf.line(x2,            y2 + markGap, x2,   pageH);
+    }
+
+    pdf.save('kafe-cartes-fidelite-print.pdf');
+    btn.textContent = '⬇ Exporter PDF print';
+    btn.disabled = false;
   }
 </script>
 </body>
