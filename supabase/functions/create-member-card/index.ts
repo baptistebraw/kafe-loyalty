@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
       .insert({
         code,
         tier: 'member',
-        discount: 10,
+        discount: 5,
         status: 'active',
         client_firstname: firstname,
         client_lastname: lastname,
@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
           barcodeFormat: 'QR',
           title: 'member',
           label: `${firstname} ${lastname}`,
-          value: '10% discount',
+          value: '5% discount',
           color: '#7a9e8f',
           logoURL: LOGO_BASE64,
           expirationDays: 365,
