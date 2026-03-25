@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kafé — Rejoindre le programme</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,700;9..40,900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --sage:   #7a9e8f;
+    --dark:   #1a1916;
+    --muted:  #8a857c;
+    --bg:     #f5f1ea;
+    --border: #e2ddd5;
+    --white:  #ffffff;
+    --f-body: 'DM Sans', sans-serif;
+    --f-mono: 'DM Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--dark);
+    font-family: var(--f-body);
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 20px 64px;
+  }
+
+  /* ── HEADER ── */
+  .page-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .page-logo {
+    height: 32px;
+    width: auto;
+    display: block;
+    margin: 0 auto 8px;
+  }
+
+  .page-address {
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.01em;
+  }
+
+  /* ── CARD BANNER ── */
+  .card-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--sage);
+    border-radius: 14px;
+    padding: 20px 24px;
+    width: 100%;
+    max-width: 420px;
+    margin-bottom: 16px;
+    color: var(--white);
+  }
+
+  .card-banner-label {
+    font-family: var(--f-mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 500;
+    opacity: 0.9;
+  }
+
+  .card-banner-discount {
+    font-weight: 900;
+    font-size: 26px;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  /* ── MAIN CARD ── */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .state-loading, .state-error, .state-already, .state-form, .state-success {
+    display: none;
+  }
+  .state-loading.active, .state-error.active, .state-already.active,
+  .state-form.active, .state-success.active {
+    display: block;
+  }
+
+  /* ── LOADING ── */
+  .spinner {
+    text-align: center;
+    padding: 24px 0;
+    color: var(--muted);
+    font-family: var(--f-mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── ERROR / ALREADY ── */
+  .status-icon  { font-size: 24px; margin-bottom: 10px; }
+  .status-title { font-weight: 700; font-size: 18px; letter-spacing: -0.02em; margin-bottom: 5px; }
+  .status-msg   { font-size: 14px; color: var(--muted); line-height: 1.5; }
+  .btn-back {
+    display: inline-block;
+    margin-top: 16px;
+    font-family: var(--f-mono);
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .btn-back:hover { color: var(--dark); }
+
+  /* ── FORM ── */
+  .form-eyebrow {
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .form-title {
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -0.02em;
+    margin-bottom: 5px;
+  }
+
+  .form-subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 22px;
+    line-height: 1.5;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .form-field { margin-top: 14px; }
+  .form-field:first-child { margin-top: 0; }
+  .form-row .form-field { margin-top: 0; }
+
+  .form-label {
+    display: block;
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 5px;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 11px 13px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--dark);
+    font-family: var(--f-body);
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .form-input:focus { border-color: var(--sage); }
+  .form-input::placeholder { color: var(--muted); }
+
+  .btn-submit {
+    width: 100%;
+    padding: 14px;
+    background: var(--dark);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    font-family: var(--f-body);
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: opacity 0.15s;
+  }
+
+  .btn-submit:hover { opacity: 0.82; }
+  .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── SUCCESS ── */
+  .success-heading {
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+    margin-bottom: 5px;
+  }
+
+  .success-sub {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+
+  /* Loyalty card */
+  .loyalty-card {
+    border-radius: 14px;
+    overflow: hidden;
+    aspect-ratio: 85.6 / 54;
+    width: 100%;
+    margin-bottom: 20px;
+    color: var(--white);
+    background: var(--sage);
+  }
+
+  .loyalty-card-inner {
+    height: 100%;
+    padding: 16px 18px;
+    display: grid;
+    grid-template-rows: 1fr auto;
+  }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .card-top-left { display: flex; flex-direction: column; gap: 6px; }
+
+  .card-logo-img {
+    height: 16px;
+    max-width: 72px;
+    width: auto;
+    display: block;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+  }
+
+  .card-address {
+    font-family: var(--f-mono);
+    font-size: clamp(7px, 1.6vw, 9px);
+    line-height: 1.5;
+    color: rgba(255,255,255,0.75);
+    letter-spacing: 0.02em;
+  }
+
+  .card-top-right {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .card-client-name {
+    font-weight: 700;
+    font-size: clamp(9px, 2vw, 12px);
+    line-height: 1.2;
+    color: var(--white);
+    letter-spacing: -0.01em;
+  }
+
+  .card-member-label {
+    font-family: var(--f-mono);
+    font-size: clamp(7px, 1.5vw, 9px);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+  }
+
+  .card-discount-label {
+    font-family: var(--f-mono);
+    font-size: clamp(7px, 1.5vw, 9px);
+    letter-spacing: 0.06em;
+    color: rgba(255,255,255,0.9);
+  }
+
+  .card-bottom {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding-bottom: 4px;
+  }
+
+  .card-qr-wrap {
+    background: var(--white);
+    border-radius: 6px;
+    padding: 5px;
+    display: inline-block;
+  }
+
+  #success-qr canvas { display: none !important; }
+  #success-qr img { display: block; width: 56px !important; height: 56px !important; }
+
+  /* ── WALLET BUTTONS ── */
+  .wallet-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 13px 16px;
+    border-radius: 8px;
+    font-family: var(--f-body);
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration: none;
+    margin-bottom: 10px;
+    border: none;
+    cursor: pointer;
+  }
+
+  .wallet-btn.apple  { background: var(--dark); color: var(--white); }
+  .wallet-btn.google { background: var(--white); color: var(--dark); border: 1.5px solid var(--dark); }
+
+  .wb-icon  { font-size: 18px; }
+  .wb-text  { flex: 1; }
+  .wb-label { font-size: 10px; font-weight: 400; opacity: 0.6; letter-spacing: 0.08em; text-transform: uppercase; display: block; margin-bottom: 1px; }
+
+  .wallet-note {
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.5;
+    padding: 12px 0 4px;
+  }
+
+  .footer-note {
+    font-family: var(--f-mono);
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 16px;
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <img class="page-logo" src="assets/kafe-wordmark.png" alt="Kafé">
+  <p class="page-address">12 rue Martel · Paris 10e</p>
+</header>
+
+<!-- Card banner (shown only in form state) -->
+<div class="card-banner" id="card-banner" style="display:none;">
+  <span class="card-banner-label">Carte membre</span>
+  <span class="card-banner-discount">−10%</span>
+</div>
+
+<div class="card">
+
+  <!-- Loading -->
+  <div class="state-loading active" id="s-loading">
+    <div class="spinner">Chargement...</div>
+  </div>
+
+  <!-- Error -->
+  <div class="state-error" id="s-error">
+    <div class="status-icon">✗</div>
+    <div class="status-title" id="error-title">Une erreur est survenue</div>
+    <div class="status-msg" id="error-msg">Veuillez réessayer ou contacter hello@kafe.paris</div>
+    <a href="join.html" class="btn-back">← Réessayer</a>
+  </div>
+
+  <!-- Already member -->
+  <div class="state-already" id="s-already">
+    <div class="status-icon">👋</div>
+    <div class="status-title">Déjà membre !</div>
+    <div class="status-msg">Un compte existe déjà avec cet email. Retrouvez votre carte dans votre wallet.</div>
+    <a href="join.html" class="btn-back">← Retour</a>
+  </div>
+
+  <!-- Form -->
+  <div class="state-form" id="s-form">
+    <p class="form-eyebrow">Programme fidélité</p>
+    <h1 class="form-title">Rejoindre Kafé</h1>
+    <p class="form-subtitle">Créez votre carte membre et bénéficiez de −10% à chaque visite.</p>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label class="form-label" for="firstname">Prénom</label>
+        <input class="form-input" type="text" id="firstname" placeholder="Marie" autocomplete="given-name">
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="lastname">Nom</label>
+        <input class="form-input" type="text" id="lastname" placeholder="Dupont" autocomplete="family-name">
+      </div>
+    </div>
+
+    <div class="form-field" style="margin-top:14px;">
+      <label class="form-label" for="email">Email</label>
+      <input class="form-input" type="email" id="email" placeholder="marie@exemple.com" autocomplete="email">
+    </div>
+
+    <button class="btn-submit" id="submit-btn" onclick="createCard()">
+      Obtenir ma carte
+    </button>
+  </div>
+
+  <!-- Success -->
+  <div class="state-success" id="s-success">
+
+    <div class="loyalty-card">
+      <div class="loyalty-card-inner">
+        <div class="card-top">
+          <div class="card-top-left">
+            <img src="assets/kafe-wordmark.png" alt="Kafé" class="card-logo-img">
+            <p class="card-address">Coffee &amp; Triangles<br>12 rue Martel, Paris 10ème</p>
+          </div>
+          <div class="card-top-right">
+            <p class="card-client-name" id="s-name">Marie Dupont</p>
+            <p class="card-member-label">Member</p>
+            <p class="card-discount-label">10% discount</p>
+          </div>
+        </div>
+        <div class="card-bottom">
+          <div class="card-qr-wrap"><div id="success-qr"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="success-heading">Carte créée ! 🎉</p>
+    <p class="success-sub">Ajoutez-la à votre wallet — elle sera toujours dans votre poche.</p>
+
+    <a class="wallet-btn apple" id="apple-wallet-btn" href="#" style="display:none;">
+      <span class="wb-icon">🍎</span>
+      <span class="wb-text">
+        <span class="wb-label">Ajouter à</span>
+        Apple Wallet
+      </span>
+    </a>
+
+    <a class="wallet-btn google" id="google-wallet-btn" href="#" style="display:none;">
+      <span class="wb-icon">G</span>
+      <span class="wb-text">
+        <span class="wb-label">Ajouter à</span>
+        Google Wallet
+      </span>
+    </a>
+
+    <p class="wallet-note" id="wallet-note" style="display:none;"></p>
+  </div>
+
+</div>
+
+<p class="footer-note" style="margin-top:16px;">Programme fidélité · Kafé Paris 10e</p>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  const SUPABASE_URL      = 'https://hnnqbcfmoppcspewchxh.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhubnFiY2Ztb3BwY3NwZXdjaHhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1OTEwMzksImV4cCI6MjA4OTE2NzAzOX0.7TC5CA3TFKPAY_9NF5xhxJTLUKql1ZIz3ZehmnokK20';
+
+  function showState(id) {
+    ['s-loading','s-error','s-already','s-form','s-success'].forEach(s => {
+      document.getElementById(s).classList.toggle('active', s === id);
+    });
+    document.getElementById('card-banner').style.display = (id === 's-form') ? 'flex' : 'none';
+  }
+
+  // Show form immediately (no URL code needed)
+  showState('s-form');
+
+  async function createCard() {
+    const firstname = document.getElementById('firstname').value.trim();
+    const lastname  = document.getElementById('lastname').value.trim();
+    const email     = document.getElementById('email').value.trim();
+
+    if (!firstname || !lastname) { alert('Merci de renseigner votre prénom et nom.'); return; }
+    if (!email || !email.includes('@')) { alert('Merci de renseigner un email valide.'); return; }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Création en cours...';
+    showState('s-loading');
+
+    try {
+      const resp = await fetch(`${SUPABASE_URL}/functions/v1/create-member-card`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({ firstname, lastname, email })
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        if (resp.status === 409 || err.error === 'email_exists') {
+          showState('s-already');
+          return;
+        }
+        throw new Error(err.error || 'Erreur serveur');
+      }
+
+      const { pkpass, code, walletError } = await resp.json();
+      if (walletError) console.warn('WalletWallet:', walletError);
+
+      // Show success card
+      document.getElementById('s-name').textContent = `${firstname} ${lastname}`;
+
+      document.getElementById('success-qr').innerHTML = '';
+      new QRCode(document.getElementById('success-qr'), {
+        text: `https://loyalty.kafe.paris/activate.html?code=${code}`,
+        width: 56, height: 56,
+        colorDark: '#1a1916', colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+
+      // Build pkpass blob URL if available
+      let passUrl = null;
+      if (pkpass) {
+        const binary = atob(pkpass);
+        const bytes  = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const blob = new Blob([bytes], { type: 'application/vnd.apple.pkpass' });
+        passUrl = URL.createObjectURL(blob);
+      }
+
+      // Device detection
+      const isIOS     = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      const note      = document.getElementById('wallet-note');
+
+      if (isIOS) {
+        if (passUrl) {
+          const appleBtn = document.getElementById('apple-wallet-btn');
+          appleBtn.href = passUrl;
+          appleBtn.download = 'kafe-membre.pkpass';
+          appleBtn.style.display = 'flex';
+        } else {
+          note.textContent = "La génération Apple Wallet a échoué. Montrez le QR code ci-dessus au comptoir.";
+          note.style.display = 'block';
+        }
+      } else if (isAndroid) {
+        const googleBtn = document.getElementById('google-wallet-btn');
+        googleBtn.style.display = 'flex';
+        googleBtn.style.opacity = '0.5';
+        googleBtn.style.pointerEvents = 'none';
+        googleBtn.querySelector('.wb-label').textContent = 'Bientôt disponible —';
+        note.textContent = "Google Wallet arrive prochainement. En attendant, montrez le QR code ci-dessus au comptoir.";
+        note.style.display = 'block';
+      } else {
+        // Desktop
+        if (passUrl) {
+          const appleBtn = document.getElementById('apple-wallet-btn');
+          appleBtn.href = passUrl;
+          appleBtn.download = 'kafe-membre.pkpass';
+          appleBtn.style.display = 'flex';
+        } else {
+          note.textContent = "📱 Ouvrez ce lien depuis votre iPhone pour ajouter la carte à Apple Wallet.";
+          note.style.display = 'block';
+        }
+      }
+
+      showState('s-success');
+
+    } catch (e) {
+      document.getElementById('error-msg').textContent = e.message || 'Veuillez réessayer ou contacter hello@kafe.paris';
+      showState('s-error');
+      btn.disabled = false;
+      btn.textContent = 'Obtenir ma carte';
+    }
+  }
+</script>
+</body>
+</html>
