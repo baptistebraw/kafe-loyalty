@@ -433,6 +433,32 @@
   }
 
   // ── PDF EXPORT FOR PRINT (with bleed + crop marks) ──────────────────
+
+  // Convertit une img avec filter brightness(0) invert(1) en PNG blanc via canvas
+  function makeWhiteLogo(imgEl) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        c.width  = img.naturalWidth;
+        c.height = img.naturalHeight;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const d = ctx.getImageData(0, 0, c.width, c.height);
+        for (let i = 0; i < d.data.length; i += 4) {
+          if (d.data[i + 3] > 0) {          // pixel non-transparent
+            d.data[i]     = 255;            // → blanc
+            d.data[i + 1] = 255;
+            d.data[i + 2] = 255;
+          }
+        }
+        ctx.putImageData(d, 0, 0);
+        resolve(c.toDataURL('image/png'));
+      };
+      img.src = imgEl.src;
+    });
+  }
+
   async function exportPDF() {
     const cards = Array.from(document.querySelectorAll('.loyalty-card'));
     if (!cards.length) return alert('Aucune carte à exporter.');
@@ -442,6 +468,18 @@
     btn.disabled = true;
 
     const { jsPDF } = window.jspdf;
+
+    // 1. Préparer le logo blanc (html2canvas ignore CSS filter)
+    const logoImgs = Array.from(document.querySelectorAll('.card-logo'));
+    let whiteSrc = null;
+    if (logoImgs.length) {
+      whiteSrc = await makeWhiteLogo(logoImgs[0]);
+      logoImgs.forEach(img => { img._orig = img.src; img.src = whiteSrc; });
+    }
+    // Désactiver le filter CSS pendant le rendu
+    const filterOverride = document.createElement('style');
+    filterOverride.textContent = '.card-logo { filter: none !important; }';
+    document.head.appendChild(filterOverride);
 
     // Dimensions en mm
     const cardW  = 85.6;
@@ -461,7 +499,7 @@
     for (let i = 0; i < cards.length; i++) {
       if (i > 0) pdf.addPage([pageW, pageH], 'landscape');
 
-      // Rendre la carte en canvas haute résolution (scale 4 ≈ 300 dpi)
+      // 2. Rendre la carte en canvas haute résolution (scale 4 ≈ 300 dpi)
       const canvas = await html2canvas(cards[i], {
         scale: 4,
         useCORS: true,
@@ -501,6 +539,12 @@
       pdf.line(x2 + markGap, y2, pageW,           y2);
       pdf.line(x2,            y2 + markGap, x2,   pageH);
     }
+
+    // 3. Restaurer logos originaux
+    if (logoImgs.length && whiteSrc) {
+      logoImgs.forEach(img => { img.src = img._orig; delete img._orig; });
+    }
+    filterOverride.remove();
 
     pdf.save('kafe-cartes-fidelite-print.pdf');
     btn.textContent = '⬇ Exporter PDF print';
