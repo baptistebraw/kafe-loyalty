@@ -434,30 +434,25 @@
 
   // ── PDF EXPORT FOR PRINT (with bleed + crop marks) ──────────────────
 
-  // Convertit une img avec filter brightness(0) invert(1) en PNG blanc via canvas
-  function makeWhiteLogo(imgEl) {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        const c = document.createElement('canvas');
-        c.width  = img.naturalWidth;
-        c.height = img.naturalHeight;
-        const ctx = c.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        const d = ctx.getImageData(0, 0, c.width, c.height);
-        for (let i = 0; i < d.data.length; i += 4) {
-          if (d.data[i + 3] > 0) {          // pixel non-transparent
-            d.data[i]     = 255;            // → blanc
-            d.data[i + 1] = 255;
-            d.data[i + 2] = 255;
-          }
-        }
-        ctx.putImageData(d, 0, 0);
-        resolve(c.toDataURL('image/png'));
-      };
-      img.src = imgEl.src;
-    });
-  }
+  // Pré-calcule le logo blanc depuis LOGO_B64 (data URI → canvas → pixels blancs → data URI)
+  let WHITE_LOGO_SRC = null;
+  (function precomputeWhiteLogo() {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width  = img.naturalWidth;
+      c.height = img.naturalHeight;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const d = ctx.getImageData(0, 0, c.width, c.height);
+      for (let i = 0; i < d.data.length; i += 4) {
+        if (d.data[i + 3] > 0) { d.data[i] = d.data[i+1] = d.data[i+2] = 255; }
+      }
+      ctx.putImageData(d, 0, 0);
+      WHITE_LOGO_SRC = c.toDataURL('image/png');
+    };
+    img.src = LOGO_B64;
+  })();
 
   async function exportPDF() {
     const cards = Array.from(document.querySelectorAll('.loyalty-card'));
@@ -469,17 +464,16 @@
 
     const { jsPDF } = window.jspdf;
 
-    // 1. Préparer le logo blanc (html2canvas ignore CSS filter)
+    // 1. Swap logo → blanc + désactiver filter CSS
     const logoImgs = Array.from(document.querySelectorAll('.card-logo'));
-    let whiteSrc = null;
-    if (logoImgs.length) {
-      whiteSrc = await makeWhiteLogo(logoImgs[0]);
-      logoImgs.forEach(img => { img._orig = img.src; img.src = whiteSrc; });
-    }
-    // Désactiver le filter CSS pendant le rendu
-    const filterOverride = document.createElement('style');
-    filterOverride.textContent = '.card-logo { filter: none !important; }';
-    document.head.appendChild(filterOverride);
+    logoImgs.forEach(img => {
+      img._origSrc   = img.src;
+      img._origStyle = img.getAttribute('style') || '';
+      img.src = WHITE_LOGO_SRC || img.src;
+      img.style.cssText = 'filter: none !important;';
+    });
+    // Laisser le navigateur redessiner avec les nouvelles srcs
+    await new Promise(r => setTimeout(r, 120));
 
     // Dimensions en mm
     const cardW  = 85.6;
@@ -541,10 +535,10 @@
     }
 
     // 3. Restaurer logos originaux
-    if (logoImgs.length && whiteSrc) {
-      logoImgs.forEach(img => { img.src = img._orig; delete img._orig; });
-    }
-    filterOverride.remove();
+    logoImgs.forEach(img => {
+      img.src = img._origSrc;
+      img.setAttribute('style', img._origStyle);
+    });
 
     pdf.save('kafe-cartes-fidelite-print.pdf');
     btn.textContent = '⬇ Exporter PDF print';
