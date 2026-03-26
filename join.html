@@ -508,7 +508,7 @@
         throw new Error(err.error || 'Erreur serveur');
       }
 
-      const { pkpass, code, walletError } = await resp.json();
+      const { pkpass, code, walletError, googleWalletUrl } = await resp.json();
       if (walletError) console.warn('WalletWallet:', walletError);
 
       // Show success card
@@ -548,22 +548,33 @@
           note.style.display = 'block';
         }
       } else if (isAndroid) {
-        const googleBtn = document.getElementById('google-wallet-btn');
-        googleBtn.style.display = 'flex';
-        googleBtn.style.opacity = '0.5';
-        googleBtn.style.pointerEvents = 'none';
-        googleBtn.querySelector('.wb-label').textContent = 'Bientôt disponible —';
-        note.textContent = "Google Wallet arrive prochainement. En attendant, montrez le QR code ci-dessus au comptoir.";
-        note.style.display = 'block';
+        if (googleWalletUrl) {
+          const googleBtn = document.getElementById('google-wallet-btn');
+          googleBtn.href = googleWalletUrl;
+          googleBtn.target = '_blank';
+          googleBtn.rel = 'noopener';
+          googleBtn.style.display = 'flex';
+        } else {
+          note.textContent = "La génération Google Wallet a échoué. Montrez le QR code ci-dessus au comptoir.";
+          note.style.display = 'block';
+        }
       } else {
-        // Desktop
+        // Desktop — proposer les deux
         if (passUrl) {
           const appleBtn = document.getElementById('apple-wallet-btn');
           appleBtn.href = passUrl;
           appleBtn.download = 'kafe-membre.pkpass';
           appleBtn.style.display = 'flex';
-        } else {
-          note.textContent = "📱 Ouvrez ce lien depuis votre iPhone pour ajouter la carte à Apple Wallet.";
+        }
+        if (googleWalletUrl) {
+          const googleBtn = document.getElementById('google-wallet-btn');
+          googleBtn.href = googleWalletUrl;
+          googleBtn.target = '_blank';
+          googleBtn.rel = 'noopener';
+          googleBtn.style.display = 'flex';
+        }
+        if (!passUrl && !googleWalletUrl) {
+          note.textContent = "📱 Ouvrez ce lien depuis votre iPhone ou Android pour ajouter la carte à votre Wallet.";
           note.style.display = 'block';
         }
       }

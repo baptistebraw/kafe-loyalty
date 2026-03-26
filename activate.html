@@ -511,33 +511,49 @@
       return;
     }
 
-    // 2. Generate Wallet pass via Edge Function
-    let passUrl = null;
-    try {
-      const resp = await fetch(`${SUPABASE_URL}/functions/v1/generate-pass`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-        },
-        body: JSON.stringify({ code, tier: cardData.tier, discount: cardData.discount, firstname, lastname })
-      });
+    // 2. Detect device
+    const isIOS     = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isAndroid = /Android/i.test(navigator.userAgent);
 
-      if (resp.ok) {
-        const { pkpass } = await resp.json();
-        if (pkpass) {
-          const binary = atob(pkpass);
-          const bytes = new Uint8Array(binary.length);
-          for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-          const blob = new Blob([bytes], { type: 'application/vnd.apple.pkpass' });
-          passUrl = URL.createObjectURL(blob);
+    // 3. Generate Apple Wallet pass (iOS only — WalletWallet)
+    let passUrl = null;
+    if (isIOS) {
+      try {
+        const resp = await fetch(`${SUPABASE_URL}/functions/v1/generate-pass`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+          body: JSON.stringify({ code, tier: cardData.tier, discount: cardData.discount, firstname, lastname })
+        });
+        if (resp.ok) {
+          const { pkpass } = await resp.json();
+          if (pkpass) {
+            const binary = atob(pkpass);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            const blob = new Blob([bytes], { type: 'application/vnd.apple.pkpass' });
+            passUrl = URL.createObjectURL(blob);
+          }
         }
-      }
-    } catch(e) {
-      console.warn('Wallet error:', e);
+      } catch(e) { console.warn('Apple Wallet error:', e); }
     }
 
-    // 3. Show success card
+    // 4. Generate Google Wallet URL (Android + desktop)
+    let googleWalletUrl = null;
+    if (!isIOS) {
+      try {
+        const resp = await fetch(`${SUPABASE_URL}/functions/v1/google-wallet-pass`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+          body: JSON.stringify({ code, discount: cardData.discount, firstname, lastname })
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.url) googleWalletUrl = data.url;
+        }
+      } catch(e) { console.warn('Google Wallet error:', e); }
+    }
+
+    // 5. Show success card
     document.getElementById('s-name').textContent = `${firstname} ${lastname}`;
     document.getElementById('s-discount').textContent = `${cardData.discount}% discount`;
 
@@ -549,10 +565,7 @@
       correctLevel: QRCode.CorrectLevel.M
     });
 
-    // Detect device
-    const isIOS     = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isAndroid = /Android/i.test(navigator.userAgent);
-    const note      = document.getElementById('wallet-note');
+    const note = document.getElementById('wallet-note');
 
     if (isIOS) {
       if (passUrl) {
@@ -565,22 +578,33 @@
         note.style.display = 'block';
       }
     } else if (isAndroid) {
-      const googleBtn = document.getElementById('google-wallet-btn');
-      googleBtn.style.display = 'flex';
-      googleBtn.style.opacity = '0.5';
-      googleBtn.style.pointerEvents = 'none';
-      googleBtn.querySelector('.wb-label').textContent = 'Bientôt disponible —';
-      note.textContent = "Google Wallet arrive prochainement. En attendant, montrez le QR code ci-dessus au comptoir.";
-      note.style.display = 'block';
+      if (googleWalletUrl) {
+        const googleBtn = document.getElementById('google-wallet-btn');
+        googleBtn.href = googleWalletUrl;
+        googleBtn.target = '_blank';
+        googleBtn.rel = 'noopener';
+        googleBtn.style.display = 'flex';
+      } else {
+        note.textContent = "La génération Google Wallet a échoué. Montrez le QR code ci-dessus au comptoir.";
+        note.style.display = 'block';
+      }
     } else {
-      // Desktop
+      // Desktop — proposer les deux
       if (passUrl) {
         const appleBtn = document.getElementById('apple-wallet-btn');
         appleBtn.href = passUrl;
         appleBtn.download = 'kafe-membre.pkpass';
         appleBtn.style.display = 'flex';
-      } else {
-        note.textContent = "📱 Ouvrez ce lien depuis votre iPhone pour ajouter la carte à Apple Wallet, ou depuis votre Android pour Google Wallet.";
+      }
+      if (googleWalletUrl) {
+        const googleBtn = document.getElementById('google-wallet-btn');
+        googleBtn.href = googleWalletUrl;
+        googleBtn.target = '_blank';
+        googleBtn.rel = 'noopener';
+        googleBtn.style.display = 'flex';
+      }
+      if (!passUrl && !googleWalletUrl) {
+        note.textContent = "📱 Ouvrez ce lien depuis votre iPhone ou Android pour ajouter la carte à votre Wallet.";
         note.style.display = 'block';
       }
     }

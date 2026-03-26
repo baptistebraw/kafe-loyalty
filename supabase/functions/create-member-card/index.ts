@@ -120,7 +120,31 @@ Deno.serve(async (req) => {
       console.warn('WalletWallet fetch error:', e);
     }
 
-    return new Response(JSON.stringify({ success: true, code, pkpass, walletError }), {
+    // Générer le lien Google Wallet
+    let googleWalletUrl: string | null = null;
+    let googleWalletError: string | null = null;
+    try {
+      const gwResp = await fetch(`${SUPABASE_URL}/functions/v1/google-wallet-pass`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+        },
+        body: JSON.stringify({ code, discount: 5, firstname, lastname }),
+      });
+      if (gwResp.ok) {
+        const gwJson = await gwResp.json();
+        googleWalletUrl = gwJson.url ?? null;
+      } else {
+        googleWalletError = `HTTP ${gwResp.status}: ${await gwResp.text()}`;
+        console.warn('Google Wallet error:', googleWalletError);
+      }
+    } catch (e) {
+      googleWalletError = String(e);
+      console.warn('Google Wallet fetch error:', e);
+    }
+
+    return new Response(JSON.stringify({ success: true, code, pkpass, walletError, googleWalletUrl, googleWalletError }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
