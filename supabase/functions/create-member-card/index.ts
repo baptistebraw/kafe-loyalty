@@ -88,12 +88,11 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           barcodeValue: code,
           barcodeFormat: 'QR',
-          title: 'member',
-          label: `${firstname} ${lastname}`,
-          value: '5% discount',
-          color: '#7a9e8f',
-          logoURL: LOGO_BASE64,
-          expirationDays: 365,
+          title:        'Serendipity Coffee & Triangles',
+          label:        `${firstname} ${lastname}`,
+          value:        'Member - 5% discount',
+          color:        '#7a9e8f',
+          logoURL:      'https://loyalty.kafe.paris/assets/kafe-wordmark.png',
         }),
       });
 
