@@ -4,9 +4,53 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const SUPABASE_URL     = Deno.env.get('SUPABASE_URL') ?? '';
-const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+const SUPABASE_URL         = Deno.env.get('SUPABASE_URL') ?? '';
+const SERVICE_ROLE_KEY     = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const WALLETWALLET_API_KEY = Deno.env.get('WALLETWALLET_API_KEY') ?? '';
+const SA_EMAIL             = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL') ?? '';
+const SA_KEY_RAW           = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY') ?? '';
+
+const ISSUER_ID = '3388000000023087064';
+const CLASS_ID  = `${ISSUER_ID}.kafe_loyalty_member`;
+
+function b64url(data: string | ArrayBuffer): string {
+  const str = typeof data === 'string'
+    ? data
+    : (() => { const b = new Uint8Array(data); let s = ''; for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]); return s; })();
+  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+async function importPrivateKey(pem: string): Promise<CryptoKey> {
+  const clean = pem.replace(/\\n/g, '\n').replace(/-----BEGIN PRIVATE KEY-----/g, '').replace(/-----END PRIVATE KEY-----/g, '').replace(/\s+/g, '');
+  const der = Uint8Array.from(atob(clean), c => c.charCodeAt(0));
+  return crypto.subtle.importKey('pkcs8', der.buffer, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+}
+
+async function buildGoogleWalletUrl(code: string, discount: number, firstname: string, lastname: string): Promise<string> {
+  const objectId = `${ISSUER_ID}.${code.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+  const loyaltyObject = {
+    id: objectId, classId: CLASS_ID, state: 'ACTIVE',
+    accountId: code, accountName: `${firstname} ${lastname}`,
+    barcode: { type: 'QR_CODE', value: code, alternateText: code },
+    loyaltyPoints: { label: 'Réduction', balance: { string: `${discount}%` } },
+    textModulesData: [{ header: 'Avantage membre', body: `${discount}% de réduction à chaque visite · Coffee & Triangles, 12 rue Martel Paris 10e`, id: 'benefit' }],
+    linksModuleData: { uris: [{ uri: 'https://loyalty.kafe.paris', description: 'Programme fidélité Kafé', id: 'website' }] },
+  };
+  const payload = {
+    iss: SA_EMAIL, aud: 'google', typ: 'savetowallet',
+    iat: Math.floor(Date.now() / 1000),
+    payload: { loyaltyObjects: [loyaltyObject] },
+    origins: ['https://loyalty.kafe.paris'],
+  };
+  const header = { alg: 'RS256', typ: 'JWT' };
+  const hb = b64url(JSON.stringify(header));
+  const pb = b64url(JSON.stringify(payload));
+  const input = `${hb}.${pb}`;
+  const key = await importPrivateKey(SA_KEY_RAW);
+  const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(input));
+  const jwt = `${input}.${b64url(sig)}`;
+  return `https://pay.google.com/gp/v/save/${jwt}`;
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -119,28 +163,18 @@ Deno.serve(async (req) => {
       console.warn('WalletWallet fetch error:', e);
     }
 
-    // Générer le lien Google Wallet
+    // Générer le lien Google Wallet (inline, pas d'appel HTTP inter-fonction)
     let googleWalletUrl: string | null = null;
     let googleWalletError: string | null = null;
-    try {
-      const gwResp = await fetch(`${SUPABASE_URL}/functions/v1/google-wallet-pass`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
-        },
-        body: JSON.stringify({ code, discount: 5, firstname, lastname }),
-      });
-      if (gwResp.ok) {
-        const gwJson = await gwResp.json();
-        googleWalletUrl = gwJson.url ?? null;
-      } else {
-        googleWalletError = `HTTP ${gwResp.status}: ${await gwResp.text()}`;
-        console.warn('Google Wallet error:', googleWalletError);
+    if (SA_EMAIL && SA_KEY_RAW) {
+      try {
+        googleWalletUrl = await buildGoogleWalletUrl(code, 5, firstname, lastname);
+      } catch (e) {
+        googleWalletError = String(e);
+        console.warn('Google Wallet error:', e);
       }
-    } catch (e) {
-      googleWalletError = String(e);
-      console.warn('Google Wallet fetch error:', e);
+    } else {
+      console.warn('Google Wallet: missing service account env vars');
     }
 
     return new Response(JSON.stringify({ success: true, code, pkpass, walletError, googleWalletUrl, googleWalletError }), {
