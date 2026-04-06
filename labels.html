@@ -274,6 +274,12 @@
     letter-spacing: 0.08em;
   }
 
+  .label-bottom-spacer {
+    height: 8%;
+    flex-shrink: 0;
+    background: #fff;
+  }
+
   .label-empty {
     opacity: 0.25;
     border-style: dashed;
@@ -369,6 +375,12 @@
       font-size: 5.5pt;
       color: rgba(255,255,255,0.45) !important;
       letter-spacing: 0.08em;
+    }
+
+    .print-label-spacer {
+      height: 5mm;
+      background: #fff;
+      flex-shrink: 0;
     }
   }
 
@@ -497,6 +509,10 @@
       : 'NÉANT';
 
     label.innerHTML = `
+      <div class="label-body">
+        <div class="label-title">${esc(r.title) || '<em style="opacity:.3">Titre…</em>'}</div>
+        <div class="label-ingredients">${esc(r.ingredients) || ''}</div>
+      </div>
       <div class="label-footer">
         <div class="label-price">${esc(r.price) || '—'}</div>
         <div class="label-allergens">
@@ -504,10 +520,7 @@
           ${esc(allergenText)}
         </div>
       </div>
-      <div class="label-body">
-        <div class="label-title">${esc(r.title) || '<em style="opacity:.3">Titre…</em>'}</div>
-        <div class="label-ingredients">${esc(r.ingredients) || ''}</div>
-      </div>
+      <div class="label-bottom-spacer"></div>
     `;
     return label;
   }
@@ -522,6 +535,10 @@
       const div = document.createElement('div');
       div.className = 'print-label';
       div.innerHTML = `
+        <div class="print-label-body">
+          <div class="print-label-title">${esc(r.title)}</div>
+          <div class="print-label-ingredients">${esc(r.ingredients)}</div>
+        </div>
         <div class="print-label-footer">
           <div class="print-label-price">${esc(r.price)}</div>
           <div class="print-label-allergens">
@@ -529,10 +546,7 @@
             ${esc(allergenText)}
           </div>
         </div>
-        <div class="print-label-body">
-          <div class="print-label-title">${esc(r.title)}</div>
-          <div class="print-label-ingredients">${esc(r.ingredients)}</div>
-        </div>
+        <div class="print-label-spacer"></div>
       `;
       grid.appendChild(div);
     });
