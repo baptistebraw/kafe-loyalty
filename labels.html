@@ -205,8 +205,7 @@
   /* ── LABEL ── */
   .label {
     background: #fff;
-    border: 1px solid #d4cfc8;
-    border-radius: 4px;
+    border: none;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -224,54 +223,57 @@
   .label-title {
     font-family: 'DM Serif Display', serif;
     font-style: italic;
-    font-size: clamp(10px, 2.5vw, 17px);
+    font-size: clamp(13px, 3.2vw, 22px);
     color: var(--dark);
     line-height: 1.2;
     word-break: break-word;
   }
 
   .label-ingredients {
-    font-size: clamp(9px, 1.9vw, 13px);
-    color: #555;
+    font-size: clamp(11px, 2.2vw, 15px);
+    color: #333;
     line-height: 1.4;
-    font-weight: 300;
+    font-weight: 400;
   }
 
   .label-footer {
-    background: var(--navy);
+    background: #fff;
     display: flex;
     align-items: stretch;
     flex-shrink: 0;
+    padding: 0 9%;
+    gap: 6%;
   }
 
   .label-price {
     font-family: 'DM Serif Display', serif;
-    font-size: clamp(11px, 2.8vw, 20px);
-    color: #fff;
-    padding: 6% 8%;
-    border-right: 1px solid rgba(255,255,255,0.12);
+    font-size: clamp(13px, 3vw, 22px);
+    color: var(--dark);
+    padding: 4% 0;
     white-space: nowrap;
     display: flex;
     align-items: center;
   }
 
   .label-allergens {
-    font-size: clamp(5px, 1.2vw, 8px);
-    color: rgba(255,255,255,0.7);
-    padding: 4% 6%;
+    font-size: clamp(9px, 1.8vw, 13px);
+    color: var(--dark);
+    font-weight: 700;
+    padding: 4% 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    line-height: 1.5;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
     word-break: break-word;
   }
 
   .label-allergens span {
-    font-size: clamp(4px, 0.9vw, 7px);
-    color: rgba(255,255,255,0.45);
-    letter-spacing: 0.08em;
+    font-size: clamp(7px, 1.3vw, 10px);
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 0.06em;
   }
 
   .label-bottom-spacer {
@@ -310,8 +312,7 @@
     .print-label {
       height: 63mm;
       background: #fff;
-      border: 0.5pt solid #ccc;
-      border-radius: 2mm;
+      border: none;
       overflow: hidden;
       display: flex;
       flex-direction: column;
@@ -319,62 +320,64 @@
 
     .print-label-body {
       flex: 1;
-      padding: 5mm 6mm 3mm;
+      padding: 5mm 6mm 2mm;
       display: flex;
       flex-direction: column;
-      gap: 3mm;
+      gap: 2mm;
     }
 
     .print-label-title {
       font-family: 'DM Serif Display', serif;
       font-style: italic;
-      font-size: 16pt;
+      font-size: 20pt;
       color: #1a1916;
       line-height: 1.15;
     }
 
     .print-label-ingredients {
       font-family: 'DM Sans', sans-serif;
-      font-size: 9.5pt;
-      color: #555;
+      font-size: 10pt;
+      color: #333;
       line-height: 1.45;
-      font-weight: 300;
+      font-weight: 400;
     }
 
     .print-label-footer {
-      background: #1e2b3a !important;
+      background: #fff !important;
       display: flex;
       flex-shrink: 0;
+      padding: 0 6mm;
+      gap: 5mm;
+      align-items: center;
     }
 
     .print-label-price {
       font-family: 'DM Serif Display', serif;
       font-size: 18pt;
-      color: #fff !important;
-      padding: 3mm 5mm;
-      border-right: 0.3pt solid rgba(255,255,255,0.15);
+      color: #1a1916 !important;
+      padding: 2mm 0;
       white-space: nowrap;
-      display: flex;
-      align-items: center;
     }
 
     .print-label-allergens {
       font-family: 'DM Sans', sans-serif;
-      font-size: 6.5pt;
-      color: rgba(255,255,255,0.75) !important;
-      padding: 2.5mm 4mm;
+      font-size: 8.5pt;
+      font-weight: 700;
+      color: #1a1916 !important;
+      padding: 2mm 0;
       display: flex;
       flex-direction: column;
       justify-content: center;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      line-height: 1.5;
+      letter-spacing: 0.04em;
+      line-height: 1.4;
     }
 
     .print-label-allergens span {
-      font-size: 5.5pt;
-      color: rgba(255,255,255,0.45) !important;
-      letter-spacing: 0.08em;
+      font-size: 7pt;
+      font-weight: 400;
+      color: #8a857c !important;
+      letter-spacing: 0.06em;
     }
 
     .print-label-spacer {
