@@ -306,12 +306,10 @@
     }
 
     .print-label {
-      height: 100%;
       background: #fff;
       border: 0.3pt solid #bbb;
       overflow: hidden;
-      display: flex;
-      flex-direction: column;
+      position: relative;
     }
 
     .print-label-body {
@@ -338,11 +336,13 @@
     }
 
     .print-label-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
       background: #fff !important;
       display: flex;
-      flex-shrink: 0;
-      margin-top: auto;
-      padding: 0 5mm 5mm;
+      padding: 0 5mm 4mm;
       gap: 3mm;
       align-items: center;
     }
