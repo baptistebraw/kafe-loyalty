@@ -420,19 +420,35 @@
 
 <script>
   const SLOTS = 8; // 2 cols × 4 rows on A4
+  const STORAGE_KEY = 'kafe_labels_recipes';
 
-  let recipes = [
+  const defaultRecipes = [
     { title: 'poulet bang bang', ingredients: 'poulet rôti, sauce bang bang (mayo, sriracha, miel), concombre, coriandre, sésame', price: '12,50€', allergens: 'gluten, œufs, sésame' },
     { title: 'rocher choco vegan', ingredients: 'banane, noix de coco, sucre, pépites de chocolat', price: '3,00€', allergens: 'néant' },
   ];
 
+  function load() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : defaultRecipes;
+    } catch { return defaultRecipes; }
+  }
+
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(recipes));
+  }
+
+  let recipes = load();
+
   function addRecipe() {
     recipes.push({ title: '', ingredients: '', price: '', allergens: '' });
+    save();
     render();
   }
 
   function removeRecipe(i) {
     recipes.splice(i, 1);
+    save();
     render();
   }
 
@@ -482,6 +498,7 @@
   function syncLive(i) {
     const inputs = document.querySelectorAll(`[data-i="${i}"]`);
     inputs.forEach(el => { recipes[i][el.dataset.field] = el.value; });
+    save();
     renderPreview();
   }
 
