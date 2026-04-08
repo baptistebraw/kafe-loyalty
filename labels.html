@@ -198,6 +198,12 @@
     margin: 0 auto;
   }
 
+  #previewPages {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
   /* ── LABEL ── */
   .label {
     background: #fff;
@@ -296,10 +302,19 @@
 
     .print-sheet {
       width: 210mm;
-      height: 297mm;
       padding: 0;
       background: #fff;
+    }
+
+    .print-page {
+      width: 210mm;
+      height: 297mm;
       overflow: hidden;
+      page-break-after: always;
+    }
+
+    .print-page:last-child {
+      page-break-after: avoid;
     }
 
     .print-grid {
@@ -382,6 +397,7 @@
     }
 
     .print-label-spacer { display: none; }
+  .print-label-empty { background: #fff; }
   }
 
   .print-sheet { display: none; }
@@ -407,16 +423,14 @@
   <div class="preview-section">
     <div class="preview-header">
       <h2 style="margin:0">Aperçu A4</h2>
-      <span style="font-size:12px;color:var(--muted)">3 colonnes · jusqu'à 24 étiquettes</span>
+      <span style="font-size:12px;color:var(--muted)" id="previewInfo">3 colonnes · 24 étiquettes par page</span>
     </div>
-    <div class="a4-preview" id="a4Preview"></div>
+    <div id="previewPages"></div>
   </div>
 </div>
 
 <!-- ═══════════════════════════════════════════ PRINT SHEET ═══ -->
-<div class="print-sheet" id="printSheet">
-  <div class="print-grid" id="printGrid"></div>
-</div>
+<div class="print-sheet" id="printSheet"></div>
 
 <script>
   const SLOTS = 24; // 3 cols × 8 rows on A4
@@ -456,7 +470,10 @@
       // Ajoute les nouvelles recettes par défaut qui ne sont pas encore dans le localStorage
       const savedTitles = valid.map(r => r.title.toLowerCase().trim());
       const newOnes = defaultRecipes.filter(r => !savedTitles.includes(r.title.toLowerCase().trim()));
-      return [...valid, ...newOnes];
+      const merged = [...valid, ...newOnes];
+      // Resave immédiatement pour nettoyer le localStorage des entrées vides
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+      return merged;
     } catch { return defaultRecipes; }
   }
 
@@ -529,18 +546,29 @@
   }
 
   function renderPreview() {
-    const preview = document.getElementById('a4Preview');
-    preview.innerHTML = '';
-    for (let i = 0; i < SLOTS; i++) {
-      const r = recipes[i];
-      if (!r) {
-        const empty = document.createElement('div');
-        empty.className = 'label label-empty';
-        preview.appendChild(empty);
-        continue;
+    const container = document.getElementById('previewPages');
+    container.innerHTML = '';
+    const pages = chunkIntoPages(recipes, SLOTS);
+    const info = document.getElementById('previewInfo');
+    info.textContent = `3 colonnes · 24 étiquettes par page · ${pages.length} page${pages.length > 1 ? 's' : ''}`;
+
+    pages.forEach((pageRecipes, pi) => {
+      const page = document.createElement('div');
+      page.className = 'a4-preview';
+      page.style.marginBottom = '24px';
+
+      for (let i = 0; i < SLOTS; i++) {
+        const r = pageRecipes[i];
+        if (!r) {
+          const empty = document.createElement('div');
+          empty.className = 'label label-empty';
+          page.appendChild(empty);
+        } else {
+          page.appendChild(buildLabelNode(r));
+        }
       }
-      preview.appendChild(buildLabelNode(r));
-    }
+      container.appendChild(page);
+    });
   }
 
   function buildLabelNode(r) {
@@ -568,30 +596,60 @@
     return label;
   }
 
+  function buildPrintLabel(r) {
+    const allergenText = r.allergens ? r.allergens.toUpperCase() : 'NÉANT';
+    const div = document.createElement('div');
+    div.className = 'print-label';
+    div.innerHTML = `
+      <div class="print-label-body">
+        <div class="print-label-title">${esc(r.title)}</div>
+        <div class="print-label-ingredients">${esc(r.ingredients)}</div>
+      </div>
+      <div class="print-label-footer">
+        <div class="print-label-price">${esc(r.price)}</div>
+        <div class="print-label-allergens">
+          <span>Allergènes</span>
+          ${esc(allergenText)}
+        </div>
+      </div>
+    `;
+    return div;
+  }
+
+  function chunkIntoPages(arr, size) {
+    const pages = [];
+    for (let i = 0; i < arr.length; i += size) {
+      pages.push(arr.slice(i, i + size));
+    }
+    if (pages.length === 0) pages.push([]);
+    return pages;
+  }
+
   function printLabels() {
     syncFromDOM();
-    const grid = document.getElementById('printGrid');
-    grid.innerHTML = '';
+    const sheet = document.getElementById('printSheet');
+    sheet.innerHTML = '';
 
-    recipes.forEach(r => {
-      const allergenText = r.allergens ? r.allergens.toUpperCase() : 'NÉANT';
-      const div = document.createElement('div');
-      div.className = 'print-label';
-      div.innerHTML = `
-        <div class="print-label-body">
-          <div class="print-label-title">${esc(r.title)}</div>
-          <div class="print-label-ingredients">${esc(r.ingredients)}</div>
-        </div>
-        <div class="print-label-footer">
-          <div class="print-label-price">${esc(r.price)}</div>
-          <div class="print-label-allergens">
-            <span>Allergènes</span>
-            ${esc(allergenText)}
-          </div>
-        </div>
-        <div class="print-label-spacer"></div>
-      `;
-      grid.appendChild(div);
+    const pages = chunkIntoPages(recipes, SLOTS);
+    pages.forEach(pageRecipes => {
+      const page = document.createElement('div');
+      page.className = 'print-page';
+      const grid = document.createElement('div');
+      grid.className = 'print-grid';
+
+      // Fill exactly 24 slots
+      for (let i = 0; i < SLOTS; i++) {
+        const r = pageRecipes[i];
+        if (r) {
+          grid.appendChild(buildPrintLabel(r));
+        } else {
+          const empty = document.createElement('div');
+          empty.className = 'print-label print-label-empty';
+          grid.appendChild(empty);
+        }
+      }
+      page.appendChild(grid);
+      sheet.appendChild(page);
     });
 
     window.print();
