@@ -425,12 +425,36 @@
   const defaultRecipes = [
     { title: 'poulet bang bang', ingredients: 'poulet rôti, sauce bang bang (mayo, sriracha, miel), concombre, coriandre, sésame', price: '12,50€', allergens: 'gluten, œufs, sésame' },
     { title: 'rocher choco vegan', ingredients: 'banane, noix de coco, sucre, pépites de chocolat', price: '3,00€', allergens: 'néant' },
+    { title: 'Eau neuve pétillante', ingredients: '', price: '', allergens: '' },
+    { title: 'Eau neuve plate', ingredients: '', price: '', allergens: '' },
+    { title: 'Kéfir gingembre', ingredients: '', price: '', allergens: '' },
+    { title: 'Kéfir pamplemousse', ingredients: '', price: '', allergens: '' },
+    { title: 'Kéfir menthe citron vert', ingredients: '', price: '', allergens: '' },
+    { title: 'Kéfir mangue passion', ingredients: '', price: '', allergens: '' },
+    { title: 'Lemonaid citron vert', ingredients: '', price: '', allergens: '' },
+    { title: 'Lemonaid fruit passion', ingredients: '', price: '', allergens: '' },
+    { title: 'Lemonaid orange sanguine', ingredients: '', price: '', allergens: '' },
+    { title: 'Lemonaid gingembre', ingredients: '', price: '', allergens: '' },
+    { title: 'Lemonaid orange', ingredients: '', price: '', allergens: '' },
+    { title: 'ChariTea red', ingredients: '', price: '', allergens: '' },
+    { title: 'ChariTea black', ingredients: '', price: '', allergens: '' },
+    { title: 'ChariTea green', ingredients: '', price: '', allergens: '' },
+    { title: 'ChariTea maté', ingredients: '', price: '', allergens: '' },
+    { title: 'Kombucha brut', ingredients: '', price: '', allergens: '' },
+    { title: 'Kombucha framboisier', ingredients: '', price: '', allergens: '' },
+    { title: 'Kombucha cassissier', ingredients: '', price: '', allergens: '' },
+    { title: 'Kombucha figuier', ingredients: '', price: '', allergens: '' },
   ];
 
   function load() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : defaultRecipes;
+      if (!saved) return defaultRecipes;
+      const parsed = JSON.parse(saved);
+      // Ajoute les nouvelles recettes par défaut qui ne sont pas encore dans le localStorage
+      const savedTitles = parsed.map(r => r.title.toLowerCase().trim());
+      const newOnes = defaultRecipes.filter(r => !savedTitles.includes(r.title.toLowerCase().trim()));
+      return [...parsed, ...newOnes];
     } catch { return defaultRecipes; }
   }
 
