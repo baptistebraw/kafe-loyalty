@@ -451,10 +451,12 @@
       const saved = localStorage.getItem(STORAGE_KEY);
       if (!saved) return defaultRecipes;
       const parsed = JSON.parse(saved);
+      // Ignore les entrées sans titre
+      const valid = parsed.filter(r => r.title && r.title.trim() !== '');
       // Ajoute les nouvelles recettes par défaut qui ne sont pas encore dans le localStorage
-      const savedTitles = parsed.map(r => r.title.toLowerCase().trim());
+      const savedTitles = valid.map(r => r.title.toLowerCase().trim());
       const newOnes = defaultRecipes.filter(r => !savedTitles.includes(r.title.toLowerCase().trim()));
-      return [...parsed, ...newOnes];
+      return [...valid, ...newOnes];
     } catch { return defaultRecipes; }
   }
 
