@@ -523,13 +523,65 @@
 
   .footer-link:hover { opacity: 1; }
 
+  /* ── HERO PHOTO ── */
+  .hero-photo {
+    position: relative;
+    width: 100%;
+    min-height: 480px;
+    overflow: hidden;
+  }
+
+  .hero-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 30%;
+    display: block;
+    filter: brightness(0.45);
+    min-height: 480px;
+  }
+
+  .hero-photo-content {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 40px;
+    align-items: flex-end;
+    padding: 48px;
+  }
+
+  .hero-photo h1 {
+    font-size: clamp(28px, 4vw, 52px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: #ffffff;
+  }
+
+  .hero-photo h1 em {
+    font-style: normal;
+    color: var(--sage);
+  }
+
+  .hero-photo .hero-cta-block { text-align: right; }
+
+  .hero-photo .hero-meta {
+    font-size: 11px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 14px;
+    line-height: 1.8;
+    letter-spacing: 0.04em;
+  }
+
   /* ══════════════════════════════════════
      RESPONSIVE
   ══════════════════════════════════════ */
   @media (max-width: 860px) {
     .hero { padding: 24px; }
-    .hero-bottom { grid-template-columns: 1fr; gap: 24px; }
-    .hero-cta-block { text-align: left; }
+    .hero-photo-content { grid-template-columns: 1fr; padding: 32px 24px; }
+    .hero-photo .hero-cta-block { text-align: left; }
     .s-args, .s-formules, .s-contact { padding: 56px 24px; }
     .args-grid { grid-template-columns: 1fr; gap: 32px; }
     .formules-grid { grid-template-columns: 1fr; }
@@ -552,19 +604,23 @@
     <img class="hero-logo" src="https://kafe.paris/_assets/v11/fc2136da6b8e9e3686dadcee7d836a563b3cad02.png" alt="Kafé">
   </div>
 
-  <div class="hero-bottom">
-    <h1 class="hero-headline">
-      Régalez votre équipe.<br>
-      <em>On s'occupe du reste.</em>
-    </h1>
-    <div class="hero-cta-block">
-      <div class="hero-meta">
-        À partir de 15€ / personne<br>
-        Livraison ou sur place
+  <!-- Photo avec texte + CTA par-dessus -->
+  <div class="hero-photo">
+    <img src="assets/kafe-ambiance.jpg" alt="Kafé ambiance">
+    <div class="hero-photo-content">
+      <h1>
+        Régalez votre équipe.<br>
+        <em>On s'occupe du reste.</em>
+      </h1>
+      <div class="hero-cta-block">
+        <div class="hero-meta">
+          À partir de 15€ / personne<br>
+          Livraison ou sur place
+        </div>
+        <a href="https://wa.me/33664976390?text=Bonjour%2C%20je%20souhaite%20commander%20des%20plateaux%20traiteur" class="btn-primary">
+          Commander sur WhatsApp →
+        </a>
       </div>
-      <a href="https://wa.me/33664976390?text=Bonjour%2C%20je%20souhaite%20commander%20des%20plateaux%20traiteur" class="btn-primary">
-        Commander sur WhatsApp →
-      </a>
     </div>
   </div>
 </section>
@@ -579,7 +635,7 @@
       <div>
         <div class="arg-num">01</div>
         <div class="arg-title">Fait maison chaque matin</div>
-        <div class="arg-desc">Sandwichs, salades, cookies et gâteaux préparés sur place à partir de produits frais. Rien de sous-vide, rien d'industriel.</div>
+        <div class="arg-desc">Sandwichs, salades, cookies et gâteaux préparés sur place. Pain boulanger au levain bio petit épeautre, produits soigneusement sélectionnés. À déguster sur place au Kafé ou livré chez vous.</div>
       </div>
       <div>
         <div class="arg-num">02</div>
@@ -589,7 +645,7 @@
       <div>
         <div class="arg-num">03</div>
         <div class="arg-title">Zéro prise de tête</div>
-        <div class="arg-desc">Un message WhatsApp suffit. On confirme, on prépare, on livre. Pas de plateforme, pas de minimum absurde.</div>
+        <div class="arg-desc">Un message WhatsApp ou un email suffit. On confirme, on prépare, on livre.</div>
       </div>
     </div>
   </section>
