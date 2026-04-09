@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Traiteur — Kafé</title>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@700,500,400,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black:  #191919;
+    --white:  #f5f2ed;
+    --sage:   #92b0a3;
+    --peach:  #f9c892;
+    --brown:  #816144;
+    --muted:  rgba(245,242,237,0.45);
+    --border: rgba(245,242,237,0.12);
+  }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Satoshi', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* ── NAV ── */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 48px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .nav-tagline {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .nav-link {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .nav-link:hover { color: var(--white); }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 80px 48px 64px;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: end;
+  }
+
+  .hero-eyebrow {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--sage);
+    margin-bottom: 20px;
+  }
+
+  .hero-title {
+    font-size: clamp(52px, 7vw, 88px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+    text-transform: uppercase;
+  }
+
+  .hero-title em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--sage);
+  }
+
+  .hero-right {
+    padding-bottom: 6px;
+  }
+
+  .hero-desc {
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 32px;
+    max-width: 380px;
+  }
+
+  .hero-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tag {
+    display: inline-block;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ── FORMULES ── */
+  .section {
+    padding: 64px 48px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .section-note {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .formules {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--black);
+    padding: 36px 32px 40px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: background 0.25s;
+  }
+
+  .card:hover { background: #1f1f1f; }
+
+  .card-accent { width: 32px; height: 3px; border-radius: 2px; margin-bottom: 28px; }
+  .card-1 .card-accent { background: var(--sage); }
+  .card-2 .card-accent { background: var(--peach); }
+  .card-3 .card-accent { background: var(--brown); }
+
+  .card-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .card-price {
+    font-size: 56px;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .card-1 .card-price { color: var(--sage); }
+  .card-2 .card-price { color: var(--peach); }
+  .card-3 .card-price { color: var(--brown); }
+
+  .card-timing {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .card-min {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 3px 12px;
+    margin-bottom: 32px;
+  }
+
+  .card-no-min { margin-bottom: 32px; height: 24px; }
+
+  .card-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 16px 0;
+  }
+
+  .group-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--white);
+    margin-bottom: 8px;
+    opacity: 0.8;
+  }
+
+  .group-items {
+    list-style: none;
+    padding: 0;
+  }
+
+  .group-items li {
+    font-size: 12.5px;
+    font-weight: 300;
+    color: var(--muted);
+    padding: 2px 0 2px 14px;
+    position: relative;
+    line-height: 1.5;
+  }
+
+  .group-items li::before {
+    content: '·';
+    position: absolute;
+    left: 0;
+  }
+
+  .group-items li.or {
+    font-style: italic;
+    padding-left: 0;
+    font-size: 11px;
+    margin: 2px 0;
+    opacity: 0.5;
+  }
+
+  .group-items li.or::before { content: ''; }
+
+  .badge {
+    position: absolute;
+    top: 36px; right: 32px;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--brown);
+    border: 1px solid var(--brown);
+    border-radius: 100px;
+    padding: 3px 10px;
+    opacity: 0.8;
+  }
+
+  /* ── LIVRAISON ── */
+  .livraison {
+    margin: 0 48px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 48px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 48px;
+    align-items: center;
+  }
+
+  .livraison-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--sage);
+    margin-bottom: 16px;
+  }
+
+  .livraison-title {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 24px;
+  }
+
+  .livraison-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--muted);
+  }
+
+  .livraison-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--sage);
+    flex-shrink: 0;
+    margin-top: 8px;
+    opacity: 0.6;
+  }
+
+  .livraison-cta {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .cta-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .cta-number {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+    color: var(--white);
+  }
+
+  .cta-sub {
+    font-size: 11px;
+    font-weight: 300;
+    color: var(--muted);
+  }
+
+  .cta-btn {
+    display: inline-block;
+    margin-top: 20px;
+    background: var(--sage);
+    color: var(--black);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 14px 28px;
+    border-radius: 100px;
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+
+  .cta-btn:hover { opacity: 0.85; }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 40px 48px;
+    border-top: 1px solid var(--border);
+    margin-top: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-logo {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .footer-note {
+    font-size: 11px;
+    font-weight: 300;
+    color: var(--muted);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    nav { padding: 20px 24px; }
+    .nav-tagline { display: none; }
+    .hero { grid-template-columns: 1fr; padding: 48px 24px 40px; gap: 32px; }
+    .section { padding: 48px 24px; }
+    .formules { grid-template-columns: 1fr; }
+    .livraison { margin: 0 24px; padding: 32px 24px; grid-template-columns: 1fr; }
+    .livraison-cta { text-align: left; }
+    footer { padding: 32px 24px; flex-direction: column; gap: 12px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="https://kafe.paris" class="nav-logo">Kafé</a>
+  <div class="nav-tagline">Serendipity Coffee &amp; Triangles</div>
+  <a href="https://kafe.paris" class="nav-link">← Retour</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow">Services traiteur</div>
+    <h1 class="hero-title">Plateaux<br><em>pour votre</em><br>bureau</h1>
+  </div>
+  <div class="hero-right">
+    <p class="hero-desc">Livraison ou récupération sur place. Des produits frais, faits maison, pensés pour vos réunions et déjeuners d'équipe.</p>
+    <div class="hero-tags">
+      <span class="tag">Livraison</span>
+      <span class="tag">Réunions</span>
+      <span class="tag">Petits-déjeuners</span>
+      <span class="tag">Déjeuners d'équipe</span>
+    </div>
+  </div>
+</section>
+
+<!-- FORMULES -->
+<section class="section">
+  <div class="section-header">
+    <span class="section-title">Nos formules</span>
+    <span class="section-note">Par personne · Disponible lun – ven</span>
+  </div>
+
+  <div class="formules">
+
+    <!-- FORMULE 1 -->
+    <div class="card card-1">
+      <div class="card-accent"></div>
+      <div class="card-label">Formule 1</div>
+      <div class="card-price">15€</div>
+      <div class="card-timing">Par personne · midi</div>
+      <div class="card-no-min"></div>
+
+      <div class="group-title">Assortiment de sandwichs</div>
+      <ul class="group-items">
+        <li>Jambon Prince de Paris</li>
+        <li>Rillette de truite fumée</li>
+        <li>English <span style="opacity:.5">(végétarien)</span></li>
+      </ul>
+
+      <div class="card-divider"></div>
+
+      <div class="group-title">Cookies</div>
+      <ul class="group-items">
+        <li>Sésame chocolat fleur de sel</li>
+        <li>Matcha chocolat blanc</li>
+        <li>Pistache</li>
+      </ul>
+
+      <div class="card-divider"></div>
+
+      <div class="group-title">Boisson au choix</div>
+      <ul class="group-items">
+        <li>Eau plate ou pétillante</li>
+        <li>Botanical soda sparkling blend</li>
+        <li>Charitea</li>
+      </ul>
+    </div>
+
+    <!-- FORMULE 2 -->
+    <div class="card card-2">
+      <div class="card-accent"></div>
+      <div class="card-label">Formule 2</div>
+      <div class="card-price">19€</div>
+      <div class="card-timing">Par personne · midi</div>
+      <div class="card-min">Minimum 12 personnes</div>
+
+      <div class="group-title">Tous nos sandwichs</div>
+      <ul class="group-items">
+        <li>Rillette de truite fumée</li>
+        <li>Jambon Prince de Paris</li>
+        <li>Pastrami &amp; relish de cornichons</li>
+        <li>Bang Bang · English</li>
+      </ul>
+
+      <div class="card-divider"></div>
+
+      <div class="group-title">Salade parisienne</div>
+      <div class="group-title" style="margin-top:6px">+ Soupe du moment</div>
+
+      <div class="card-divider"></div>
+
+      <div class="group-title">Dessert au choix</div>
+      <ul class="group-items">
+        <li>Fondant chocolat &amp; fleur de sel</li>
+        <li class="or">— ou —</li>
+        <li>Cookies (4 variétés)</li>
+        <li class="or">— ou —</li>
+        <li>Madeleines citron</li>
+      </ul>
+
+      <div class="card-divider"></div>
+
+      <div class="group-title">Boisson</div>
+      <ul class="group-items">
+        <li>1 boisson barista sur place ou froide</li>
+      </ul>
+    </div>
+
+    <!-- FORMULE 3 -->
+    <div class="card card-3">
+      <span class="badge">Complet</span>
+      <div class="card-accent"></div>
+      <div class="card-label">Formule 3</div>
+      <div class="card-price">28€</div>
+      <div class="card-timing">Par personne · midi + goûter</div>
+      <div class="card-min">Minimum 12 personnes</div>
+
+      <div class="group-title">Tous nos sandwichs</div>
+      <ul class="group-items">
+        <li>Rillette truite fumée</li>
+        <li>Jambon Prince de Paris</li>
+        <li>Pastrami &amp; relish · Bang Bang · English</li>
+      </ul>
+
+      <div class="card-divider"></div>
+
+      <div class="group-title">Salade parisienne grand format</div>
+      <div class="group-title" style="margin-top:6px">+ Soupe du moment</div>
+
+      <div class="card-divider"></div>
+
+      <div class="group-title">Thermos café Fèves</div>
+      <ul class="group-items">
+        <li>Origine Colombie — notes fruitées,<br>pomme verte, noisette, sucre de canne</li>
+      </ul>
+
+      <div class="card-divider"></div>
+
+      <div class="group-title">Pause goûter</div>
+      <ul class="group-items">
+        <li>Gâteau à l'orange</li>
+        <li>Banana Bread · Gâteau basque</li>
+        <li>Madeleine citron · Barres de granola</li>
+      </ul>
+
+      <div class="card-divider"></div>
+
+      <div class="group-title">1 boisson barista dans la journée</div>
+
+      <div class="card-divider"></div>
+
+      <div class="group-title">Option composition florale 🌿</div>
+      <ul class="group-items">
+        <li>En collaboration avec notre fleuriste</li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+<!-- LIVRAISON -->
+<div class="livraison">
+  <div>
+    <div class="livraison-label">Livraison</div>
+    <div class="livraison-title">On vient<br>chez vous</div>
+    <div class="livraison-item">
+      <div class="livraison-dot"></div>
+      <span>Gratuit dans la rue ou à 250 m en périphérie</span>
+    </div>
+    <div class="livraison-item">
+      <div class="livraison-dot"></div>
+      <span>Entre 250 m et 1 km : 15 € de frais de livraison</span>
+    </div>
+    <div class="livraison-item">
+      <div class="livraison-dot"></div>
+      <span>Récupération sur place possible avec consigne</span>
+    </div>
+  </div>
+  <div class="livraison-cta">
+    <div class="cta-label">Commander</div>
+    <div class="cta-number">06 26 09 28 69</div>
+    <div class="cta-sub">WhatsApp ou appel</div>
+    <a href="https://wa.me/33626092869" class="cta-btn">Envoyer un message</a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Kafé</div>
+  <div class="footer-note">12 rue Martel, Paris 10e · Lun – Ven · Tarifs HT par personne</div>
+  <a href="https://kafe.paris" class="nav-link">kafe.paris</a>
+</footer>
+
+</body>
+</html>
