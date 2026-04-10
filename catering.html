@@ -49,15 +49,15 @@
     object-fit: cover;
     object-position: center 35%;
     display: block;
-    filter: brightness(0.5) saturate(0.7);
+    filter: brightness(0.38) saturate(0.8);
   }
 
-  /* Overlay sage pour que le logo se fonde */
+  /* Léger voile sombre pour contraste */
   .hero-bg::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(146, 176, 163, 0.55);
+    background: rgba(10, 10, 10, 0.25);
   }
 
   .hero-nav,
@@ -78,8 +78,7 @@
     font-weight: 500;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--ink);
-    opacity: 0.55;
+    color: rgba(255,255,255,0.55);
   }
 
   .hero-logo-wrap {
@@ -89,13 +88,12 @@
     padding: 16px 0;
   }
 
-  /* Logo uses the PNG — sage bg matches perfectly */
+  /* Logo blanc : invert + contraste fort pour blanc pur sur fond sombre */
   .hero-logo {
     width: min(680px, 85vw);
     display: block;
-    /* Remove the sage bg strip by cropping to just the letterforms */
-    clip-path: inset(0 0 22% 0);
-    margin-bottom: -18%;
+    filter: invert(1) contrast(50) brightness(3);
+    mix-blend-mode: screen;
   }
 
   .hero-bottom {
@@ -635,7 +633,7 @@
   </div>
 
   <div class="hero-logo-wrap">
-    <img class="hero-logo" src="https://kafe.paris/_assets/v11/fc2136da6b8e9e3686dadcee7d836a563b3cad02.png" alt="Kafé">
+    <img class="hero-logo" src="assets/kafe-logo-white.png" alt="Kafé">
   </div>
 </section>
 
