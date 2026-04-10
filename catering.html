@@ -34,6 +34,36 @@
     display: grid;
     grid-template-rows: auto 1fr;
     padding: 32px 48px 48px;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .hero-bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 35%;
+    display: block;
+    filter: brightness(0.5) saturate(0.7);
+  }
+
+  /* Overlay sage pour que le logo se fonde */
+  .hero-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(146, 176, 163, 0.55);
+  }
+
+  .hero-nav,
+  .hero-logo-wrap {
+    position: relative;
+    z-index: 1;
   }
 
   .hero-nav {
@@ -592,8 +622,13 @@
 </head>
 <body>
 
-<!-- ══ HERO — logo sticky sage ══ -->
+<!-- ══ HERO — photo en fond, logo par-dessus ══ -->
 <section class="hero">
+  <!-- Photo de fond -->
+  <div class="hero-bg">
+    <img src="assets/kafe-ambiance.jpg" alt="Kafé ambiance">
+  </div>
+
   <div class="hero-nav">
     <span class="hero-nav-label">Paris 10e · Lun–Ven</span>
     <span class="hero-nav-label">Traiteur</span>
@@ -607,28 +642,18 @@
 <!-- ══ SCROLL WRAP ══ -->
 <div class="scroll-wrap">
 
-  <!-- Photo pleine largeur avec headline + CTA par-dessus -->
-  <div class="hero-photo">
-    <img src="assets/kafe-ambiance.jpg" alt="Kafé ambiance">
-    <div class="hero-photo-content">
-      <h1>
-        Régalez votre équipe.<br>
-        <em>On s'occupe du reste.</em>
-      </h1>
-      <div class="hero-cta-block">
-        <div class="hero-meta">
-          À partir de 15€ / personne<br>
-          Livraison ou sur place
-        </div>
-        <a href="https://wa.me/33664976390?text=Bonjour%2C%20je%20souhaite%20commander%20des%20plateaux%20traiteur" class="btn-primary">
-          Commander sur WhatsApp →
-        </a>
-      </div>
-    </div>
-  </div>
-
   <!-- ARGUMENTS -->
   <section class="s-args">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:64px;flex-wrap:wrap;gap:24px;">
+      <h1 style="font-size:clamp(28px,4vw,52px);font-weight:700;letter-spacing:-0.02em;line-height:1.05;color:var(--cream);">
+        Régalez votre équipe.<br>
+        <span style="opacity:0.4;">On s'occupe du reste.</span>
+      </h1>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:11px;color:rgba(245,241,234,0.45);margin-bottom:14px;line-height:1.8;letter-spacing:0.04em;">À partir de 15€ / personne<br>Livraison ou sur place</div>
+        <a href="https://wa.me/33664976390?text=Bonjour%2C%20je%20souhaite%20commander%20des%20plateaux%20traiteur" class="btn-primary">Commander sur WhatsApp →</a>
+      </div>
+    </div>
     <div class="args-label">Pourquoi Kafé</div>
     <div class="args-grid">
       <div>
