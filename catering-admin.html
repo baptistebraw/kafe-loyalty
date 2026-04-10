@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kafé · Catering Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #f5f1ea;
+    --white:   #ffffff;
+    --border:  #e2ddd5;
+    --sage:    #7a9e8f;
+    --ink:     #1a1916;
+    --muted:   #8a8580;
+    --danger:  #c0392b;
+    --radius:  10px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ══ HEADER ══ */
+  header {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-brand {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--ink);
+  }
+
+  .header-brand span {
+    font-weight: 400;
+    color: var(--muted);
+  }
+
+  .header-actions { display: flex; align-items: center; gap: 12px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.15s, background 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn:hover { opacity: 0.85; }
+
+  .btn-primary {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .btn-sage {
+    background: var(--sage);
+    color: #fff;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--border);
+  }
+
+  .btn-ghost:hover { background: var(--bg); opacity: 1; }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid rgba(192,57,43,0.25);
+    padding: 5px 10px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+
+  .btn-danger:hover { background: rgba(192,57,43,0.06); opacity: 1; }
+
+  .btn-add {
+    background: transparent;
+    color: var(--sage);
+    border: 1px dashed var(--sage);
+    padding: 6px 14px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+
+  .btn-add:hover { background: rgba(122,158,143,0.08); opacity: 1; }
+
+  /* ══ SAVE INDICATOR ══ */
+  .save-indicator {
+    font-size: 12px;
+    color: var(--sage);
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .save-indicator.visible { opacity: 1; }
+
+  /* ══ LAYOUT ══ */
+  .page { max-width: 1200px; margin: 0 auto; padding: 40px; }
+
+  /* ══ SECTION ══ */
+  .section { margin-bottom: 40px; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ══ CARD ══ */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+
+  /* ══ FORM ELEMENTS ══ */
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.03em;
+  }
+
+  input[type="text"],
+  textarea {
+    width: 100%;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+    resize: none;
+  }
+
+  input[type="text"]:focus,
+  textarea:focus {
+    border-color: var(--sage);
+    background: var(--white);
+  }
+
+  textarea { min-height: 72px; line-height: 1.5; }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .field-row-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* ══ HERO SECTION ══ */
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* ══ ARGS SECTION ══ */
+  .args-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .arg-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  .arg-num {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--sage);
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+  }
+
+  /* ══ FORMULES ══ */
+  .formules-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .formule-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .formule-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  .formule-index {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--sage);
+    margin-bottom: 10px;
+  }
+
+  .formule-body { padding: 20px; flex: 1; }
+
+  /* ══ SECTIONS IN FORMULE ══ */
+  .sections-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+
+  .section-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+  }
+
+  .section-block-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .section-block-header input {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 10px;
+  }
+
+  /* ══ ITEMS LIST ══ */
+  .items-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+
+  .item-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .item-row input {
+    flex: 1;
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+
+  /* ══ CONTACT ══ */
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .contact-items-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+
+  .contact-item-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .contact-item-row input { flex: 1; }
+
+  /* ══ RESPONSIVE ══ */
+  @media (max-width: 900px) {
+    .page { padding: 24px; }
+    .formules-grid { grid-template-columns: 1fr; }
+    .args-grid { grid-template-columns: 1fr; }
+    .hero-grid { grid-template-columns: 1fr; }
+    .contact-grid { grid-template-columns: 1fr; }
+    header { padding: 0 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand">Kafé <span>· Catering Admin</span></div>
+  <div class="header-actions">
+    <span class="save-indicator" id="save-indicator">Sauvegardé ✓</span>
+    <a href="catering.html" target="_blank" class="btn btn-ghost">Voir la page →</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- ══ HERO ══ -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-label">Hero</span>
+    </div>
+    <div class="card hero-grid">
+      <div class="field">
+        <label>Headline</label>
+        <input type="text" id="hero-headline" placeholder="Régalez votre équipe.">
+      </div>
+      <div class="field">
+        <label>Subline</label>
+        <input type="text" id="hero-subline" placeholder="On s'occupe du reste.">
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ARGUMENTS ══ -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-label">Pourquoi Kafé — 3 arguments</span>
+    </div>
+    <div class="args-grid" id="args-grid"></div>
+  </div>
+
+  <!-- ══ FORMULES ══ -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-label">Formules</span>
+    </div>
+    <div class="formules-grid" id="formules-grid"></div>
+  </div>
+
+  <!-- ══ CONTACT ══ -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-label">Contact & Livraison</span>
+    </div>
+    <div class="card">
+      <div class="contact-grid">
+        <div>
+          <div class="field">
+            <label>Headline (les \n deviennent des sauts de ligne)</label>
+            <input type="text" id="contact-headline" placeholder="On vient\nchez vous">
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Téléphone</label>
+              <input type="text" id="contact-phone" placeholder="06 64 97 63 90">
+            </div>
+            <div class="field">
+              <label>Email</label>
+              <input type="text" id="contact-email" placeholder="hello@kafe.paris">
+            </div>
+          </div>
+          <div class="field">
+            <label>Sous-titre</label>
+            <input type="text" id="contact-sub" placeholder="WhatsApp ou appel · Lun–Ven">
+          </div>
+        </div>
+        <div>
+          <label style="display:block;margin-bottom:10px;">Items de livraison</label>
+          <div class="contact-items-list" id="contact-items-list"></div>
+          <button class="btn btn-add" onclick="addContactItem()">+ Ajouter un item</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+const STORAGE_KEY = 'kafe_catering_data';
+
+const defaultData = {
+  hero: {
+    headline: "Régalez votre équipe.",
+    subline: "On s'occupe du reste.",
+  },
+  args: [
+    { title: "Fait maison chaque matin", desc: "Sandwichs, salades, cookies et gâteaux préparés sur place. Pain boulanger au levain bio petit épeautre, produits soigneusement sélectionnés. À déguster sur place au Kafé ou livré chez vous." },
+    { title: "Livraison ou récupération", desc: "On livre dans le quartier ou vous venez chercher avec vos contenants. Gratuit à 250 m, 15€ jusqu'à 1 km." },
+    { title: "Zéro prise de tête", desc: "Un message WhatsApp ou un email suffit. On confirme, on prépare, on livre." }
+  ],
+  formules: [
+    {
+      label: "Formule Essentielle",
+      price: "15€",
+      timing: "Par personne · déjeuner",
+      min: "",
+      badge: "",
+      sections: [
+        { title: "Assortiment de sandwichs", items: ["Jambon Prince de Paris", "Rillette de truite fumée", "English (végétarien)"] },
+        { title: "Cookies", items: ["Sésame chocolat fleur de sel", "Matcha chocolat blanc", "Pistache"] },
+        { title: "Boisson au choix", items: ["Eau plate ou pétillante", "Botanical soda", "Charitea"] }
+      ]
+    },
+    {
+      label: "Formule Complète",
+      price: "19€",
+      timing: "Par personne · déjeuner",
+      min: "Min. 12 personnes",
+      badge: "",
+      sections: [
+        { title: "Tous nos sandwichs", items: ["Rillette de truite fumée", "Jambon Prince de Paris", "Pastrami & relish de cornichons", "Bang Bang · English"] },
+        { title: "Salade parisienne + Soupe du moment", items: [] },
+        { title: "Dessert au choix", items: ["Fondant chocolat & fleur de sel", "Cookies (4 variétés)", "Madeleines citron"] },
+        { title: "Boisson", items: ["1 boisson barista sur place ou froide"] }
+      ]
+    },
+    {
+      label: "Journée entière",
+      price: "28€",
+      timing: "Par personne · midi + goûter",
+      min: "Min. 12 personnes",
+      badge: "Le plus complet",
+      sections: [
+        { title: "Tous nos sandwichs", items: ["Rillette truite fumée · Jambon Paris", "Pastrami & relish · Bang Bang · English"] },
+        { title: "Salade parisienne grand format + Soupe", items: [] },
+        { title: "Thermos café Fèves", items: ["Colombie — notes fruitées, pomme verte, noisette"] },
+        { title: "Pause goûter", items: ["Gâteau à l'orange · Banana Bread", "Madeleine citron · Barres de granola"] },
+        { title: "1 boisson barista dans la journée", items: [] },
+        { title: "Option composition florale 🌿", items: ["En collaboration avec notre fleuriste"] }
+      ]
+    }
+  ],
+  contact: {
+    headline: "On vient\nchez vous",
+    phone: "06 64 97 63 90",
+    email: "hello@kafe.paris",
+    sub: "WhatsApp ou appel · Lun–Ven",
+    items: [
+      "Gratuit à moins de 250 m du café",
+      "15 € de livraison jusqu'à 1 km",
+      "Récupération sur place avec consigne possible",
+      "Commande la veille ou le matin avant 9h"
+    ]
+  }
+};
+
+// ── State ──────────────────────────────────────────────
+let data;
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultData));
+  } catch { return JSON.parse(JSON.stringify(defaultData)); }
+}
+
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  const ind = document.getElementById('save-indicator');
+  ind.classList.add('visible');
+  clearTimeout(ind._timeout);
+  ind._timeout = setTimeout(() => ind.classList.remove('visible'), 2000);
+}
+
+// Read current form state back into `data`, then save
+function collectAndSave() {
+  // Hero
+  data.hero.headline = document.getElementById('hero-headline').value;
+  data.hero.subline  = document.getElementById('hero-subline').value;
+
+  // Args
+  data.args.forEach((_, i) => {
+    data.args[i].title = document.getElementById(`arg-title-${i}`).value;
+    data.args[i].desc  = document.getElementById(`arg-desc-${i}`).value;
+  });
+
+  // Formules
+  data.formules.forEach((f, fi) => {
+    f.label  = document.getElementById(`f-label-${fi}`).value;
+    f.price  = document.getElementById(`f-price-${fi}`).value;
+    f.timing = document.getElementById(`f-timing-${fi}`).value;
+    f.min    = document.getElementById(`f-min-${fi}`).value;
+    f.badge  = document.getElementById(`f-badge-${fi}`).value;
+    f.sections.forEach((s, si) => {
+      const titleEl = document.getElementById(`s-title-${fi}-${si}`);
+      if (titleEl) s.title = titleEl.value;
+      s.items = [];
+      const itemInputs = document.querySelectorAll(`[data-item="${fi}-${si}"]`);
+      itemInputs.forEach(inp => {
+        if (inp.value.trim()) s.items.push(inp.value);
+      });
+    });
+  });
+
+  // Contact
+  data.contact.headline = document.getElementById('contact-headline').value;
+  data.contact.phone    = document.getElementById('contact-phone').value;
+  data.contact.email    = document.getElementById('contact-email').value;
+  data.contact.sub      = document.getElementById('contact-sub').value;
+  data.contact.items = [];
+  document.querySelectorAll('[data-contact-item]').forEach(inp => {
+    if (inp.value.trim()) data.contact.items.push(inp.value);
+  });
+
+  saveData();
+}
+
+// ── Render ─────────────────────────────────────────────
+function renderAll() {
+  renderHeroFields();
+  renderArgs();
+  renderFormules();
+  renderContactFields();
+}
+
+function renderHeroFields() {
+  document.getElementById('hero-headline').value = data.hero.headline || '';
+  document.getElementById('hero-subline').value  = data.hero.subline  || '';
+}
+
+function renderArgs() {
+  const grid = document.getElementById('args-grid');
+  grid.innerHTML = data.args.map((a, i) => `
+    <div class="arg-card">
+      <div class="arg-num">Argument ${i + 1}</div>
+      <div class="field">
+        <label>Titre</label>
+        <input type="text" id="arg-title-${i}" value="${esc(a.title)}" oninput="collectAndSave()">
+      </div>
+      <div class="field">
+        <label>Description</label>
+        <textarea id="arg-desc-${i}" oninput="collectAndSave()">${esc(a.desc)}</textarea>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderFormules() {
+  const grid = document.getElementById('formules-grid');
+  grid.innerHTML = data.formules.map((f, fi) => `
+    <div class="formule-card">
+      <div class="formule-header">
+        <div class="formule-index">Formule ${fi + 1}</div>
+        <div class="field-row" style="margin-bottom:10px;">
+          <div class="field" style="margin-bottom:0">
+            <label>Nom</label>
+            <input type="text" id="f-label-${fi}" value="${esc(f.label)}" oninput="collectAndSave()">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Prix</label>
+            <input type="text" id="f-price-${fi}" value="${esc(f.price)}" oninput="collectAndSave()">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field" style="margin-bottom:0">
+            <label>Timing</label>
+            <input type="text" id="f-timing-${fi}" value="${esc(f.timing)}" oninput="collectAndSave()">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Minimum</label>
+            <input type="text" id="f-min-${fi}" value="${esc(f.min || '')}" placeholder="Min. 12 personnes" oninput="collectAndSave()">
+          </div>
+        </div>
+        <div class="field" style="margin-top:10px;margin-bottom:0;">
+          <label>Badge (optionnel)</label>
+          <input type="text" id="f-badge-${fi}" value="${esc(f.badge || '')}" placeholder="Le plus complet" oninput="collectAndSave()">
+        </div>
+      </div>
+      <div class="formule-body">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <label style="margin-bottom:0;">Sections</label>
+          <button class="btn btn-add" onclick="addSection(${fi})">+ Section</button>
+        </div>
+        <div class="sections-list" id="sections-${fi}">
+          ${f.sections.map((s, si) => renderSectionBlock(fi, si, s)).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderSectionBlock(fi, si, s) {
+  const itemsHtml = (s.items || []).map((item, ii) => `
+    <div class="item-row" id="item-row-${fi}-${si}-${ii}">
+      <input type="text" data-item="${fi}-${si}" value="${esc(item)}" placeholder="Item..." oninput="collectAndSave()">
+      <button class="btn btn-danger" onclick="removeItem(${fi},${si},${ii})">✕</button>
+    </div>
+  `).join('');
+
+  return `
+    <div class="section-block" id="section-block-${fi}-${si}">
+      <div class="section-block-header">
+        <input type="text" id="s-title-${fi}-${si}" value="${esc(s.title)}" placeholder="Titre de section..." oninput="collectAndSave()">
+        <button class="btn btn-danger" onclick="removeSection(${fi},${si})">✕</button>
+      </div>
+      <div class="items-list" id="items-${fi}-${si}">${itemsHtml}</div>
+      <button class="btn btn-add" style="font-size:11px;padding:4px 10px;" onclick="addItem(${fi},${si})">+ Item</button>
+    </div>
+  `;
+}
+
+function renderContactFields() {
+  document.getElementById('contact-headline').value = data.contact.headline || '';
+  document.getElementById('contact-phone').value    = data.contact.phone    || '';
+  document.getElementById('contact-email').value    = data.contact.email    || '';
+  document.getElementById('contact-sub').value      = data.contact.sub      || '';
+  renderContactItems();
+}
+
+function renderContactItems() {
+  const list = document.getElementById('contact-items-list');
+  list.innerHTML = data.contact.items.map((item, i) => `
+    <div class="contact-item-row" id="ci-row-${i}">
+      <input type="text" data-contact-item="${i}" value="${esc(item)}" placeholder="Item de livraison..." oninput="collectAndSave()">
+      <button class="btn btn-danger" onclick="removeContactItem(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+// ── Mutations ──────────────────────────────────────────
+function addSection(fi) {
+  collectAndSave();
+  data.formules[fi].sections.push({ title: '', items: [] });
+  saveData();
+  renderFormules();
+}
+
+function removeSection(fi, si) {
+  collectAndSave();
+  data.formules[fi].sections.splice(si, 1);
+  saveData();
+  renderFormules();
+}
+
+function addItem(fi, si) {
+  collectAndSave();
+  data.formules[fi].sections[si].items.push('');
+  saveData();
+  renderFormules();
+}
+
+function removeItem(fi, si, ii) {
+  collectAndSave();
+  data.formules[fi].sections[si].items.splice(ii, 1);
+  saveData();
+  renderFormules();
+}
+
+function addContactItem() {
+  collectAndSave();
+  data.contact.items.push('');
+  saveData();
+  renderContactItems();
+}
+
+function removeContactItem(i) {
+  collectAndSave();
+  data.contact.items.splice(i, 1);
+  saveData();
+  renderContactItems();
+}
+
+// ── Utils ──────────────────────────────────────────────
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Init ───────────────────────────────────────────────
+data = loadData();
+renderAll();
+
+// Listen for oninput on static fields
+['hero-headline','hero-subline','contact-headline','contact-phone','contact-email','contact-sub'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', collectAndSave);
+});
+</script>
+
+</body>
+</html>
