@@ -52,7 +52,6 @@
     filter: brightness(0.38) saturate(0.8);
   }
 
-  /* Léger voile sombre pour contraste */
   .hero-bg::after {
     content: '';
     position: absolute;
@@ -88,7 +87,6 @@
     padding: 16px 0;
   }
 
-  /* Logo blanc : invert rend le fond noir, brightness amplifie les formes en blanc */
   .hero-logo {
     width: min(680px, 85vw);
     display: block;
@@ -551,64 +549,11 @@
 
   .footer-link:hover { opacity: 1; }
 
-  /* ── HERO PHOTO ── */
-  .hero-photo {
-    position: relative;
-    width: 100%;
-    height: 560px;
-    overflow: hidden;
-  }
-
-  .hero-photo img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center 40%;
-    display: block;
-    filter: brightness(0.65);
-  }
-
-  .hero-photo-content {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 40px;
-    align-items: flex-end;
-    padding: 48px;
-  }
-
-  .hero-photo h1 {
-    font-size: clamp(28px, 4vw, 52px);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 1.05;
-    color: #ffffff;
-  }
-
-  .hero-photo h1 em {
-    font-style: normal;
-    color: var(--sage);
-  }
-
-  .hero-photo .hero-cta-block { text-align: right; }
-
-  .hero-photo .hero-meta {
-    font-size: 11px;
-    font-weight: 400;
-    color: rgba(255,255,255,0.55);
-    margin-bottom: 14px;
-    line-height: 1.8;
-    letter-spacing: 0.04em;
-  }
-
   /* ══════════════════════════════════════
      RESPONSIVE
   ══════════════════════════════════════ */
   @media (max-width: 860px) {
     .hero { padding: 24px; }
-    .hero-photo-content { grid-template-columns: 1fr; padding: 32px 24px; }
-    .hero-photo .hero-cta-block { text-align: left; }
     .s-args, .s-formules, .s-contact { padding: 56px 24px; }
     .args-grid { grid-template-columns: 1fr; gap: 32px; }
     .formules-grid { grid-template-columns: 1fr; }
@@ -620,33 +565,19 @@
 </head>
 <body>
 
-<!-- ══ HERO — photo en fond, logo par-dessus ══ -->
+<!-- ══ HERO ══ -->
 <section class="hero">
-  <!-- Photo de fond -->
   <div class="hero-bg">
     <img src="assets/kafe-ambiance.jpg" alt="Kafé ambiance">
   </div>
-
   <div class="hero-nav">
     <span class="hero-nav-label">Paris 10e · Lun–Ven</span>
     <span class="hero-nav-label">Traiteur</span>
   </div>
-
   <div class="hero-logo-wrap">
     <img class="hero-logo" src="assets/kafe-logo-white.png" alt="Kafé">
   </div>
-
-  <!-- Headline + CTA en bas du hero -->
-  <div class="hero-bottom" style="position:relative;z-index:1;display:grid;grid-template-columns:1fr auto;gap:40px;align-items:flex-end;">
-    <h1 style="font-size:clamp(28px,4vw,52px);font-weight:700;letter-spacing:-0.02em;line-height:1.05;color:#fff;">
-      Régalez votre équipe.<br>
-      <span style="opacity:0.4;">On s'occupe du reste.</span>
-    </h1>
-    <div style="text-align:right;flex-shrink:0;">
-      <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-bottom:14px;line-height:1.8;letter-spacing:0.04em;">À partir de 15€ / personne<br>Livraison ou sur place</div>
-      <a href="https://wa.me/33664976390?text=Bonjour%2C%20je%20souhaite%20commander%20des%20plateaux%20traiteur" style="display:inline-block;background:#fff;color:#191919;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:16px 32px;border-radius:100px;text-decoration:none;">Commander sur WhatsApp →</a>
-    </div>
-  </div>
+  <div id="hero-bottom" class="hero-bottom" style="position:relative;z-index:1;"></div>
 </section>
 
 <!-- ══ SCROLL WRAP ══ -->
@@ -655,23 +586,7 @@
   <!-- ARGUMENTS -->
   <section class="s-args">
     <div class="args-label">Pourquoi Kafé</div>
-    <div class="args-grid">
-      <div>
-        <div class="arg-num">01</div>
-        <div class="arg-title">Fait maison chaque matin</div>
-        <div class="arg-desc">Sandwichs, salades, cookies et gâteaux préparés sur place. Pain boulanger au levain bio petit épeautre, produits soigneusement sélectionnés. À déguster sur place au Kafé ou livré chez vous.</div>
-      </div>
-      <div>
-        <div class="arg-num">02</div>
-        <div class="arg-title">Livraison ou récupération</div>
-        <div class="arg-desc">On livre dans le quartier ou vous venez chercher avec vos contenants. Gratuit à 250 m, 15€ jusqu'à 1 km.</div>
-      </div>
-      <div>
-        <div class="arg-num">03</div>
-        <div class="arg-title">Zéro prise de tête</div>
-        <div class="arg-desc">Un message WhatsApp ou un email suffit. On confirme, on prépare, on livre.</div>
-      </div>
-    </div>
+    <div id="args-grid" class="args-grid"></div>
   </section>
 
   <!-- FORMULES -->
@@ -680,143 +595,7 @@
       <span class="section-title">Nos formules</span>
       <span class="formules-note">Par personne · Lundi au vendredi</span>
     </div>
-
-    <div class="formules-grid">
-
-      <!-- F1 -->
-      <div class="card c1">
-        <div class="card-top">
-          <div class="card-accent"></div>
-          <div class="card-eyebrow">Formule Essentielle</div>
-          <div class="card-price">15€</div>
-          <div class="card-timing">Par personne · déjeuner</div>
-        </div>
-        <div class="card-body">
-          <div>
-            <div class="group-title">Assortiment de sandwichs</div>
-            <ul class="group-items">
-              <li>Jambon Prince de Paris</li>
-              <li>Rillette de truite fumée</li>
-              <li>English <span style="opacity:.5">(végétarien)</span></li>
-            </ul>
-          </div>
-          <div class="card-divider"></div>
-          <div>
-            <div class="group-title">Cookies</div>
-            <ul class="group-items">
-              <li>Sésame chocolat fleur de sel</li>
-              <li>Matcha chocolat blanc</li>
-              <li>Pistache</li>
-            </ul>
-          </div>
-          <div class="card-divider"></div>
-          <div>
-            <div class="group-title">Boisson au choix</div>
-            <ul class="group-items">
-              <li>Eau plate ou pétillante</li>
-              <li>Botanical soda</li>
-              <li>Charitea</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- F2 -->
-      <div class="card c2">
-        <div class="card-top">
-          <div class="card-accent"></div>
-          <div class="card-eyebrow">Formule Complète</div>
-          <div class="card-price">19€</div>
-          <div class="card-timing">Par personne · déjeuner</div>
-          <div class="card-min">Min. 12 personnes</div>
-        </div>
-        <div class="card-body">
-          <div>
-            <div class="group-title">Tous nos sandwichs</div>
-            <ul class="group-items">
-              <li>Rillette de truite fumée</li>
-              <li>Jambon Prince de Paris</li>
-              <li>Pastrami &amp; relish de cornichons</li>
-              <li>Bang Bang · English</li>
-            </ul>
-          </div>
-          <div class="card-divider"></div>
-          <div>
-            <div class="group-title">Salade parisienne + Soupe du moment</div>
-          </div>
-          <div class="card-divider"></div>
-          <div>
-            <div class="group-title">Dessert au choix</div>
-            <ul class="group-items">
-              <li>Fondant chocolat &amp; fleur de sel</li>
-              <li class="or">— ou —</li>
-              <li>Cookies (4 variétés)</li>
-              <li class="or">— ou —</li>
-              <li>Madeleines citron</li>
-            </ul>
-          </div>
-          <div class="card-divider"></div>
-          <div>
-            <div class="group-title">Boisson</div>
-            <ul class="group-items">
-              <li>1 boisson barista sur place ou froide</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- F3 -->
-      <div class="card c3">
-        <div class="card-top">
-          <span class="badge">Le plus complet</span>
-          <div class="card-eyebrow">Journée entière</div>
-          <div class="card-price">28€</div>
-          <div class="card-timing">Par personne · midi + goûter</div>
-          <div class="card-min">Min. 12 personnes</div>
-        </div>
-        <div class="card-body">
-          <div>
-            <div class="group-title">Tous nos sandwichs</div>
-            <ul class="group-items">
-              <li>Rillette truite fumée · Jambon Paris</li>
-              <li>Pastrami &amp; relish · Bang Bang · English</li>
-            </ul>
-          </div>
-          <div class="card-divider"></div>
-          <div>
-            <div class="group-title">Salade parisienne grand format + Soupe</div>
-          </div>
-          <div class="card-divider"></div>
-          <div>
-            <div class="group-title">Thermos café Fèves</div>
-            <ul class="group-items">
-              <li>Colombie — notes fruitées, pomme verte, noisette</li>
-            </ul>
-          </div>
-          <div class="card-divider"></div>
-          <div>
-            <div class="group-title">Pause goûter</div>
-            <ul class="group-items">
-              <li>Gâteau à l'orange · Banana Bread</li>
-              <li>Madeleine citron · Barres de granola</li>
-            </ul>
-          </div>
-          <div class="card-divider"></div>
-          <div>
-            <div class="group-title">1 boisson barista dans la journée</div>
-          </div>
-          <div class="card-divider"></div>
-          <div>
-            <div class="group-title">Option composition florale 🌿</div>
-            <ul class="group-items">
-              <li>En collaboration avec notre fleuriste</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
+    <div id="formules-grid" class="formules-grid"></div>
     <div class="formules-cta">
       <p>Vous hésitez sur la formule ? On vous conseille.</p>
       <a href="https://wa.me/33664976390?text=Bonjour%2C%20je%20souhaite%20des%20infos%20sur%20les%20plateaux%20traiteur" class="btn-dark">
@@ -827,37 +606,8 @@
 
   <!-- CONTACT -->
   <section class="s-contact">
-    <div>
-      <div class="contact-label">Commander</div>
-      <div class="contact-headline">On vient<br>chez vous</div>
-      <div class="contact-items">
-        <div class="contact-item">
-          <div class="contact-dot"></div>
-          <span>Gratuit à moins de 250 m du café</span>
-        </div>
-        <div class="contact-item">
-          <div class="contact-dot"></div>
-          <span>15 € de livraison jusqu'à 1 km</span>
-        </div>
-        <div class="contact-item">
-          <div class="contact-dot"></div>
-          <span>Récupération sur place avec consigne possible</span>
-        </div>
-        <div class="contact-item">
-          <div class="contact-dot"></div>
-          <span>Commande la veille ou le matin avant 9h</span>
-        </div>
-      </div>
-    </div>
-    <div class="contact-right">
-      <a href="tel:+33664976390" class="contact-number">06 64 97 63 90</a>
-      <div class="contact-sub">WhatsApp ou appel · Lun–Ven</div>
-      <a href="mailto:hello@kafe.paris" style="display:block;margin-top:6px;font-size:13px;font-weight:500;color:var(--ink);opacity:0.5;text-decoration:none;">hello@kafe.paris</a>
-      <a href="https://wa.me/33664976390?text=Bonjour%2C%20je%20souhaite%20commander%20des%20plateaux%20traiteur" class="btn-wa">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-        Envoyer un message
-      </a>
-    </div>
+    <div id="contact-left"></div>
+    <div id="contact-right" class="contact-right"></div>
   </section>
 
 </div><!-- /scroll-wrap -->
@@ -868,6 +618,183 @@
   <span class="footer-note">12 rue Martel · Paris 10e · Tarifs HT par personne</span>
   <a href="https://kafe.paris" class="footer-link">kafe.paris ↗</a>
 </footer>
+
+<script>
+const STORAGE_KEY = 'kafe_catering_data';
+
+const defaultData = {
+  hero: {
+    headline: "Régalez votre équipe.",
+    subline: "On s'occupe du reste.",
+  },
+  args: [
+    { title: "Fait maison chaque matin", desc: "Sandwichs, salades, cookies et gâteaux préparés sur place. Pain boulanger au levain bio petit épeautre, produits soigneusement sélectionnés. À déguster sur place au Kafé ou livré chez vous." },
+    { title: "Livraison ou récupération", desc: "On livre dans le quartier ou vous venez chercher avec vos contenants. Gratuit à 250 m, 15€ jusqu'à 1 km." },
+    { title: "Zéro prise de tête", desc: "Un message WhatsApp ou un email suffit. On confirme, on prépare, on livre." }
+  ],
+  formules: [
+    {
+      label: "Formule Essentielle",
+      price: "15€",
+      timing: "Par personne · déjeuner",
+      min: "",
+      sections: [
+        { title: "Assortiment de sandwichs", items: ["Jambon Prince de Paris", "Rillette de truite fumée", "English (végétarien)"] },
+        { title: "Cookies", items: ["Sésame chocolat fleur de sel", "Matcha chocolat blanc", "Pistache"] },
+        { title: "Boisson au choix", items: ["Eau plate ou pétillante", "Botanical soda", "Charitea"] }
+      ]
+    },
+    {
+      label: "Formule Complète",
+      price: "19€",
+      timing: "Par personne · déjeuner",
+      min: "Min. 12 personnes",
+      sections: [
+        { title: "Tous nos sandwichs", items: ["Rillette de truite fumée", "Jambon Prince de Paris", "Pastrami & relish de cornichons", "Bang Bang · English"] },
+        { title: "Salade parisienne + Soupe du moment", items: [] },
+        { title: "Dessert au choix", items: ["Fondant chocolat & fleur de sel", "Cookies (4 variétés)", "Madeleines citron"] },
+        { title: "Boisson", items: ["1 boisson barista sur place ou froide"] }
+      ]
+    },
+    {
+      label: "Journée entière",
+      price: "28€",
+      timing: "Par personne · midi + goûter",
+      min: "Min. 12 personnes",
+      badge: "Le plus complet",
+      sections: [
+        { title: "Tous nos sandwichs", items: ["Rillette truite fumée · Jambon Paris", "Pastrami & relish · Bang Bang · English"] },
+        { title: "Salade parisienne grand format + Soupe", items: [] },
+        { title: "Thermos café Fèves", items: ["Colombie — notes fruitées, pomme verte, noisette"] },
+        { title: "Pause goûter", items: ["Gâteau à l'orange · Banana Bread", "Madeleine citron · Barres de granola"] },
+        { title: "1 boisson barista dans la journée", items: [] },
+        { title: "Option composition florale 🌿", items: ["En collaboration avec notre fleuriste"] }
+      ]
+    }
+  ],
+  contact: {
+    headline: "On vient\nchez vous",
+    phone: "06 64 97 63 90",
+    email: "hello@kafe.paris",
+    sub: "WhatsApp ou appel · Lun–Ven",
+    items: [
+      "Gratuit à moins de 250 m du café",
+      "15 € de livraison jusqu'à 1 km",
+      "Récupération sur place avec consigne possible",
+      "Commande la veille ou le matin avant 9h"
+    ]
+  }
+};
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : defaultData;
+  } catch { return defaultData; }
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderHero(data) {
+  const phoneEncoded = encodeURIComponent('Bonjour, je souhaite commander des plateaux traiteur');
+  document.getElementById('hero-bottom').innerHTML = `
+    <h1 style="font-size:clamp(28px,4vw,52px);font-weight:700;letter-spacing:-0.02em;line-height:1.05;color:#fff;">
+      ${escHtml(data.hero.headline)}<br>
+      <span style="opacity:0.4;">${escHtml(data.hero.subline)}</span>
+    </h1>
+    <div style="text-align:right;flex-shrink:0;">
+      <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-bottom:14px;line-height:1.8;letter-spacing:0.04em;">À partir de 15€ / personne<br>Livraison ou sur place</div>
+      <a href="https://wa.me/33664976390?text=${phoneEncoded}" style="display:inline-block;background:#fff;color:#191919;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:16px 32px;border-radius:100px;text-decoration:none;">Commander sur WhatsApp →</a>
+    </div>
+  `;
+}
+
+function renderArgs(data) {
+  document.getElementById('args-grid').innerHTML = data.args.map((a, i) => `
+    <div>
+      <div class="arg-num">0${i + 1}</div>
+      <div class="arg-title">${escHtml(a.title)}</div>
+      <div class="arg-desc">${escHtml(a.desc)}</div>
+    </div>
+  `).join('');
+}
+
+function renderFormules(data) {
+  const classes = ['c1', 'c2', 'c3'];
+  document.getElementById('formules-grid').innerHTML = data.formules.map((f, i) => {
+    const cls = classes[i] || `c${i + 1}`;
+    const badgeHtml = f.badge ? `<span class="badge">${escHtml(f.badge)}</span>` : '';
+    const minHtml = f.min ? `<div class="card-min">${escHtml(f.min)}</div>` : '';
+    const sectionsHtml = f.sections.map((s, si) => {
+      const divider = si > 0 ? '<div class="card-divider"></div>' : '';
+      const itemsHtml = s.items && s.items.length
+        ? `<ul class="group-items">${s.items.map(item => `<li>${escHtml(item)}</li>`).join('')}</ul>`
+        : '';
+      return `${divider}<div><div class="group-title">${escHtml(s.title)}</div>${itemsHtml}</div>`;
+    }).join('');
+    return `
+      <div class="card ${cls}">
+        <div class="card-top">
+          ${badgeHtml}
+          <div class="card-accent"></div>
+          <div class="card-eyebrow">${escHtml(f.label)}</div>
+          <div class="card-price">${escHtml(f.price)}</div>
+          <div class="card-timing">${escHtml(f.timing)}</div>
+          ${minHtml}
+        </div>
+        <div class="card-body">${sectionsHtml}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderContact(data) {
+  const c = data.contact;
+  const phoneRaw = c.phone.replace(/\s/g, '');
+  const phoneLink = phoneRaw.startsWith('0') ? '+33' + phoneRaw.slice(1) : phoneRaw;
+  const headlineHtml = escHtml(c.headline).replace(/\n/g, '<br>');
+  const itemsHtml = c.items.map(item => `
+    <div class="contact-item">
+      <div class="contact-dot"></div>
+      <span>${escHtml(item)}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('contact-left').innerHTML = `
+    <div class="contact-label">Commander</div>
+    <div class="contact-headline">${headlineHtml}</div>
+    <div class="contact-items">${itemsHtml}</div>
+  `;
+
+  const waMsg = encodeURIComponent('Bonjour, je souhaite commander des plateaux traiteur');
+  document.getElementById('contact-right').innerHTML = `
+    <a href="tel:${phoneLink}" class="contact-number">${escHtml(c.phone)}</a>
+    <div class="contact-sub">${escHtml(c.sub)}</div>
+    <a href="mailto:${escHtml(c.email)}" style="display:block;margin-top:6px;font-size:13px;font-weight:500;color:var(--ink);opacity:0.5;text-decoration:none;">${escHtml(c.email)}</a>
+    <a href="https://wa.me/33664976390?text=${waMsg}" class="btn-wa" style="margin-top:28px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Envoyer un message
+    </a>
+  `;
+}
+
+function render() {
+  const data = loadData();
+  renderHero(data);
+  renderArgs(data);
+  renderFormules(data);
+  renderContact(data);
+}
+
+render();
+
+// Re-render when localStorage changes (e.g., admin saved)
+window.addEventListener('storage', (e) => {
+  if (e.key === STORAGE_KEY) render();
+});
+</script>
 
 </body>
 </html>
