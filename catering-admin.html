@@ -329,15 +329,91 @@
     .contact-grid { grid-template-columns: 1fr; }
     header { padding: 0 20px; }
   }
+
+  /* ══ LOGIN ══ */
+  #admin-login {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .login-box {
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .login-box .brand {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 24px;
+    color: var(--ink);
+  }
+
+  .login-box .brand span { font-weight: 400; color: var(--muted); }
+
+  .login-box label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .login-box input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    background: var(--white);
+    outline: none;
+    margin-top: 4px;
+    margin-bottom: 4px;
+  }
+
+  .login-box input:focus { border-color: var(--sage); }
+
+  .login-error {
+    font-size: 12px;
+    color: var(--danger);
+    display: none;
+  }
+
+  #admin-app { display: none; }
 </style>
 </head>
 <body>
+
+<!-- ══ LOGIN ══ -->
+<div id="admin-login">
+  <div class="login-box">
+    <div class="brand">Kafé <span>· Catering Admin</span></div>
+    <label>Email</label>
+    <input type="email" id="login-email" value="hello@kafe.paris">
+    <label>Mot de passe</label>
+    <input type="password" id="login-password" placeholder="••••••••••">
+    <button class="btn btn-primary" style="margin-top:8px;" onclick="doLogin()">Accéder →</button>
+    <div class="login-error" id="login-error">Email ou mot de passe incorrect.</div>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="admin-app">
 
 <header>
   <div class="header-brand">Kafé <span>· Catering Admin</span></div>
   <div class="header-actions">
     <span class="save-indicator" id="save-indicator">Sauvegardé ✓</span>
-    <a href="catering.html" target="_blank" class="btn btn-ghost">Voir la page →</a>
+    <a href="/dashboard.html" class="btn btn-ghost">← Dashboard</a>
+    <a href="https://catering.kafe.paris" target="_blank" class="btn btn-ghost">Voir la page →</a>
+    <button class="btn btn-ghost" onclick="doLogout()">Déconnexion</button>
   </div>
 </header>
 
@@ -704,16 +780,42 @@ function esc(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── Init ───────────────────────────────────────────────
-data = loadData();
-renderAll();
+// ── Auth ───────────────────────────────────────────────
+const MERCHANT_EMAIL    = 'hello@kafe.paris';
+const MERCHANT_PASSWORD = 'KafeParis2026';
 
-// Listen for oninput on static fields
-['hero-headline','hero-subline','contact-headline','contact-phone','contact-email','contact-sub'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) el.addEventListener('input', collectAndSave);
+function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value;
+  if (email === MERCHANT_EMAIL && pass === MERCHANT_PASSWORD) {
+    document.getElementById('admin-login').style.display = 'none';
+    document.getElementById('admin-app').style.display   = 'block';
+    initApp();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+function doLogout() {
+  document.getElementById('admin-app').style.display   = 'none';
+  document.getElementById('admin-login').style.display = 'flex';
+}
+
+document.getElementById('login-password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
 });
+
+// ── Init ───────────────────────────────────────────────
+function initApp() {
+  data = loadData();
+  renderAll();
+  ['hero-headline','hero-subline','contact-headline','contact-phone','contact-email','contact-sub'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', collectAndSave);
+  });
+}
 </script>
 
+</div><!-- /admin-app -->
 </body>
 </html>
