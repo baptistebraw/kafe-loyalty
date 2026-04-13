@@ -49,14 +49,14 @@
     object-fit: cover;
     object-position: center 35%;
     display: block;
-    filter: brightness(0.38) saturate(0.8);
+    filter: brightness(0.55) saturate(0.7);
   }
 
   .hero-bg::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(10, 10, 10, 0.25);
+    background: rgba(10, 10, 10, 0.1);
   }
 
   .hero-nav,
@@ -74,10 +74,10 @@
 
   .hero-nav-label {
     font-size: 10px;
-    font-weight: 500;
+    font-weight: 700;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.55);
+    color: #ffffff;
   }
 
   .hero-logo-wrap {
@@ -574,20 +574,15 @@
     <span class="hero-nav-label">Paris 10e · Lun–Ven</span>
     <span class="hero-nav-label">Traiteur</span>
   </div>
-  <div class="hero-logo-wrap">
+  <div class="hero-logo-wrap" style="flex-direction:column;gap:16px;">
     <img class="hero-logo" src="assets/kafe-logo-white.png" alt="Kafé">
+    <span style="font-size:11px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.7);">Traiteur</span>
   </div>
   <div id="hero-bottom" class="hero-bottom" style="position:relative;z-index:1;"></div>
 </section>
 
 <!-- ══ SCROLL WRAP ══ -->
 <div class="scroll-wrap">
-
-  <!-- ARGUMENTS -->
-  <section class="s-args">
-    <div class="args-label">Pourquoi Kafé</div>
-    <div id="args-grid" class="args-grid"></div>
-  </section>
 
   <!-- FORMULES -->
   <section class="s-formules">
@@ -602,6 +597,12 @@
         Demander un devis →
       </a>
     </div>
+  </section>
+
+  <!-- ARGUMENTS -->
+  <section class="s-args">
+    <div class="args-label">Pourquoi Kafé</div>
+    <div id="args-grid" class="args-grid"></div>
   </section>
 
   <!-- CONTACT -->
