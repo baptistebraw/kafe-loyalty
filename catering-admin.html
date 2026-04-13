@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kafé · Catering Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -491,6 +492,11 @@
 </div><!-- /page -->
 
 <script>
+const SUPABASE_URL      = 'https://hnnqbcfmoppcspewchxh.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhubnFiY2Ztb3BwY3NwZXdjaHhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1OTEwMzksImV4cCI6MjA4OTE2NzAzOX0.7TC5CA3TFKPAY_9NF5xhxJTLUKql1ZIz3ZehmnokK20';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const STORAGE_KEY = 'kafe_catering_data';
 
 const defaultData = {
@@ -562,19 +568,30 @@ const defaultData = {
 // ── State ──────────────────────────────────────────────
 let data;
 
-function loadData() {
+async function loadDataAsync() {
+  try {
+    const { data: row } = await sb.from('catering_content').select('data').eq('id', 1).single();
+    if (row && row.data) return row.data;
+  } catch {}
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultData));
-  } catch { return JSON.parse(JSON.stringify(defaultData)); }
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return JSON.parse(JSON.stringify(defaultData));
 }
 
+let _saveTimer;
 function saveData() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   const ind = document.getElementById('save-indicator');
   ind.classList.add('visible');
   clearTimeout(ind._timeout);
   ind._timeout = setTimeout(() => ind.classList.remove('visible'), 2000);
+  // Debounced Supabase write
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(async () => {
+    await sb.from('catering_content').upsert({ id: 1, data, updated_at: new Date().toISOString() });
+  }, 1000);
 }
 
 // Read current form state back into `data`, then save
@@ -806,8 +823,8 @@ document.getElementById('login-password').addEventListener('keydown', e => {
 });
 
 // ── Init ───────────────────────────────────────────────
-function initApp() {
-  data = loadData();
+async function initApp() {
+  data = await loadDataAsync();
   renderAll();
   ['hero-headline','hero-subline','contact-headline','contact-phone','contact-email','contact-sub'].forEach(id => {
     const el = document.getElementById(id);

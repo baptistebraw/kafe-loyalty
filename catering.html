@@ -619,7 +619,13 @@
   <a href="https://kafe.paris" class="footer-link">kafe.paris ↗</a>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+const SUPABASE_URL      = 'https://hnnqbcfmoppcspewchxh.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhubnFiY2Ztb3BwY3NwZXdjaHhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1OTEwMzksImV4cCI6MjA4OTE2NzAzOX0.7TC5CA3TFKPAY_9NF5xhxJTLUKql1ZIz3ZehmnokK20';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const STORAGE_KEY = 'kafe_catering_data';
 
 const defaultData = {
@@ -686,11 +692,12 @@ const defaultData = {
   }
 };
 
-function loadData() {
+async function loadData() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : defaultData;
-  } catch { return defaultData; }
+    const { data: row } = await sb.from('catering_content').select('data').eq('id', 1).single();
+    if (row && row.data) return row.data;
+  } catch {}
+  return defaultData;
 }
 
 function escHtml(str) {
@@ -780,8 +787,8 @@ function renderContact(data) {
   `;
 }
 
-function render() {
-  const data = loadData();
+async function render() {
+  const data = await loadData();
   renderHero(data);
   renderArgs(data);
   renderFormules(data);
@@ -789,11 +796,6 @@ function render() {
 }
 
 render();
-
-// Re-render when localStorage changes (e.g., admin saved)
-window.addEventListener('storage', (e) => {
-  if (e.key === STORAGE_KEY) render();
-});
 </script>
 
 </body>
