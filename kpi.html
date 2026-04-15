@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kafé — KPI Dashboard</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1a1a; padding: 28px 32px; max-width: 1100px; margin: 0 auto; }
+h1 { font-size: 22px; font-weight: 500; margin-bottom: 3px; }
+.subtitle { font-size: 13px; color: #777; margin-bottom: 22px; }
+.header-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.week-nav { display: flex; align-items: center; gap: 6px; }
+.week-nav button { background: #eceae3; border: none; border-radius: 6px; width: 30px; height: 30px; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #555; }
+.week-nav button:hover { background: #ddd8cc; }
+.week-nav select { font-family: inherit; font-size: 13px; background: #fff; border: 0.5px solid rgba(0,0,0,.15); border-radius: 6px; padding: 5px 10px; color: #1a1a1a; cursor: pointer; }
+.grid4 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 16px; }
+.grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; margin-bottom: 16px; }
+.kpi { background: #eceae3; border-radius: 8px; padding: 13px 15px; }
+.kpi-label { font-size: 11px; color: #666; margin-bottom: 3px; text-transform: uppercase; letter-spacing: .04em; }
+.kpi-value { font-size: 22px; font-weight: 500; }
+.kpi-sub { font-size: 11px; color: #999; margin-top: 2px; }
+.card { background: #fff; border: 0.5px solid rgba(0,0,0,.11); border-radius: 12px; padding: 15px 17px; }
+.section-title { font-size: 11px; font-weight: 500; color: #777; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
+.row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.row-name { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-wrap { flex: 1; background: #eceae3; border-radius: 3px; height: 12px; overflow: hidden; }
+.bar { height: 100%; border-radius: 3px; }
+.row-val { font-size: 11px; color: #777; text-align: right; white-space: nowrap; }
+.week-bar-wrap { flex:1; background:#eceae3; border-radius:4px; height:18px; overflow:hidden; }
+.week-bar { height:100%; border-radius:4px; }
+.dot { width:9px; height:9px; border-radius:2px; flex-shrink:0; display:inline-block; }
+.legend { display:flex; flex-wrap:wrap; gap:10px; font-size:11px; color:#777; }
+.legend span { display:flex; align-items:center; gap:4px; }
+hr.divider { border:none; border-top:0.5px solid rgba(0,0,0,.08); margin:10px 0; }
+.insights { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-bottom: 16px; }
+.insight-card { background: #fff; border: 0.5px solid rgba(0,0,0,.11); border-radius: 12px; padding: 14px 16px; }
+.insight-icon { font-size: 17px; margin-bottom: 7px; }
+.insight-title { font-size: 13px; font-weight: 500; margin-bottom: 5px; }
+.insight-body { font-size: 12px; color: #555; line-height: 1.65; }
+.loading { text-align: center; padding: 60px 0; color: #999; font-size: 14px; }
+@media (max-width: 700px) {
+  .grid4 { grid-template-columns: repeat(2,1fr); }
+  .grid2 { grid-template-columns: 1fr; }
+  .insights { grid-template-columns: 1fr; }
+  body { padding: 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header-row">
+  <div>
+    <h1 id="title">Kafé · KPI Dashboard</h1>
+    <p class="subtitle" id="subtitle">Chargement...</p>
+  </div>
+  <div class="week-nav">
+    <button onclick="prevWeek()">&#8249;</button>
+    <select id="weekSelect" onchange="onWeekChange()"></select>
+    <button onclick="nextWeek()">&#8250;</button>
+  </div>
+</div>
+
+<div id="content"><div class="loading">Chargement des données...</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const SUPABASE_URL = 'https://hnnqbcfmoppcspewchxh.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhubnFiY2Ztb3BwY3NwZXdjaHhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1OTEwMzksImV4cCI6MjA4OTE2NzAzOX0.7TC5CA3TFKPAY_9NF5xhxJTLUKql1ZIz3ZehmnokK20';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const COLORS = { blue: '#3266ad', green: '#1D9E75', orange: '#BA7517', gray: '#888780' };
+const WEEK_COLORS = [COLORS.blue, COLORS.green, COLORS.orange, '#9b59b6', '#e74c3c', '#2ecc71', '#f39c12', '#1abc9c', '#e67e22', '#8e44ad'];
+
+// Category mapping
+const BARISTA_ITEMS = ['Latte','Espresso','Matcha Latte','Cappuccino','Flat White','Americano',
+  'Chaï Latte','Filtre du Jour','Double espresso','Chocolate Chaud','Cortado',
+  'Levain Miel Latte','Noisette','Golden Latte','Dirty Chai','Thé','Hojicha Latte',
+  'Long Black','Iced Latte','Iced Matcha','Iced Americano','Iced Chai'];
+const FOOD_ITEMS = ['Triangle','Chia','Skyr','Salade','Soupe','Wrap','Sandwich'];
+const PATISSERIE_ITEMS = ['Gâteaux','Cookies','Granola Bar','Madeleine','Cookie','Banana Bread','Carrot Cake'];
+const FRIGO_ITEMS = ['Jus','ChariTea','Lemonaid','Symbiose','Eau neuve','Archipel','Eau Plate','Eau Gazeuse'];
+
+function classifyItem(row) {
+  const item = row.item;
+  const cat = row.category;
+  if (cat === 'Café et thé' || BARISTA_ITEMS.includes(item)) return 'Boissons barista';
+  if (FOOD_ITEMS.includes(item)) return 'Food frigo';
+  if (PATISSERIE_ITEMS.includes(item)) return 'Pâtisserie';
+  if (cat === 'Boisson' || FRIGO_ITEMS.includes(item)) return 'Boissons frigo';
+  return 'Autre';
+}
+
+let allData = [];
+let weeks = [];
+let selectedWeek = 'all';
+
+function getISOWeek(d) {
+  const date = new Date(d);
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
+  const week1 = new Date(date.getFullYear(), 0, 4);
+  return { year: date.getFullYear(), week: 1 + Math.round(((date - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7) };
+}
+
+function getWeekMonday(year, week) {
+  const jan4 = new Date(year, 0, 4);
+  const dayOfWeek = (jan4.getDay() + 6) % 7;
+  const monday = new Date(jan4);
+  monday.setDate(jan4.getDate() - dayOfWeek + (week - 1) * 7);
+  return monday;
+}
+
+function formatDate(d) {
+  return d.getDate() + '/' + (d.getMonth() + 1);
+}
+
+function fmtEuro(n) {
+  if (Math.abs(n) >= 1000) return n.toLocaleString('fr-FR', { maximumFractionDigits: 0 }) + ' €';
+  return n.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' €';
+}
+
+function fmtEuroDec(n) {
+  return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+}
+
+function pctChange(curr, prev) {
+  if (!prev) return '';
+  const pct = ((curr - prev) / Math.abs(prev) * 100);
+  const sign = pct >= 0 ? '+' : '';
+  return sign + pct.toFixed(0) + '%';
+}
+
+async function loadData() {
+  let all = [];
+  let from = 0;
+  const PAGE = 1000;
+  while (true) {
+    const { data, error } = await sb.from('sales').select('*').range(from, from + PAGE - 1).order('date', { ascending: true });
+    if (error) { document.getElementById('content').innerHTML = `<div class="loading">Erreur : ${error.message}</div>`; return; }
+    all = all.concat(data);
+    if (data.length < PAGE) break;
+    from += PAGE;
+  }
+  allData = all;
+  if (!all.length) { document.getElementById('content').innerHTML = '<div class="loading">Aucune donnée. Importez d\'abord un fichier CSV.</div>'; return; }
+
+  // Build weeks
+  const weekMap = {};
+  all.forEach(r => {
+    const w = getISOWeek(r.date);
+    const key = w.year + '-W' + String(w.week).padStart(2, '0');
+    if (!weekMap[key]) weekMap[key] = { year: w.year, week: w.week, key };
+  });
+  weeks = Object.values(weekMap).sort((a, b) => a.key.localeCompare(b.key));
+
+  buildWeekSelector();
+  render();
+}
+
+function buildWeekSelector() {
+  const sel = document.getElementById('weekSelect');
+  sel.innerHTML = '<option value="all">Toutes</option>';
+  weeks.forEach((w, i) => {
+    const mon = getWeekMonday(w.year, w.week);
+    const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+    sel.innerHTML += `<option value="${w.key}">Sem. ${w.week} (${formatDate(mon)} → ${formatDate(sun)})</option>`;
+  });
+  sel.value = selectedWeek;
+}
+
+function onWeekChange() {
+  selectedWeek = document.getElementById('weekSelect').value;
+  render();
+}
+
+function prevWeek() {
+  const sel = document.getElementById('weekSelect');
+  const opts = [...sel.options];
+  const idx = opts.findIndex(o => o.value === selectedWeek);
+  if (idx > 0) { selectedWeek = opts[idx - 1].value; sel.value = selectedWeek; render(); }
+}
+
+function nextWeek() {
+  const sel = document.getElementById('weekSelect');
+  const opts = [...sel.options];
+  const idx = opts.findIndex(o => o.value === selectedWeek);
+  if (idx < opts.length - 1) { selectedWeek = opts[idx + 1].value; sel.value = selectedWeek; render(); }
+}
+
+function filterData(weekKey) {
+  if (weekKey === 'all') return allData;
+  return allData.filter(r => {
+    const w = getISOWeek(r.date);
+    return (w.year + '-W' + String(w.week).padStart(2, '0')) === weekKey;
+  });
+}
+
+function render() {
+  const data = filterData(selectedWeek);
+  const isAll = selectedWeek === 'all';
+
+  // Previous week data for comparison
+  let prevData = null;
+  if (!isAll) {
+    const idx = weeks.findIndex(w => w.key === selectedWeek);
+    if (idx > 0) prevData = filterData(weeks[idx - 1].key);
+  }
+
+  // Subtitle
+  const dates = data.map(r => r.date).sort();
+  const uniqueDates = [...new Set(dates)];
+  const minDate = uniqueDates[0];
+  const maxDate = uniqueDates[uniqueDates.length - 1];
+  const nDays = uniqueDates.length;
+
+  const subtitleEl = document.getElementById('subtitle');
+  if (isAll) {
+    subtitleEl.textContent = `${formatDateISO(minDate)} → ${formatDateISO(maxDate)} · ${nDays} jours d'ouverture · Source : Square`;
+  } else {
+    const w = weeks.find(w => w.key === selectedWeek);
+    const mon = getWeekMonday(w.year, w.week);
+    const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+    subtitleEl.textContent = `Semaine ${w.week} · ${formatDate(mon)} → ${formatDate(sun)} · ${nDays} jours · Source : Square`;
+  }
+
+  // KPIs
+  const netSales = data.reduce((s, r) => s + Number(r.net_sales), 0);
+  const totalQty = data.reduce((s, r) => s + Number(r.qty), 0);
+  const caPerDay = nDays ? netSales / nDays : 0;
+  const txns = new Set(data.map(r => r.transaction_id));
+  const ticketMoyen = txns.size ? netSales / txns.size : 0;
+
+  let kpiSubs = ['', `${Math.round(totalQty / Math.max(nDays, 1))} items / jour en moy.`, '', ''];
+
+  if (prevData && !isAll) {
+    const prevNet = prevData.reduce((s, r) => s + Number(r.net_sales), 0);
+    const prevQty = prevData.reduce((s, r) => s + Number(r.qty), 0);
+    const prevDates = [...new Set(prevData.map(r => r.date))];
+    const prevNDays = prevDates.length;
+    const prevCaPerDay = prevNDays ? prevNet / prevNDays : 0;
+    const prevTxns = new Set(prevData.map(r => r.transaction_id));
+    const prevTicket = prevTxns.size ? prevNet / prevTxns.size : 0;
+
+    kpiSubs[0] = pctChange(netSales, prevNet) + ' vs sem. préc.';
+    kpiSubs[2] = pctChange(caPerDay, prevCaPerDay) + ' vs sem. préc.';
+    kpiSubs[3] = pctChange(ticketMoyen, prevTicket) + ' vs sem. préc.';
+  }
+
+  // Build HTML
+  let html = '';
+
+  // KPI cards
+  html += '<div class="grid4">';
+  html += `<div class="kpi"><div class="kpi-label">Chiffre d'affaires</div><div class="kpi-value">${fmtEuro(netSales)}</div><div class="kpi-sub">${kpiSubs[0]}</div></div>`;
+  html += `<div class="kpi"><div class="kpi-label">Items vendus</div><div class="kpi-value">${Math.round(totalQty).toLocaleString('fr-FR')}</div><div class="kpi-sub">${kpiSubs[1]}</div></div>`;
+  html += `<div class="kpi"><div class="kpi-label">CA moyen / jour</div><div class="kpi-value">${fmtEuro(caPerDay)}</div><div class="kpi-sub">${kpiSubs[2]}</div></div>`;
+  html += `<div class="kpi"><div class="kpi-label">Ticket moyen</div><div class="kpi-value">${fmtEuroDec(ticketMoyen)}</div><div class="kpi-sub">${kpiSubs[3]}</div></div>`;
+  html += '</div>';
+
+  // Charts
+  html += '<div class="grid2">';
+  html += '<div class="card"><div class="section-title">Revenu brut journalier</div><div style="position:relative;width:100%;height:200px;"><canvas id="dailyChart"></canvas></div><div class="legend" style="margin-top:8px;" id="dailyLegend"></div></div>';
+  html += '<div class="card"><div class="section-title">Items commandés par heure</div><div style="position:relative;width:100%;height:200px;"><canvas id="hourlyChart"></canvas></div><div id="hourlyNote" style="margin-top:8px;font-size:11px;color:#999;"></div></div>';
+  html += '</div>';
+
+  // Progression + Categories
+  html += '<div class="grid2">';
+  html += '<div class="card"><div class="section-title">Progression hebdomadaire</div><div id="weekProgression"></div></div>';
+  html += '<div class="card"><div class="section-title">Mix catégories — CA</div><div style="display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center;"><div style="position:relative;height:150px;"><canvas id="catChart"></canvas></div><div id="catLegend"></div></div></div>';
+  html += '</div>';
+
+  // Top products
+  html += '<div class="grid2">';
+  html += '<div class="card"><div class="section-title">Boissons barista</div><div id="baristaItems"></div></div>';
+  html += '<div style="display:grid;grid-template-rows:auto auto;gap:16px;"><div class="card"><div class="section-title">Food frigo</div><div id="foodItems"></div></div><div class="card"><div class="section-title">Pâtisserie</div><div id="patisItems"></div></div></div>';
+  html += '</div>';
+
+  // Boissons frigo
+  html += '<div class="card" style="margin-bottom:20px;"><div class="section-title">Boissons frigo</div><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;" id="frigoItems"></div></div>';
+
+  // Insights
+  html += '<p style="font-size:11px;font-weight:500;color:#777;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Points clés</p>';
+  html += '<div class="insights" id="insightsContainer"></div>';
+
+  document.getElementById('content').innerHTML = html;
+
+  // Render charts and sections
+  renderDailyChart(data);
+  renderHourlyChart(data);
+  renderWeekProgression();
+  renderCategories(data);
+  renderProducts(data);
+  renderFrigo(data);
+  renderInsights(data, prevData);
+}
+
+function formatDateISO(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return parseInt(d) + '/' + parseInt(m) + '/' + y;
+}
+
+function renderDailyChart(data) {
+  // Group by date
+  const byDate = {};
+  data.forEach(r => { byDate[r.date] = (byDate[r.date] || 0) + Number(r.net_sales); });
+  const sortedDates = Object.keys(byDate).sort();
+
+  // Color by week
+  const colors = sortedDates.map(d => {
+    const w = getISOWeek(d);
+    const key = w.year + '-W' + String(w.week).padStart(2, '0');
+    const idx = weeks.findIndex(wk => wk.key === key);
+    return WEEK_COLORS[idx % WEEK_COLORS.length];
+  });
+
+  const labels = sortedDates.map(d => { const [y, m, dd] = d.split('-'); return parseInt(dd) + '/' + parseInt(m); });
+
+  new Chart(document.getElementById('dailyChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: sortedDates.map(d => byDate[d]),
+        backgroundColor: colors.map(c => c + 'cc'),
+        borderColor: colors,
+        borderWidth: 1,
+        borderRadius: 3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: v => v.raw.toFixed(0) + ' €' } } },
+      scales: {
+        x: { ticks: { font: { size: 10 }, color: '#888', autoSkip: true, maxRotation: 0 }, grid: { display: false } },
+        y: { ticks: { font: { size: 10 }, color: '#888', callback: v => v + '€' }, grid: { color: 'rgba(0,0,0,.06)' } }
+      }
+    }
+  });
+
+  // Legend
+  const legendEl = document.getElementById('dailyLegend');
+  if (selectedWeek === 'all') {
+    const usedWeeks = [...new Set(sortedDates.map(d => {
+      const w = getISOWeek(d);
+      return w.year + '-W' + String(w.week).padStart(2, '0');
+    }))];
+    legendEl.innerHTML = usedWeeks.map(key => {
+      const idx = weeks.findIndex(w => w.key === key);
+      const w = weeks[idx];
+      const wDays = sortedDates.filter(d => { const wk = getISOWeek(d); return (wk.year + '-W' + String(wk.week).padStart(2, '0')) === key; }).length;
+      return `<span><span class="dot" style="background:${WEEK_COLORS[idx % WEEK_COLORS.length]};"></span>Sem. ${w.week} (${wDays}j)</span>`;
+    }).join('');
+  }
+}
+
+function renderHourlyChart(data) {
+  const byHour = {};
+  data.forEach(r => {
+    const h = parseInt(r.time.split(':')[0]);
+    byHour[h] = (byHour[h] || 0) + Number(r.qty);
+  });
+
+  const hours = [];
+  for (let h = 7; h <= 19; h++) hours.push(h);
+  const values = hours.map(h => byHour[h] || 0);
+  const total = values.reduce((a, b) => a + b, 0);
+
+  // Find peak
+  let peakH = 7, peakV = 0;
+  hours.forEach((h, i) => { if (values[i] > peakV) { peakV = values[i]; peakH = h; } });
+  const peakPct = total ? Math.round(peakV / total * 100) : 0;
+
+  new Chart(document.getElementById('hourlyChart'), {
+    type: 'bar',
+    data: {
+      labels: hours.map(h => h + 'h'),
+      datasets: [{
+        data: values,
+        backgroundColor: COLORS.blue + 'bb',
+        borderColor: COLORS.blue,
+        borderWidth: 1,
+        borderRadius: 3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { font: { size: 10 }, color: '#888' }, grid: { display: false } },
+        y: { ticks: { font: { size: 10 }, color: '#888' }, grid: { color: 'rgba(0,0,0,.06)' } }
+      }
+    }
+  });
+
+  document.getElementById('hourlyNote').textContent = `Pic à ${peakH}h = ${peakPct}% des items`;
+}
+
+function renderWeekProgression() {
+  const el = document.getElementById('weekProgression');
+  if (weeks.length === 0) { el.innerHTML = '<div style="font-size:12px;color:#999;">Pas assez de données</div>'; return; }
+
+  // Compute stats per week
+  const weekStats = weeks.map((w, i) => {
+    const wData = filterData(w.key);
+    const net = wData.reduce((s, r) => s + Number(r.net_sales), 0);
+    const qty = wData.reduce((s, r) => s + Number(r.qty), 0);
+    const days = [...new Set(wData.map(r => r.date))].length;
+    return { ...w, net, qty, days, caPerDay: days ? net / days : 0, itemsPerDay: days ? qty / days : 0 };
+  });
+
+  const maxNet = Math.max(...weekStats.map(w => w.net));
+
+  let html = '<div style="margin-bottom:14px;">';
+  weekStats.forEach((w, i) => {
+    const pct = maxNet ? (w.net / maxNet * 100).toFixed(1) : 0;
+    const color = WEEK_COLORS[i % WEEK_COLORS.length];
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
+      <div style="width:80px;font-size:11px;color:#777;">Sem. ${w.week} · ${w.days}j</div>
+      <div class="week-bar-wrap"><div class="week-bar" style="width:${pct}%;background:${color};"></div></div>
+      <div style="width:55px;text-align:right;font-size:12px;font-weight:500;color:${color};">${fmtEuro(w.net)}</div>
+    </div>`;
+    html += `<div style="font-size:10px;color:#aaa;margin:1px 0 8px 88px;">${Math.round(w.qty)} items · ${fmtEuro(w.caPerDay)}/j · ${Math.round(w.itemsPerDay)} items/j</div>`;
+  });
+  html += '</div>';
+
+  // Week over week comparisons
+  if (weekStats.length >= 2) {
+    html += '<hr class="divider">';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;color:#777;">';
+    for (let i = 1; i < weekStats.length && i <= 4; i++) {
+      const prev = weekStats[i - 1], curr = weekStats[i];
+      const caPct = pctChange(curr.caPerDay, prev.caPerDay);
+      const itemPct = pctChange(curr.itemsPerDay, prev.itemsPerDay);
+      html += `<div>${caPct.startsWith('+') ? '↑' : '↓'} ${caPct} CA/j · sem. ${prev.week}→${curr.week}</div>`;
+      html += `<div>${itemPct.startsWith('+') ? '↑' : '↓'} ${itemPct} items/j · sem. ${prev.week}→${curr.week}</div>`;
+    }
+    html += '</div>';
+  }
+
+  el.innerHTML = html;
+}
+
+function renderCategories(data) {
+  const catMap = { 'Boissons barista': 0, 'Food frigo': 0, 'Pâtisserie': 0, 'Boissons frigo': 0, 'Autre': 0 };
+  const catQty = { 'Boissons barista': 0, 'Food frigo': 0, 'Pâtisserie': 0, 'Boissons frigo': 0, 'Autre': 0 };
+  data.forEach(r => {
+    const c = classifyItem(r);
+    catMap[c] += Number(r.net_sales);
+    catQty[c] += Number(r.qty);
+  });
+
+  const catOrder = ['Boissons barista', 'Food frigo', 'Pâtisserie', 'Boissons frigo', 'Autre'];
+  const catColors = [COLORS.blue, COLORS.green, COLORS.orange, COLORS.gray, '#bbb'];
+  const totalCA = Object.values(catMap).reduce((a, b) => a + b, 0);
+
+  // Filter out zero categories
+  const activeCats = catOrder.filter(c => catMap[c] > 0);
+
+  new Chart(document.getElementById('catChart'), {
+    type: 'doughnut',
+    data: {
+      labels: activeCats,
+      datasets: [{
+        data: activeCats.map(c => catMap[c]),
+        backgroundColor: activeCats.map(c => catColors[catOrder.indexOf(c)]),
+        borderWidth: 0,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '62%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: v => v.raw.toLocaleString('fr') + '€ (' + Math.round(v.raw / totalCA * 100) + '%)' } }
+      }
+    }
+  });
+
+  const legendEl = document.getElementById('catLegend');
+  legendEl.innerHTML = '<div style="font-size:12px;line-height:1.5;">' + activeCats.map(c => {
+    const qty = Math.round(catQty[c]);
+    const avg = qty ? catMap[c] / qty : 0;
+    return `<div style="margin-bottom:9px;"><span class="dot" style="background:${catColors[catOrder.indexOf(c)]};margin-right:6px;"></span><strong>${c}</strong><br><span style="color:#777;font-size:11px;">${fmtEuro(catMap[c])} · ${qty} items · ${fmtEuroDec(avg)}/u</span></div>`;
+  }).join('') + '</div>';
+}
+
+function getTopItems(data, category, limit) {
+  const items = {};
+  data.forEach(r => {
+    if (classifyItem(r) !== category) return;
+    if (!items[r.item]) items[r.item] = { qty: 0, sales: 0 };
+    items[r.item].qty += Number(r.qty);
+    items[r.item].sales += Number(r.net_sales);
+  });
+  return Object.entries(items)
+    .map(([name, v]) => [name, Math.round(v.qty), v.qty ? +(v.sales / v.qty).toFixed(2) : 0])
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit || 20);
+}
+
+function renderBars(id, items, color) {
+  const el = document.getElementById(id);
+  if (!el || !items.length) { if (el) el.innerHTML = '<div style="font-size:11px;color:#999;">Aucune donnée</div>'; return; }
+  const maxQ = items[0][1];
+  el.innerHTML = items.map(([name, qty, price]) => {
+    const pct = maxQ ? (qty / maxQ * 100).toFixed(0) : 0;
+    return `<div class="row"><div class="row-name" style="width:120px;">${name}</div><div class="bar-wrap"><div class="bar" style="width:${pct}%;background:${color}bb;"></div></div><div class="row-val" style="width:72px;">${qty} · ${price}€</div></div>`;
+  }).join('');
+}
+
+function renderProducts(data) {
+  renderBars('baristaItems', getTopItems(data, 'Boissons barista', 20), COLORS.blue);
+  renderBars('foodItems', getTopItems(data, 'Food frigo', 10), COLORS.green);
+  renderBars('patisItems', getTopItems(data, 'Pâtisserie', 10), COLORS.orange);
+}
+
+function renderFrigo(data) {
+  const items = getTopItems(data, 'Boissons frigo', 6);
+  const el = document.getElementById('frigoItems');
+  el.innerHTML = items.map(([n, q, p]) =>
+    `<div style="text-align:center;padding:8px;background:#eceae3;border-radius:8px;"><div style="font-size:11px;color:#777;margin-bottom:4px;">${n}</div><div style="font-size:18px;font-weight:500;">${q}</div><div style="font-size:10px;color:#aaa;margin-top:2px;">${p} €/u</div></div>`
+  ).join('');
+}
+
+function renderInsights(data, prevData) {
+  const el = document.getElementById('insightsContainer');
+  const insights = [];
+
+  const netSales = data.reduce((s, r) => s + Number(r.net_sales), 0);
+  const totalQty = data.reduce((s, r) => s + Number(r.qty), 0);
+  const uniqueDates = [...new Set(data.map(r => r.date))];
+  const nDays = uniqueDates.length;
+  const txns = new Set(data.map(r => r.transaction_id));
+
+  // 1. Week over week growth
+  if (weeks.length >= 2) {
+    const lastW = weeks[weeks.length - 1];
+    const prevW = weeks[weeks.length - 2];
+    const lastData = filterData(lastW.key);
+    const prevWData = filterData(prevW.key);
+    const lastDays = [...new Set(lastData.map(r => r.date))].length;
+    const prevDays = [...new Set(prevWData.map(r => r.date))].length;
+    const lastCaJ = lastDays ? lastData.reduce((s, r) => s + Number(r.net_sales), 0) / lastDays : 0;
+    const prevCaJ = prevDays ? prevWData.reduce((s, r) => s + Number(r.net_sales), 0) / prevDays : 0;
+    if (prevCaJ > 0) {
+      const growth = ((lastCaJ - prevCaJ) / prevCaJ * 100).toFixed(0);
+      insights.push({
+        icon: '📈',
+        title: growth >= 0 ? 'Croissance du CA journalier' : 'Baisse du CA journalier',
+        body: `Le CA moyen/jour est passé de ${fmtEuro(prevCaJ)} (sem. ${prevW.week}) à ${fmtEuro(lastCaJ)} (sem. ${lastW.week}), soit ${growth >= 0 ? '+' : ''}${growth}%.`
+      });
+    }
+  }
+
+  // 2. Peak hour
+  const byHour = {};
+  data.forEach(r => { const h = parseInt(r.time.split(':')[0]); byHour[h] = (byHour[h] || 0) + Number(r.qty); });
+  let peakH = 0, peakV = 0;
+  Object.entries(byHour).forEach(([h, v]) => { if (v > peakV) { peakV = v; peakH = parseInt(h); } });
+  const totalItems = Object.values(byHour).reduce((a, b) => a + b, 0);
+  const peakPct = totalItems ? Math.round(peakV / totalItems * 100) : 0;
+  insights.push({
+    icon: '🕛',
+    title: `Le rush de ${peakH}h domine`,
+    body: `${peakH}h–${peakH + 1}h concentre ${peakPct}% des items commandés (${Math.round(peakV)} sur ${Math.round(totalItems)}). C'est le créneau le plus actif.`
+  });
+
+  // 3. Top seller
+  const itemMap = {};
+  data.forEach(r => { itemMap[r.item] = (itemMap[r.item] || 0) + Number(r.qty); });
+  const topItem = Object.entries(itemMap).sort((a, b) => b[1] - a[1])[0];
+  if (topItem) {
+    insights.push({
+      icon: '☕',
+      title: `${topItem[0]} en tête des ventes`,
+      body: `${topItem[0]} est le produit le plus vendu avec ${Math.round(topItem[1])} unités sur la période, soit ${totalItems ? Math.round(topItem[1] / totalItems * 100) : 0}% du total des items.`
+    });
+  }
+
+  // 4. Discounts
+  const totalDisc = data.reduce((s, r) => s + Math.abs(Number(r.discounts || 0)), 0);
+  const discRows = data.filter(r => Number(r.discounts || 0) < 0).length;
+  if (totalDisc > 0) {
+    const discPct = (discRows / data.length * 100).toFixed(1);
+    insights.push({
+      icon: '🎁',
+      title: 'Utilisation des remises',
+      body: `${fmtEuro(totalDisc)} de remises accordées sur ${discRows} lignes (${discPct}% des items). Le programme fidélité et les offres sont actifs.`
+    });
+  }
+
+  // 5. Ticket moyen
+  const ticketMoyen = txns.size ? netSales / txns.size : 0;
+  insights.push({
+    icon: '💳',
+    title: `Ticket moyen à ${fmtEuroDec(ticketMoyen)}`,
+    body: `Sur ${txns.size} transactions et ${nDays} jours, le panier moyen est de ${fmtEuroDec(ticketMoyen)}. Soit environ ${(txns.size / Math.max(nDays, 1)).toFixed(0)} transactions par jour.`
+  });
+
+  // 6. Category leader
+  const catSales = {};
+  data.forEach(r => { const c = classifyItem(r); catSales[c] = (catSales[c] || 0) + Number(r.net_sales); });
+  const topCat = Object.entries(catSales).filter(([c]) => c !== 'Autre').sort((a, b) => b[1] - a[1])[0];
+  if (topCat) {
+    const catPct = netSales ? Math.round(topCat[1] / netSales * 100) : 0;
+    insights.push({
+      icon: '🏆',
+      title: `${topCat[0]} = ${catPct}% du CA`,
+      body: `La catégorie ${topCat[0]} génère ${fmtEuro(topCat[1])} de chiffre d'affaires, représentant ${catPct}% du total. C'est le pilier de l'activité.`
+    });
+  }
+
+  // Render (max 6)
+  el.innerHTML = insights.slice(0, 6).map(ins =>
+    `<div class="insight-card"><div class="insight-icon">${ins.icon}</div><div class="insight-title">${ins.title}</div><div class="insight-body">${ins.body}</div></div>`
+  ).join('');
+}
+
+// Boot
+loadData();
+</script>
+</body>
+</html>

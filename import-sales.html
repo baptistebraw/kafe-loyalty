@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kafé — Import ventes Square</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1a1a; padding: 28px 32px; max-width: 700px; margin: 0 auto; }
+h1 { font-size: 22px; font-weight: 500; margin-bottom: 3px; }
+.subtitle { font-size: 13px; color: #777; margin-bottom: 22px; }
+.card { background: #fff; border: 0.5px solid rgba(0,0,0,.11); border-radius: 12px; padding: 20px 22px; margin-bottom: 16px; }
+label { font-size: 11px; font-weight: 500; color: #777; text-transform: uppercase; letter-spacing: .05em; display: block; margin-bottom: 8px; }
+input[type="file"] { font-size: 13px; margin-bottom: 16px; }
+button { background: #3266ad; color: #fff; border: none; border-radius: 8px; padding: 10px 22px; font-size: 14px; font-weight: 500; cursor: pointer; }
+button:disabled { opacity: .4; cursor: default; }
+button:hover:not(:disabled) { background: #274f8a; }
+.progress-wrap { background: #eceae3; border-radius: 4px; height: 14px; overflow: hidden; margin: 12px 0; display: none; }
+.progress-bar { height: 100%; background: #1D9E75; border-radius: 4px; transition: width .15s; width: 0%; }
+.log { font-size: 12px; color: #555; line-height: 1.7; white-space: pre-wrap; max-height: 300px; overflow-y: auto; margin-top: 12px; }
+.stat { display: inline-block; background: #eceae3; border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 500; margin-right: 8px; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<h1>Kafé · Import ventes</h1>
+<p class="subtitle">Importer un export CSV Square (items) dans Supabase</p>
+
+<div class="card">
+  <label>Fichier CSV Square (UTF-16, tab-separated)</label>
+  <input type="file" id="csvFile" accept=".csv,.tsv,.txt">
+  <br>
+  <button id="importBtn" disabled onclick="startImport()">Importer</button>
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+  <div id="stats"></div>
+  <div class="log" id="log"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const SUPABASE_URL = 'https://hnnqbcfmoppcspewchxh.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhubnFiY2Ztb3BwY3NwZXdjaHhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1OTEwMzksImV4cCI6MjA4OTE2NzAzOX0.7TC5CA3TFKPAY_9NF5xhxJTLUKql1ZIz3ZehmnokK20';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const fileInput = document.getElementById('csvFile');
+const importBtn = document.getElementById('importBtn');
+const progressWrap = document.getElementById('progressWrap');
+const progressBar = document.getElementById('progressBar');
+const logEl = document.getElementById('log');
+const statsEl = document.getElementById('stats');
+
+fileInput.addEventListener('change', () => { importBtn.disabled = !fileInput.files.length; });
+
+function log(msg) { logEl.textContent += msg + '\n'; logEl.scrollTop = logEl.scrollHeight; }
+
+function parseEuro(s) {
+  if (!s || s === '""' || s === '') return 0;
+  // Remove €, spaces, quotes, and handle negative
+  let cleaned = s.replace(/[€"\s]/g, '');
+  if (!cleaned) return 0;
+  // Handle comma as decimal separator
+  cleaned = cleaned.replace(',', '.');
+  return parseFloat(cleaned) || 0;
+}
+
+async function startImport() {
+  const file = fileInput.files[0];
+  if (!file) return;
+  importBtn.disabled = true;
+  logEl.textContent = '';
+  statsEl.innerHTML = '';
+  progressWrap.style.display = 'block';
+  progressBar.style.width = '0%';
+
+  log('Lecture du fichier...');
+
+  // Read as ArrayBuffer to handle UTF-16
+  const buffer = await file.arrayBuffer();
+  let text;
+  const bytes = new Uint8Array(buffer);
+
+  // Detect BOM
+  if (bytes[0] === 0xFF && bytes[1] === 0xFE) {
+    // UTF-16 LE BOM
+    const decoder = new TextDecoder('utf-16le');
+    text = decoder.decode(buffer);
+  } else if (bytes[0] === 0xFE && bytes[1] === 0xFF) {
+    // UTF-16 BE BOM
+    const decoder = new TextDecoder('utf-16be');
+    text = decoder.decode(buffer);
+  } else {
+    // Assume UTF-8
+    text = new TextDecoder('utf-8').decode(buffer);
+  }
+
+  // Remove BOM character if present
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  const headers = lines[0].split('\t').map(h => h.trim());
+  log(`${lines.length - 1} lignes détectées, ${headers.length} colonnes`);
+
+  // Map header indices
+  const idx = {};
+  ['Date','Time','Category','Item','Qty','Product Sales','Discounts','Net Sales','Tax','Gross Sales','Transaction ID','Payment ID','Dining Option','Employee','Notes'].forEach(h => {
+    idx[h] = headers.indexOf(h);
+  });
+
+  // Check required columns
+  if (idx['Date'] === -1 || idx['Transaction ID'] === -1) {
+    log('ERREUR : colonnes Date ou Transaction ID introuvables');
+    importBtn.disabled = false;
+    return;
+  }
+
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split('\t');
+    const txnId = (cols[idx['Transaction ID']] || '').replace(/"/g, '').trim();
+    const item = (cols[idx['Item']] || '').replace(/"/g, '').trim();
+    const dateStr = (cols[idx['Date']] || '').replace(/"/g, '').trim();
+    const timeStr = (cols[idx['Time']] || '').replace(/"/g, '').trim();
+    const netSales = parseEuro(cols[idx['Net Sales']]);
+
+    if (!txnId || !item || !dateStr || !timeStr) continue;
+
+    rows.push({
+      date: dateStr,
+      time: timeStr,
+      category: (cols[idx['Category']] || '').replace(/"/g, '').trim() || null,
+      item: item,
+      qty: parseFloat((cols[idx['Qty']] || '1').replace(/"/g, '')) || 1,
+      product_sales: parseEuro(cols[idx['Product Sales']]),
+      discounts: parseEuro(cols[idx['Discounts']]),
+      net_sales: netSales,
+      tax: parseEuro(cols[idx['Tax']]),
+      gross_sales: parseEuro(cols[idx['Gross Sales']]),
+      transaction_id: txnId,
+      payment_id: (cols[idx['Payment ID']] || '').replace(/"/g, '').trim() || null,
+      dining_option: (cols[idx['Dining Option']] || '').replace(/"/g, '').trim() || null,
+      employee: (cols[idx['Employee']] || '').replace(/"/g, '').trim() || null,
+      notes: (cols[idx['Notes']] || '').replace(/"/g, '').trim() || null,
+    });
+  }
+
+  log(`${rows.length} lignes valides à importer`);
+
+  let imported = 0, skipped = 0, errors = 0;
+  const BATCH = 100;
+
+  for (let i = 0; i < rows.length; i += BATCH) {
+    const batch = rows.slice(i, i + BATCH);
+    const { data, error } = await sb
+      .from('sales')
+      .upsert(batch, { onConflict: 'transaction_id,item,time', ignoreDuplicates: true });
+
+    if (error) {
+      // Try row by row for this batch
+      for (const row of batch) {
+        const { error: rowErr } = await sb
+          .from('sales')
+          .upsert([row], { onConflict: 'transaction_id,item,time', ignoreDuplicates: true });
+        if (rowErr) {
+          errors++;
+          if (errors <= 5) log(`Erreur ligne: ${row.item} ${row.date} — ${rowErr.message}`);
+        } else {
+          imported++;
+        }
+      }
+    } else {
+      imported += batch.length;
+    }
+
+    const pct = Math.min(100, Math.round((i + batch.length) / rows.length * 100));
+    progressBar.style.width = pct + '%';
+  }
+
+  skipped = rows.length - imported - errors;
+  progressBar.style.width = '100%';
+  log(`\nTerminé !`);
+  statsEl.innerHTML =
+    `<span class="stat">✓ ${imported} importées</span>` +
+    (skipped > 0 ? `<span class="stat">${skipped} doublons ignorés</span>` : '') +
+    (errors > 0 ? `<span class="stat" style="color:#c33;">${errors} erreurs</span>` : '');
+  importBtn.disabled = false;
+}
+</script>
+</body>
+</html>

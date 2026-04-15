@@ -1,5 +1,7 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/catering.html" }
+    { "source": "/", "destination": "/catering.html" },
+    { "source": "/kpi", "destination": "/kpi.html" },
+    { "source": "/import-sales", "destination": "/import-sales.html" }
   ]
 }
