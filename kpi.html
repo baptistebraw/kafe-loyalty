@@ -94,28 +94,28 @@ const SUPABASE_URL = 'https://hnnqbcfmoppcspewchxh.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhubnFiY2Ztb3BwY3NwZXdjaHhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1OTEwMzksImV4cCI6MjA4OTE2NzAzOX0.7TC5CA3TFKPAY_9NF5xhxJTLUKql1ZIz3ZehmnokK20';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const AUTH_EMAIL = 'hello@kafe.paris';
-const AUTH_PASSWORD = 'KafeParis2026';
-
-function doLogin() {
+async function doLogin() {
   const email = document.getElementById('login-email').value;
   const pass = document.getElementById('login-pass').value;
-  if (email === AUTH_EMAIL && pass === AUTH_PASSWORD) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    sessionStorage.setItem('kpi_auth', '1');
-    loadData();
-  } else {
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) {
     document.getElementById('login-error').style.display = 'block';
+    return;
   }
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  loadData();
 }
 document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
-// Auto-login si déjà authentifié dans cette session
-if (sessionStorage.getItem('kpi_auth') === '1') {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-}
+// Auto-login si session Supabase existante
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (session) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadData();
+  }
+});
 
 const COLORS = { blue: '#3266ad', green: '#1D9E75', orange: '#BA7517', gray: '#888780' };
 const WEEK_COLORS = [COLORS.blue, COLORS.green, COLORS.orange, '#9b59b6', '#e74c3c', '#2ecc71', '#f39c12', '#1abc9c', '#e67e22', '#8e44ad'];
@@ -203,9 +203,10 @@ async function syncSquare() {
   btn.innerHTML = '&#8987; Sync...';
   btn.style.opacity = '0.6';
   try {
+    const { data: { session } } = await sb.auth.getSession();
     const res = await fetch(SUPABASE_URL + '/functions/v1/sync-square-sales', {
       method: 'GET',
-      headers: { 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      headers: { 'Authorization': 'Bearer ' + (session?.access_token || SUPABASE_KEY) },
     });
     const json = await res.json();
     if (json.ok) {
@@ -715,8 +716,7 @@ function renderInsights(data, prevData) {
   ).join('');
 }
 
-// Boot — only load data if already authenticated
-if (sessionStorage.getItem('kpi_auth') === '1') loadData();
+// Boot — loadData is called after auth check above
 </script>
 </body>
 </html>

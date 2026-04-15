@@ -67,22 +67,24 @@ const SUPABASE_URL = 'https://hnnqbcfmoppcspewchxh.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhubnFiY2Ztb3BwY3NwZXdjaHhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1OTEwMzksImV4cCI6MjA4OTE2NzAzOX0.7TC5CA3TFKPAY_9NF5xhxJTLUKql1ZIz3ZehmnokK20';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-function doLogin() {
+async function doLogin() {
   const email = document.getElementById('login-email').value;
   const pass = document.getElementById('login-pass').value;
-  if (email === 'hello@kafe.paris' && pass === 'KafeParis2026') {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    sessionStorage.setItem('kpi_auth', '1');
-  } else {
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) {
     document.getElementById('login-error').style.display = 'block';
+    return;
   }
-}
-document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-if (sessionStorage.getItem('kpi_auth') === '1') {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
 }
+document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (session) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+  }
+});
 
 const fileInput = document.getElementById('csvFile');
 const importBtn = document.getElementById('importBtn');
