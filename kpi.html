@@ -631,11 +631,13 @@ function renderTop10(data) {
   const items = getTopItemsGlobal(data, 10);
   const el = document.getElementById('top10Items');
   if (!el || !items.length) return;
+  const totalCA = data.reduce((s, r) => s + Number(r.net_sales), 0);
   const maxSales = items[0].sales;
   el.innerHTML = items.map((it, i) => {
     const pct = maxSales ? (it.sales / maxSales * 100).toFixed(0) : 0;
+    const caPct = totalCA ? (it.sales / totalCA * 100).toFixed(1) : 0;
     const color = CAT_COLORS[it.cat] || '#bbb';
-    return `<div class="row"><div class="row-name" style="width:150px;"><span style="color:#999;margin-right:6px;">${i+1}.</span>${it.name}</div><div class="bar-wrap"><div class="bar" style="width:${pct}%;background:${color}bb;"></div></div><div class="row-val" style="width:90px;">${it.sales.toLocaleString('fr')} € · ${it.qty}</div></div>`;
+    return `<div class="row"><div class="row-name" style="width:150px;"><span style="color:#999;margin-right:6px;">${i+1}.</span>${it.name}</div><div class="bar-wrap"><div class="bar" style="width:${pct}%;background:${color}bb;"></div></div><div class="row-val" style="width:120px;">${it.sales.toLocaleString('fr')} € · ${caPct}%</div></div>`;
   }).join('');
 }
 
