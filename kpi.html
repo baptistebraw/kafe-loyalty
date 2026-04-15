@@ -58,6 +58,7 @@ hr.divider { border:none; border-top:0.5px solid rgba(0,0,0,.08); margin:10px 0;
     <button onclick="prevWeek()">&#8249;</button>
     <select id="weekSelect" onchange="onWeekChange()"></select>
     <button onclick="nextWeek()">&#8250;</button>
+    <button id="syncBtn" onclick="syncSquare()" title="Sync Square" style="width:auto;padding:0 10px;font-size:12px;gap:4px;">&#8635; Sync</button>
   </div>
 </div>
 
@@ -130,6 +131,34 @@ function pctChange(curr, prev) {
   const pct = ((curr - prev) / Math.abs(prev) * 100);
   const sign = pct >= 0 ? '+' : '';
   return sign + pct.toFixed(0) + '%';
+}
+
+async function syncSquare() {
+  const btn = document.getElementById('syncBtn');
+  btn.disabled = true;
+  btn.innerHTML = '&#8987; Sync...';
+  btn.style.opacity = '0.6';
+  try {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/sync-square-sales', {
+      method: 'GET',
+      headers: { 'Authorization': 'Bearer ' + SUPABASE_KEY },
+    });
+    const json = await res.json();
+    if (json.ok) {
+      btn.innerHTML = '&#10003; ' + json.rows + ' lignes';
+      btn.style.background = '#d4edda';
+      await loadData();
+    } else {
+      btn.innerHTML = '&#10007; Erreur';
+      btn.style.background = '#f8d7da';
+      console.error(json.error);
+    }
+  } catch (e) {
+    btn.innerHTML = '&#10007; Erreur';
+    btn.style.background = '#f8d7da';
+    console.error(e);
+  }
+  setTimeout(() => { btn.innerHTML = '&#8635; Sync'; btn.style.background = ''; btn.style.opacity = ''; btn.disabled = false; }, 3000);
 }
 
 async function loadData() {
