@@ -366,14 +366,17 @@ function render() {
   html += '<div class="card"><div class="section-title">Mix catégories — CA</div><div style="display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center;"><div style="position:relative;height:150px;"><canvas id="catChart"></canvas></div><div id="catLegend"></div></div></div>';
   html += '</div>';
 
-  // Top products
+  // Top 10 global
+  html += '<div class="card" style="margin-bottom:16px;"><div class="section-title">Top 10 produits — CA</div><div id="top10Items"></div></div>';
+
+  // Top products by category
   html += '<div class="grid2">';
   html += '<div class="card"><div class="section-title">Boissons barista</div><div id="baristaItems"></div></div>';
   html += '<div style="display:grid;grid-template-rows:auto auto;gap:16px;"><div class="card"><div class="section-title">Food frigo</div><div id="foodItems"></div></div><div class="card"><div class="section-title">Pâtisserie</div><div id="patisItems"></div></div></div>';
   html += '</div>';
 
   // Boissons frigo
-  html += '<div class="card" style="margin-bottom:20px;"><div class="section-title">Boissons frigo</div><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;" id="frigoItems"></div></div>';
+  html += '<div class="card" style="margin-bottom:20px;"><div class="section-title">Boissons frigo</div><div id="frigoItems"></div></div>';
 
   // Insights
   html += '<p style="font-size:11px;font-weight:500;color:#777;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Points clés</p>';
@@ -387,7 +390,6 @@ function render() {
   renderWeekProgression();
   renderCategories(data);
   renderProducts(data);
-  renderFrigo(data);
   renderInsights(data, prevData);
 }
 
@@ -593,10 +595,27 @@ function getTopItems(data, category, limit) {
     items[name].sales += Number(r.net_sales);
   });
   return Object.entries(items)
-    .map(([name, v]) => [name, Math.round(v.qty), v.qty ? +(v.sales / v.qty).toFixed(2) : 0])
+    .map(([name, v]) => [name, Math.round(v.qty), v.qty ? +(v.sales / v.qty).toFixed(2) : 0, +v.sales.toFixed(2)])
     .sort((a, b) => b[1] - a[1])
     .slice(0, limit || 20);
 }
+
+function getTopItemsGlobal(data, limit) {
+  const items = {};
+  data.forEach(r => {
+    if (classifyItem(r) === 'Ignoré') return;
+    const name = normalizeItem(r.item);
+    if (!items[name]) items[name] = { qty: 0, sales: 0, cat: classifyItem(r) };
+    items[name].qty += Number(r.qty);
+    items[name].sales += Number(r.net_sales);
+  });
+  return Object.entries(items)
+    .map(([name, v]) => ({ name, qty: Math.round(v.qty), sales: +v.sales.toFixed(2), avg: v.qty ? +(v.sales / v.qty).toFixed(2) : 0, cat: v.cat }))
+    .sort((a, b) => b.sales - a.sales)
+    .slice(0, limit || 10);
+}
+
+const CAT_COLORS = { 'Boissons barista': COLORS.blue, 'Food frigo': COLORS.green, 'Pâtisserie': COLORS.orange, 'Boissons frigo': COLORS.gray, 'Autre': '#bbb' };
 
 function renderBars(id, items, color) {
   const el = document.getElementById(id);
@@ -608,18 +627,24 @@ function renderBars(id, items, color) {
   }).join('');
 }
 
+function renderTop10(data) {
+  const items = getTopItemsGlobal(data, 10);
+  const el = document.getElementById('top10Items');
+  if (!el || !items.length) return;
+  const maxSales = items[0].sales;
+  el.innerHTML = items.map((it, i) => {
+    const pct = maxSales ? (it.sales / maxSales * 100).toFixed(0) : 0;
+    const color = CAT_COLORS[it.cat] || '#bbb';
+    return `<div class="row"><div class="row-name" style="width:150px;"><span style="color:#999;margin-right:6px;">${i+1}.</span>${it.name}</div><div class="bar-wrap"><div class="bar" style="width:${pct}%;background:${color}bb;"></div></div><div class="row-val" style="width:90px;">${it.sales.toLocaleString('fr')} € · ${it.qty}</div></div>`;
+  }).join('');
+}
+
 function renderProducts(data) {
+  renderTop10(data);
   renderBars('baristaItems', getTopItems(data, 'Boissons barista', 20), COLORS.blue);
   renderBars('foodItems', getTopItems(data, 'Food frigo', 10), COLORS.green);
   renderBars('patisItems', getTopItems(data, 'Pâtisserie', 10), COLORS.orange);
-}
-
-function renderFrigo(data) {
-  const items = getTopItems(data, 'Boissons frigo', 6);
-  const el = document.getElementById('frigoItems');
-  el.innerHTML = items.map(([n, q, p]) =>
-    `<div style="text-align:center;padding:8px;background:#eceae3;border-radius:8px;"><div style="font-size:11px;color:#777;margin-bottom:4px;">${n}</div><div style="font-size:18px;font-weight:500;">${q}</div><div style="font-size:10px;color:#aaa;margin-top:2px;">${p} €/u</div></div>`
-  ).join('');
+  renderBars('frigoItems', getTopItems(data, 'Boissons frigo', 10), COLORS.gray);
 }
 
 function renderInsights(data, prevData) {
