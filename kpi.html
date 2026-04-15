@@ -74,23 +74,41 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const COLORS = { blue: '#3266ad', green: '#1D9E75', orange: '#BA7517', gray: '#888780' };
 const WEEK_COLORS = [COLORS.blue, COLORS.green, COLORS.orange, '#9b59b6', '#e74c3c', '#2ecc71', '#f39c12', '#1abc9c', '#e67e22', '#8e44ad'];
 
-// Category mapping
-const BARISTA_ITEMS = ['Latte','Espresso','Matcha Latte','Cappuccino','Flat White','Americano',
-  'Chaï Latte','Filtre du Jour','Double espresso','Chocolate Chaud','Cortado',
+// Category mapping — prefixes et mots-clés pour gérer les variantes Square
+const BARISTA_PATTERNS = ['Latte','Espresso','Matcha Latte','Cappuccino','Flat White','Americano',
+  'Chaï Latte','Filtre du Jour','Double espresso','Chocolate Chaud','Chocolat','Cortado',
   'Levain Miel Latte','Noisette','Golden Latte','Dirty Chai','Thé','Hojicha Latte',
-  'Long Black','Iced Latte','Iced Matcha','Iced Americano','Iced Chai'];
-const FOOD_ITEMS = ['Triangle','Chia','Skyr','Salade','Soupe','Wrap','Sandwich'];
-const PATISSERIE_ITEMS = ['Gâteaux','Cookies','Granola Bar','Madeleine','Cookie','Banana Bread','Carrot Cake'];
-const FRIGO_ITEMS = ['Jus','ChariTea','Lemonaid','Symbiose','Eau neuve','Archipel','Eau Plate','Eau Gazeuse'];
+  'Long Black','Iced Latte','Iced Matcha','Iced Americano','Iced Chai','Infusion'];
+const FOOD_PATTERNS = ['Triangle','Combo Triangle','Chia','Skyr','Salade','Soupe','Wrap','Sandwich'];
+const PATISSERIE_PATTERNS = ['Gâteaux','Cookies','Cookie','Granola Bar','Madeleine','Banana Bread','Carrot Cake'];
+const FRIGO_PATTERNS = ['Jus','ChariTea','Lemonaid','Symbiose','Eau neuve','Archipel','Eau Plate','Eau Gazeuse'];
+// Items à ignorer (modificateurs, pas des produits)
+const IGNORE_ITEMS = ['Lait végétal'];
+
+function matchesAny(item, patterns) {
+  return patterns.some(p => item === p || item.startsWith(p + ' '));
+}
 
 function classifyItem(row) {
   const item = row.item;
   const cat = row.category;
-  if (cat === 'Café et thé' || BARISTA_ITEMS.includes(item)) return 'Boissons barista';
-  if (FOOD_ITEMS.includes(item)) return 'Food frigo';
-  if (PATISSERIE_ITEMS.includes(item)) return 'Pâtisserie';
-  if (cat === 'Boisson' || FRIGO_ITEMS.includes(item)) return 'Boissons frigo';
+  if (IGNORE_ITEMS.includes(item)) return 'Ignoré';
+  if (cat === 'Café et thé' || matchesAny(item, BARISTA_PATTERNS)) return 'Boissons barista';
+  if (matchesAny(item, FOOD_PATTERNS)) return 'Food frigo';
+  if (matchesAny(item, PATISSERIE_PATTERNS)) return 'Pâtisserie';
+  if (cat === 'Boisson' || matchesAny(item, FRIGO_PATTERNS)) return 'Boissons frigo';
   return 'Autre';
+}
+
+// Normalise les noms d'items pour regrouper les variantes
+function normalizeItem(name) {
+  if (name === 'Triangle seul' || name === 'Triangle') return 'Triangle';
+  if (name.startsWith('Combo Triangle')) return 'Combo Triangle';
+  if (name.startsWith('Chia')) return 'Chia bowl';
+  if (name.startsWith('Skyr')) return 'Skyr';
+  if (name.startsWith('Salade')) return 'Salade';
+  if (name.startsWith('Chocolate Chaud') || name === 'Chocolat') return 'Chocolate Chaud';
+  return name;
 }
 
 let allData = [];
@@ -219,8 +237,9 @@ function nextWeek() {
 }
 
 function filterData(weekKey) {
-  if (weekKey === 'all') return allData;
-  return allData.filter(r => {
+  const base = allData.filter(r => classifyItem(r) !== 'Ignoré');
+  if (weekKey === 'all') return base;
+  return base.filter(r => {
     const w = getISOWeek(r.date);
     return (w.year + '-W' + String(w.week).padStart(2, '0')) === weekKey;
   });
@@ -477,6 +496,7 @@ function renderCategories(data) {
   const catQty = { 'Boissons barista': 0, 'Food frigo': 0, 'Pâtisserie': 0, 'Boissons frigo': 0, 'Autre': 0 };
   data.forEach(r => {
     const c = classifyItem(r);
+    if (c === 'Ignoré') return;
     catMap[c] += Number(r.net_sales);
     catQty[c] += Number(r.qty);
   });
@@ -520,9 +540,10 @@ function getTopItems(data, category, limit) {
   const items = {};
   data.forEach(r => {
     if (classifyItem(r) !== category) return;
-    if (!items[r.item]) items[r.item] = { qty: 0, sales: 0 };
-    items[r.item].qty += Number(r.qty);
-    items[r.item].sales += Number(r.net_sales);
+    const name = normalizeItem(r.item);
+    if (!items[name]) items[name] = { qty: 0, sales: 0 };
+    items[name].qty += Number(r.qty);
+    items[name].sales += Number(r.net_sales);
   });
   return Object.entries(items)
     .map(([name, v]) => [name, Math.round(v.qty), v.qty ? +(v.sales / v.qty).toFixed(2) : 0])
@@ -631,8 +652,8 @@ function renderInsights(data, prevData) {
 
   // 6. Category leader
   const catSales = {};
-  data.forEach(r => { const c = classifyItem(r); catSales[c] = (catSales[c] || 0) + Number(r.net_sales); });
-  const topCat = Object.entries(catSales).filter(([c]) => c !== 'Autre').sort((a, b) => b[1] - a[1])[0];
+  data.forEach(r => { const c = classifyItem(r); if (c !== 'Ignoré') catSales[c] = (catSales[c] || 0) + Number(r.net_sales); });
+  const topCat = Object.entries(catSales).filter(([c]) => c !== 'Autre' && c !== 'Ignoré').sort((a, b) => b[1] - a[1])[0];
   if (topCat) {
     const catPct = netSales ? Math.round(topCat[1] / netSales * 100) : 0;
     insights.push({
