@@ -6,7 +6,7 @@ Baptiste is the operational co-founder and owner of Kafé (kafe.paris), a specia
 
 The concept is positioned between specialty coffee and quality fast-casual dining — comparable references include Cojean, Dumbo, and Erewhon — targeting neighborhood freelancers, local professionals, and nearby office workers. Key differentiators include artisanal sourdough sandwich triangles, a curated beverage selection (including the Bébéccino plant-based milk drink line), and a "basecamp" atmosphere suited to both quick takeaway and work sessions.
 
-Key team members: Laura (operational right hand, Kitchen Manager & Barista), Lucie (barista), Lionel (cook). Key collaborators: Zazie (architect), Julien Chollet (menuisier), Walid (electrical/plumbing), Melho (decorator), Olivier (signage/menu design), Tanguy (website). Accountant: Xavier. Finance contact at Iconic Group: Inès. Thibaud's chief of staff: Charlotte.
+Key team members: Laura (operational right hand, Kitchen Manager & Barista — rigorous, process-oriented, military-style tendency), Lucie (barista), Lionel (cook — craft-focused, prefers stable planning), Tristan (salle/service — calm, good-humored under pressure). Key collaborators: Zazie (architect), Julien Chollet (menuisier), Walid (electrical/plumbing), Melho (decorator), Olivier (signage/menu design), Tanguy (website). Accountant: Xavier. Finance contact at Iconic Group: Inès. Thibaud's chief of staff: Charlotte.
 
 The project underwent a prior iteration ("Douze," a different Paris location) that did not proceed. Kafé launched in early April 2026.
 
@@ -20,6 +20,7 @@ Kafé has been open for several weeks. Baptiste is navigating post-launch operat
 - **Menu gaps**: Healthy options are underrepresented despite strong signals from chia and skyr bowl sales.
 - **Financing**: A loan offer from Caisse d'Épargne Île-de-France (84-month fixed-rate, BPI guarantee at 60%) has been negotiated. Key positions: reduce/waive frais de dossier (framing Iconic Group as the long-term client relationship), restructure CNP insurance to 50/50 rather than 100% per associate, and have Iconic Group bear the personal guarantee (caution personne physique) as majority shareholder, targeting 50% or zero individual exposure.
 - **Website**: kafe.paris is built on Figma Sites. Recent CSS issues included text-transform conflicts, scroll-blocking via 100dvh, and layout breakage from column width changes. A stable state was restored via Version History.
+- **Operational ramp-up**: Baptiste's strategic read is strong but operational fluency on the floor (salle service, commande prise, group handling) is still thin. First large group (13 pax, table service) exposed the gap — no morning brief, disorganized solicitation of the team, some orders missed. Laura gave a direct post-mortem; Baptiste accepted the feedback. Identified needs: morning service brief ritual, group 8+ protocol, targeted immersion on individual posts before claiming authority over them.
 
 ## On the horizon
 
@@ -29,6 +30,9 @@ Kafé has been open for several weeks. Baptiste is navigating post-launch operat
 - Adding ingredient text to recipe items on the website (two options identified: direct Figma edits per item, or Figma Sites CMS with a dedicated "Ingrédients" field)
 - Finalizing bank financing terms and executing the Caisse d'Épargne loan
 - Potential B2B supply collaborations (Rune partnership explored; white-label prepared dishes and products like chia puddings identified as better fit than sandwiches)
+- Installing a daily morning service brief (5 min, non-negotiable, Baptiste leads)
+- Writing a "groupe 8+" protocol with Laura: mandatory reservation, restricted menu/combos, pre-order where possible, pre-service team brief, dedicated order-taker, table plan
+- Blocking targeted immersion weeks (one on salle/barista, one in cuisine with Lionel) to build operational authority
 
 ## Key learnings & principles
 
@@ -37,6 +41,10 @@ Kafé has been open for several weeks. Baptiste is navigating post-launch operat
 - **Personal guarantees follow corporate roles, not ownership**: As DG (not President), Baptiste's legal exposure differs from Thibaud's; Iconic Group as majority shareholder is the appropriate guarantor.
 - **Production calibration before volume commitments**: Baptiste established a principle of spending the first weeks post-opening calibrating production capacity before committing to B2B volumes.
 - **Operational sequencing matters**: In renovation/build-out, structural and infrastructure work must be completed before finishes and equipment installation to avoid rework.
+- **Authority on a post requires mastery of it**: Giving directions without knowing the work invites pushback. Before claiming operational authority over a station (salle, barista, cuisine), spend focused time owning it.
+- **Preparation beats improvisation in service**: "Aura" and clear direction in the moment come from the prep that happened before the shift, not from reacting live. Morning brief + known-group protocol replace heroics.
+- **Laura's rigor is an asset, not a threat**: Her process instinct fills a gap Baptiste doesn't (yet) cover. Channel it rather than counter-balance it. She writes the ops process in her zone; Baptiste holds strategic direction and service tempo. Over-processing is easier to loosen later than chaos is to structure.
+- **"Être partout, donc nulle part"**: DG trap. Pick a single post per service and hold it rather than sampling across the floor.
 
 ## Approach & patterns
 
