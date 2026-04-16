@@ -203,12 +203,12 @@ async function syncSquare() {
   btn.innerHTML = '&#8987; Sync...';
   btn.style.opacity = '0.6';
   try {
-    const { data: { session } } = await sb.auth.getSession();
-    const token = session?.access_token || SUPABASE_KEY;
+    // Use anon key (HS256) for Authorization — user session tokens are ES256
+    // which the Edge Functions gateway on this project doesn't accept.
     const res = await fetch(SUPABASE_URL + '/functions/v1/sync-square-sales', {
       method: 'GET',
       headers: {
-        'Authorization': 'Bearer ' + token,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
         'apikey': SUPABASE_KEY,
         'Content-Type': 'application/json',
       },
