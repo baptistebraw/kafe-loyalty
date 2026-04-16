@@ -203,17 +203,34 @@ async function syncSquare() {
   btn.innerHTML = '&#8987; Sync...';
   btn.style.opacity = '0.6';
   try {
-    const { data, error } = await sb.functions.invoke('sync-square-sales', { method: 'GET' });
-    if (error) throw error;
-    if (data?.ok) {
-      btn.innerHTML = '&#10003; ' + data.rows + ' lignes';
+    const { data: { session } } = await sb.auth.getSession();
+    const token = session?.access_token || SUPABASE_KEY;
+    const res = await fetch(SUPABASE_URL + '/functions/v1/sync-square-sales', {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'apikey': SUPABASE_KEY,
+        'Content-Type': 'application/json',
+      },
+    });
+    const text = await res.text();
+    let json;
+    try { json = JSON.parse(text); } catch { json = null; }
+    if (!res.ok) {
+      const msg = json?.error || text || ('HTTP ' + res.status);
+      btn.innerHTML = '&#10007; ' + res.status;
+      btn.style.background = '#f8d7da';
+      console.error('Sync failed:', res.status, msg);
+      alert('Sync failed (' + res.status + '): ' + msg);
+    } else if (json?.ok) {
+      btn.innerHTML = '&#10003; ' + json.rows + ' lignes';
       btn.style.background = '#d4edda';
       await loadData();
     } else {
       btn.innerHTML = '&#10007; Erreur';
       btn.style.background = '#f8d7da';
-      console.error('Sync failed:', data?.error || data);
-      alert('Sync failed: ' + (data?.error || JSON.stringify(data)));
+      console.error('Sync failed:', json);
+      alert('Sync failed: ' + (json?.error || text));
     }
   } catch (e) {
     btn.innerHTML = '&#10007; Erreur';
