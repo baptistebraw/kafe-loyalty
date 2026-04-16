@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kafé — Scénarios stratégiques</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1a1a; padding: 40px 32px 80px; max-width: 1180px; margin: 0 auto; line-height: 1.55; }
+h1 { font-size: 26px; font-weight: 500; margin-bottom: 4px; letter-spacing: -0.01em; }
+.subtitle { font-size: 13px; color: #777; margin-bottom: 36px; }
+h2 { font-size: 11px; font-weight: 500; color: #777; text-transform: uppercase; letter-spacing: .06em; margin: 36px 0 14px; }
+h2:first-of-type { margin-top: 0; }
+.card { background: #fff; border: 0.5px solid rgba(0,0,0,.11); border-radius: 12px; padding: 22px 26px; margin-bottom: 14px; }
+.card p { font-size: 14px; color: #2a2a2a; margin-bottom: 10px; }
+.card p:last-child { margin-bottom: 0; }
+.card ul { padding-left: 18px; font-size: 14px; color: #2a2a2a; }
+.card li { margin-bottom: 6px; }
+.card li:last-child { margin-bottom: 0; }
+.intro { font-size: 15px; color: #2a2a2a; margin-bottom: 12px; }
+.intro strong { font-weight: 500; color: #1a1a1a; }
+.scenarios { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+.scenario { background: #fff; border: 0.5px solid rgba(0,0,0,.11); border-radius: 12px; padding: 22px 24px; display: flex; flex-direction: column; }
+.scenario .label { font-size: 10px; font-weight: 500; color: #999; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+.scenario h3 { font-size: 17px; font-weight: 500; margin-bottom: 4px; line-height: 1.3; }
+.scenario .lede { font-size: 12px; color: #888; margin-bottom: 16px; }
+.scenario .framing { font-size: 13px; color: #2a2a2a; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 0.5px solid rgba(0,0,0,.08); }
+.scenario dl { margin: 0; }
+.scenario dt { font-size: 10px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: .06em; margin-top: 12px; margin-bottom: 4px; }
+.scenario dt:first-child { margin-top: 0; }
+.scenario dd { font-size: 13px; color: #2a2a2a; margin-bottom: 0; }
+.scenario .triggers { margin-top: 16px; padding-top: 16px; border-top: 0.5px solid rgba(0,0,0,.08); font-size: 12px; color: #666; }
+.scenario .triggers strong { color: #1a1a1a; font-weight: 500; }
+.scenario-a { border-left: 3px solid #1D9E75; }
+.scenario-b { border-left: 3px solid #BA7517; }
+.scenario-c { border-left: 3px solid #3266ad; }
+.principle-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.principle { background: #eceae3; border-radius: 8px; padding: 12px 14px; font-size: 13px; }
+.principle strong { font-weight: 500; color: #1a1a1a; }
+.principle span { color: #555; }
+.tension { font-size: 14px; color: #2a2a2a; padding: 8px 0; border-bottom: 0.5px solid rgba(0,0,0,.06); }
+.tension:last-child { border-bottom: none; }
+.tension strong { font-weight: 500; color: #1a1a1a; }
+.metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.metric { background: #fff; border: 0.5px solid rgba(0,0,0,.11); border-radius: 10px; padding: 14px 16px; }
+.metric .metric-label { font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+.metric .metric-value { font-size: 15px; font-weight: 500; margin-bottom: 2px; }
+.metric .metric-sub { font-size: 12px; color: #666; }
+.footer { margin-top: 40px; font-size: 12px; color: #999; text-align: center; }
+@media (max-width: 900px) {
+  .scenarios { grid-template-columns: 1fr; }
+  .principle-grid { grid-template-columns: 1fr; }
+  .metrics { grid-template-columns: 1fr; }
+  body { padding: 24px 16px 60px; }
+}
+#login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
+.login-box { width:100%; max-width:320px; }
+.login-box h2 { font-size:20px; font-weight:500; margin-bottom:4px; color:#1a1a1a; text-transform:none; letter-spacing:normal; margin-top:0; }
+.login-box .login-sub { font-size:12px; color:#777; margin-bottom:20px; }
+.login-box input { width:100%; font-family:inherit; font-size:13px; padding:10px 12px; border:0.5px solid rgba(0,0,0,.15); border-radius:6px; background:#fff; margin-bottom:10px; }
+.login-box input:focus { outline:none; border-color:#3266ad; }
+.login-box button { width:100%; font-family:inherit; font-size:13px; padding:10px; background:#1a1a1a; color:#fff; border:none; border-radius:6px; cursor:pointer; }
+.login-box button:hover { background:#333; }
+.login-error { display:none; font-size:11px; color:#c0392b; margin-top:8px; }
+#app { display:none; }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h2>Kafé · Scénarios</h2>
+    <div class="login-sub">Accès réservé</div>
+    <input type="email" id="login-email" placeholder="Email">
+    <input type="password" id="login-pass" placeholder="Mot de passe">
+    <button onclick="doLogin()">Accéder</button>
+    <div class="login-error" id="login-error">Email ou mot de passe incorrect.</div>
+  </div>
+</div>
+
+<div id="app">
+
+<h1>Kafé — Scénarios stratégiques</h1>
+<p class="subtitle">Situation post-launch · Avril 2026 · 12 rue Martel, Paris 10e</p>
+
+<h2>Où on en est</h2>
+<div class="card">
+  <p class="intro">Kafé a ouvert il y a quelques semaines. Le concept se positionne entre specialty coffee et fast-casual qualitatif, dans un quartier <strong>bobo-hipster-arty</strong> (plus Holybelly / Ten Belles / Season qu'Erewhon). La signature visuelle — les <strong>triangles sourdough</strong> — est forte, mais pour l'instant elle est cachée dans un frigo. Les deux frigos (20k€) sont perçus comme cheap et hébergent une offre incohérente.</p>
+  <p class="intro">Thibaud pousse pour la simplicité, Baptiste vise delivery + combos. Le setup physique (banquettes, bar à condiments) invite à rester alors que le concept lean takeaway. Les arbitrages structurants ne sont pas encore tranchés.</p>
+</div>
+
+<h2>Les tensions actuelles</h2>
+<div class="card">
+  <div class="tension"><strong>Frigos désavoués.</strong> Mix sandwichs / salades / bowls / boissons 4€+ = lecture commodity, effet demi-vide, pertes.</div>
+  <div class="tension"><strong>Sandwich en frigo tue la signature.</strong> Le triangle ne se vend pas caché, il se vend vu.</div>
+  <div class="tension"><strong>Prévision impossible</strong> sur salades et bowls — pertes régulières en fin de journée.</div>
+  <div class="tension"><strong>Prix / perception</strong> des drinks (kefir, kombucha, charitea) quand ils sont posés à côté d'un yaourt dans un frigo self-service.</div>
+  <div class="tension"><strong>Comptoir saturé</strong> — pas de place pour un display sandwich sans audit et libération d'espace.</div>
+  <div class="tension"><strong>Positioning takeaway vs dine-in</strong> non tranché avec Thibaud.</div>
+  <div class="tension"><strong>Opérationnel encore jeune</strong> — épisode du groupe de 13 a exposé l'absence de brief et de protocole groupe.</div>
+</div>
+
+<h2>Principes qu'on a établis</h2>
+<div class="principle-grid">
+  <div class="principle"><strong>Un frigo = un job.</strong> <span>Mixer les catégories dévalorise tout.</span></div>
+  <div class="principle"><strong>Le produit signature va en vitrine.</strong> <span>Pas dans un frigo fermé.</span></div>
+  <div class="principle"><strong>Lecture quartier &gt; théorie menu.</strong> <span>Le 10e récompense le craft, pas le "healthy".</span></div>
+  <div class="principle"><strong>Les drinks premium ont besoin de contexte.</strong> <span>Staging ou recommandation staff, pas self-service.</span></div>
+  <div class="principle"><strong>Préparation &gt; improvisation.</strong> <span>Brief matinal + protocole groupe 8+ remplacent l'héroïsme.</span></div>
+  <div class="principle"><strong>La rigueur de Laura est un asset.</strong> <span>Elle écrit les process ops ; Baptiste tient la stratégie et le tempo.</span></div>
+</div>
+
+<h2>Ce qu'on teste d'abord (2 semaines)</h2>
+<div class="card">
+  <p>Avant d'engager un scénario lourd, on fait le test du redesign minimal et on mesure. <strong>C'est le prérequis pour départager A, B ou C.</strong></p>
+  <ul>
+    <li>Audit comptoir → libération de 60 cm linéaires pour un display sandwich.</li>
+    <li>Sandwich hors frigo : échelle, étagère murale, panière ou cloche marbre (à trancher avec Zazie / Melho) — 8 à 12 triangles visibles, à hauteur de regard, en amont de la caisse. Protocole HACCP par Laura (2-4h ambient, cut-off 14h → retour frigo back).</li>
+    <li>Redesign d'un seul frigo sur le modèle "petit-déj curaté" (chia, skyr, overnight oats, jus pressés, granola) avec réduction des SKUs et augmentation de la profondeur.</li>
+    <li>Drinks premium derrière le comptoir, recommandés à l'oral — pas en libre-service.</li>
+    <li>Brief de service quotidien de 5 min, Baptiste leads.</li>
+    <li>Protocole groupe 8+ écrit avec Laura.</li>
+  </ul>
+</div>
+
+<h2>Les trois scénarios après le test</h2>
+<div class="scenarios">
+
+  <div class="scenario scenario-a">
+    <div class="label">Scénario A</div>
+    <h3>Le sandwich décolle</h3>
+    <p class="lede">Le redesign fonctionne. On scale.</p>
+    <p class="framing">Le triangle redevient visuel et marchand. Les frigos sont spécialisés. La prod est lissée par la demande (pré-commandes B2B + tail discount). Le concept fast-casual tient la route.</p>
+    <dl>
+      <dt>Lieu</dt>
+      <dd>Takeaway + sur place équilibré, coin travail conservé.</dd>
+      <dt>Équipe</dt>
+      <dd>Inchangée : Laura, Lionel, Lucie, Tristan, Baptiste. Renfort ponctuel aux rushs.</dd>
+      <dt>Offre</dt>
+      <dd>Triangles en display dédié, pâtisseries, un frigo petit-déj curaté, drinks premium derrière le comptoir ou dans un frigo drinks entièrement staged.</dd>
+      <dt>Frigos</dt>
+      <dd>Spécialisés — un job par frigo, moins de SKUs, plus de profondeur.</dd>
+      <dt>Revenu</dt>
+      <dd>Walk-in + B2B matinal (bureaux autour) + delivery structuré (combos) possible en phase 2.</dd>
+      <dt>Risques</dt>
+      <dd>Statu quo déguisé si le redesign est cosmétique. Thibaud peut bloquer la conversation delivery.</dd>
+    </dl>
+    <div class="triggers"><strong>Déclencheurs :</strong> ventes triangles +20-30% vs baseline, waste frigo -50%, ticket moyen stable ou en hausse.</div>
+  </div>
+
+  <div class="scenario scenario-b">
+    <div class="label">Scénario B</div>
+    <h3>Pivot carte à table</h3>
+    <p class="lede">Le triangle flop. On s'aligne sur le setup physique.</p>
+    <p class="framing">Si la signature ne décolle pas malgré le redesign, on arrête le modèle fast-casual. Les banquettes et l'atmosphère suggèrent un service assis — on passe à une carte chef / plats du jour, service à table.</p>
+    <dl>
+      <dt>Lieu</dt>
+      <dd>Dine-in principal, takeaway secondaire. Horaires potentiellement élargis (dîner).</dd>
+      <dt>Équipe</dt>
+      <dd>Besoin d'un chef + renfort salle. Formation service. Laura peut bouger vers la gestion ops / salle.</dd>
+      <dt>Offre</dt>
+      <dd>Carte courte, plats du jour, entrée-plat-dessert, potentiellement carte vins. Petit-déj café conservé.</dd>
+      <dt>Frigos</dt>
+      <dd>Mise en place cuisine, staging vins / drinks, service.</dd>
+      <dt>Revenu</dt>
+      <dd>Ticket moyen x2-3, volume divisé par 2-3. Marge à modéliser avec Xavier.</dd>
+      <dt>Risques</dt>
+      <dd>Complexité opérationnelle x3, CAPEX recrutement, écart vs concept initial et vs la vision simplicité de Thibaud.</dd>
+    </dl>
+    <div class="triggers"><strong>Déclencheurs :</strong> ventes triangles stables ou en baisse après redesign + signal fort sur la demande table / dîner.</div>
+  </div>
+
+  <div class="scenario scenario-c">
+    <div class="label">Scénario C</div>
+    <h3>Lieu événementiel, F&amp;B minimal</h3>
+    <p class="lede">Le triangle flop. On bascule sur l'événementiel.</p>
+    <p class="framing">Journée minimaliste (café + batch), soir / week-end = destination événementielle. Privatisations, dîners signature, tastings, lancements, collabs marques. Le revenu vient des gens qu'on ramène de loin, pas du walk-in de quartier. Les banquettes, le design et le réseau (Iconic, Hexa/eFounders) deviennent les assets principaux.</p>
+    <dl>
+      <dt>Lieu</dt>
+      <dd>Journée = boutique café minimaliste. Soir = destination event. Week-end = privatisations.</dd>
+      <dt>Équipe</dt>
+      <dd>Coupe cuisine (Lionel, repositionnement possible de Laura). Garde 1 barista (Lucie) + 1 prep batch. Ajoute 1 event manager / coordination commerciale.</dd>
+      <dt>Offre journée</dt>
+      <dd>Café, pâtisseries, grilled cheese, 2-3 bowls batch. Simplicité totale.</dd>
+      <dt>Offre soir / event</dt>
+      <dd>Menus event sur mesure, brand collabs, dîners ticketés, pop-ups, privatisations 3-5k€.</dd>
+      <dt>Frigos</dt>
+      <dd>Infrastructure event : cold bar, staging boissons, mise en place.</dd>
+      <dt>Revenu</dt>
+      <dd>F&amp;B walk-in couvre les fixes. Events font la marge. Sponsoring marques possible.</dd>
+      <dt>Risques</dt>
+      <dd>Cash-flow lumpy, concurrence dense (Paris events), besoin d'un concept différenciant. Brand risk si la journée feels abandonnée.</dd>
+    </dl>
+    <div class="triggers"><strong>Déclencheurs :</strong> triangles en baisse nette après redesign + premier event réussi ou demandes entrantes + validation Thibaud.</div>
+  </div>
+
+</div>
+
+<h2>Seuils de décision</h2>
+<div class="metrics">
+  <div class="metric">
+    <div class="metric-label">Vers A — succès triangles</div>
+    <div class="metric-value">+20 à +30 %</div>
+    <div class="metric-sub">Volume triangles vs baseline, sur 2 semaines post-redesign</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Vers B — signal dine-in</div>
+    <div class="metric-value">Table demandée</div>
+    <div class="metric-sub">Demande spontanée "vous servez à table ?", réservations, temps de présence long</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Vers C — signal event</div>
+    <div class="metric-value">Demandes entrantes</div>
+    <div class="metric-sub">Privatisations, pop-ups, marques qui contactent spontanément</div>
+  </div>
+</div>
+
+<h2>À aligner avec Thibaud</h2>
+<div class="card">
+  <p>Les trois scénarios nécessitent une conversation explicite avec Thibaud, mais sur des axes différents.</p>
+  <ul>
+    <li><strong>Scénario A</strong> — point d'accord facile sur "moins de SKUs, un frigo = un job". Le terrain plus sensible est la suite delivery / combos.</li>
+    <li><strong>Scénario B</strong> — écart vs sa vision simplicité et vs le concept initial. Conversation lourde, à appuyer sur données (ventes triangles faibles, forte demande table).</li>
+    <li><strong>Scénario C</strong> — repositionnement complet. Besoin du réseau Iconic et Hexa/eFounders pour sourcer les events — Thibaud devient central à la réussite. À vendre comme valorisation des assets physiques et du réseau existant, pas comme un repli.</li>
+  </ul>
+</div>
+
+<div class="footer">Document vivant — à mettre à jour après le test 2 semaines.</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const SUPABASE_URL = 'https://hnnqbcfmoppcspewchxh.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhubnFiY2Ztb3BwY3NwZXdjaHhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1OTEwMzksImV4cCI6MjA4OTE2NzAzOX0.7TC5CA3TFKPAY_9NF5xhxJTLUKql1ZIz3ZehmnokK20';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value;
+  const pass = document.getElementById('login-pass').value;
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) {
+    document.getElementById('login-error').style.display = 'block';
+    return;
+  }
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+}
+document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (session) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+  }
+});
+</script>
+</body>
+</html>

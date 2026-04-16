@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/", "destination": "/catering.html" },
     { "source": "/kpi", "destination": "/kpi.html" },
-    { "source": "/import-sales", "destination": "/import-sales.html" }
+    { "source": "/import-sales", "destination": "/import-sales.html" },
+    { "source": "/scenarios", "destination": "/scenarios.html" }
   ]
 }
