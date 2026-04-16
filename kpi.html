@@ -204,24 +204,39 @@ async function syncSquare() {
   btn.style.opacity = '0.6';
   try {
     const { data: { session } } = await sb.auth.getSession();
+    const token = session?.access_token || SUPABASE_KEY;
     const res = await fetch(SUPABASE_URL + '/functions/v1/sync-square-sales', {
       method: 'GET',
-      headers: { 'Authorization': 'Bearer ' + (session?.access_token || SUPABASE_KEY) },
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'apikey': SUPABASE_KEY,
+        'Content-Type': 'application/json',
+      },
     });
-    const json = await res.json();
-    if (json.ok) {
+    const text = await res.text();
+    let json;
+    try { json = JSON.parse(text); } catch { json = null; }
+    if (!res.ok) {
+      const msg = json?.error || text || ('HTTP ' + res.status);
+      btn.innerHTML = '&#10007; ' + res.status;
+      btn.style.background = '#f8d7da';
+      console.error('Sync failed:', res.status, msg);
+      alert('Sync failed (' + res.status + '): ' + msg);
+    } else if (json?.ok) {
       btn.innerHTML = '&#10003; ' + json.rows + ' lignes';
       btn.style.background = '#d4edda';
       await loadData();
     } else {
       btn.innerHTML = '&#10007; Erreur';
       btn.style.background = '#f8d7da';
-      console.error(json.error);
+      console.error('Sync failed:', json);
+      alert('Sync failed: ' + (json?.error || text));
     }
   } catch (e) {
     btn.innerHTML = '&#10007; Erreur';
     btn.style.background = '#f8d7da';
     console.error(e);
+    alert('Sync error: ' + (e?.message || e));
   }
   setTimeout(() => { btn.innerHTML = '&#8635; Sync'; btn.style.background = ''; btn.style.opacity = ''; btn.disabled = false; }, 3000);
 }
