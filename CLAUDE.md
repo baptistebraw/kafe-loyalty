@@ -16,6 +16,7 @@ Kafé has been open for several weeks. Baptiste is navigating post-launch operat
 
 - **Positioning tension**: The physical setup (green banquettes, condiment bar) invites staying, while the intended concept leans takeaway — this contradiction needs resolution.
 - **Production vs. waste**: Risk of over-producing to fill display fridges visually, leading to end-of-day waste.
+- **Fridge positioning problem**: The two display fridges (20k€ investment) are perceived as "cheap" by customers — a mix of sandwiches, salads, bowls, and 4€+ bottled drinks creates an incoherent offer, empty-look when partially stocked, and price/perception mismatch on premium drinks next to yogurts. Sandwich-in-fridge is ruled out; chia/skyr sell well but waste remains; salads are hard to forecast.
 - **Partner alignment**: Thibaud favors simplicity and limiting offerings; Baptiste wants to open delivery platforms with structured combos. This misalignment is a live discussion.
 - **Menu gaps**: Healthy options are underrepresented despite strong signals from chia and skyr bowl sales.
 - **Financing**: A loan offer from Caisse d'Épargne Île-de-France (84-month fixed-rate, BPI guarantee at 60%) has been negotiated. Key positions: reduce/waive frais de dossier (framing Iconic Group as the long-term client relationship), restructure CNP insurance to 50/50 rather than 100% per associate, and have Iconic Group bear the personal guarantee (caution personne physique) as majority shareholder, targeting 50% or zero individual exposure.
@@ -33,6 +34,7 @@ Kafé has been open for several weeks. Baptiste is navigating post-launch operat
 - Installing a daily morning service brief (5 min, non-negotiable, Baptiste leads)
 - Writing a "groupe 8+" protocol with Laura: mandatory reservation, restricted menu/combos, pre-order where possible, pre-service team brief, dedicated order-taker, table plan
 - Blocking targeted immersion weeks (one on salle/barista, one in cuisine with Lionel) to build operational authority
+- Redesigning the fridge strategy: one fridge = one job (e.g. petit-déj / pause saine with chia, skyr, overnight oats, jus pressés); move 4€+ bottled drinks either behind the counter (staff-recommended) or into a fully staged dedicated drinks fridge; reduce SKUs and increase depth per SKU; attack forecasting via B2B pre-orders and a loyalty-card "tail" discount after 15h. Test on one fridge for 2 weeks before extending.
 
 ## Key learnings & principles
 
@@ -45,6 +47,8 @@ Kafé has been open for several weeks. Baptiste is navigating post-launch operat
 - **Preparation beats improvisation in service**: "Aura" and clear direction in the moment come from the prep that happened before the shift, not from reacting live. Morning brief + known-group protocol replace heroics.
 - **Laura's rigor is an asset, not a threat**: Her process instinct fills a gap Baptiste doesn't (yet) cover. Channel it rather than counter-balance it. She writes the ops process in her zone; Baptiste holds strategic direction and service tempo. Over-processing is easier to loosen later than chaos is to structure.
 - **"Être partout, donc nulle part"**: DG trap. Pick a single post per service and hold it rather than sampling across the floor.
+- **One fridge = one job**: A display fridge that mixes categories (food, drinks, snacks) reads as commodity/supermarché and devalues premium items. Dedicate each fridge to a single universe, reduce SKUs, increase depth. Half-empty kills perceived value — a "full" fridge sells, a half-stocked one depreciates the whole offer.
+- **Premium drinks need context to justify price**: Bottled drinks at 4€+ self-served in a fridge next to yogurts feel expensive; the same bottles recommended by staff or staged in a dedicated, theatrical display read as curated. Positioning is half the price.
 
 ## Approach & patterns
 
