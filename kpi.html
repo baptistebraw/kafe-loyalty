@@ -203,25 +203,23 @@ async function syncSquare() {
   btn.innerHTML = '&#8987; Sync...';
   btn.style.opacity = '0.6';
   try {
-    const { data: { session } } = await sb.auth.getSession();
-    const res = await fetch(SUPABASE_URL + '/functions/v1/sync-square-sales', {
-      method: 'GET',
-      headers: { 'Authorization': 'Bearer ' + (session?.access_token || SUPABASE_KEY) },
-    });
-    const json = await res.json();
-    if (json.ok) {
-      btn.innerHTML = '&#10003; ' + json.rows + ' lignes';
+    const { data, error } = await sb.functions.invoke('sync-square-sales', { method: 'GET' });
+    if (error) throw error;
+    if (data?.ok) {
+      btn.innerHTML = '&#10003; ' + data.rows + ' lignes';
       btn.style.background = '#d4edda';
       await loadData();
     } else {
       btn.innerHTML = '&#10007; Erreur';
       btn.style.background = '#f8d7da';
-      console.error(json.error);
+      console.error('Sync failed:', data?.error || data);
+      alert('Sync failed: ' + (data?.error || JSON.stringify(data)));
     }
   } catch (e) {
     btn.innerHTML = '&#10007; Erreur';
     btn.style.background = '#f8d7da';
     console.error(e);
+    alert('Sync error: ' + (e?.message || e));
   }
   setTimeout(() => { btn.innerHTML = '&#8635; Sync'; btn.style.background = ''; btn.style.opacity = ''; btn.disabled = false; }, 3000);
 }
