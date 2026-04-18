@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kafé — Menu traiteur</title>
+<style>
+@font-face{font-family:Satoshi;src:url(fonts/Satoshi-Regular.woff2) format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:Satoshi;src:url(fonts/Satoshi-Italic.woff2) format('woff2');font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:Satoshi;src:url(fonts/Satoshi-Medium.woff2) format('woff2');font-weight:500;font-display:swap}
+@font-face{font-family:Satoshi;src:url(fonts/Satoshi-Bold.woff2) format('woff2');font-weight:700;font-display:swap}
+@font-face{font-family:Satoshi;src:url(fonts/Satoshi-Black.woff2) format('woff2');font-weight:900;font-display:swap}
+
+:root{
+  --ink:#1A1A1A;
+  --cream:#F3E4C3;
+  --offwhite:#EFEAE0;
+  --sage:#A5BFB5;
+  --grass:#5AA04A;
+  --crimson:#D83250;
+  --salmon:#F5A8B0;
+  --peach:#ECCC9A;
+  --earth:#8B6A4D;
+
+  --fg:var(--ink);
+  --bg:var(--sage);
+  --rule:var(--ink);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--fg);font-family:Satoshi,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision}
+img{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+a:hover{opacity:.7;transition:opacity 120ms cubic-bezier(.2,.7,.2,1)}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+
+/* ─── Nav ─── */
+.nav{
+  position:sticky;top:0;z-index:20;
+  background:var(--sage);color:var(--ink);
+  border-bottom:1.5px solid var(--ink);
+}
+.nav-inner{
+  max-width:1440px;margin:0 auto;padding:18px 48px;
+  display:flex;align-items:center;gap:32px;
+}
+.nav-logo img{height:30px;width:auto}
+.nav-links{display:flex;gap:28px;margin-left:40px;font-weight:500;font-size:13px;letter-spacing:.1em;text-transform:uppercase}
+.nav-links a[aria-current=page]{font-weight:900;text-decoration:underline;text-underline-offset:6px;text-decoration-thickness:2px}
+.nav-cta{
+  margin-left:auto;
+  display:inline-flex;align-items:center;gap:10px;
+  padding:10px 16px;border:1.5px solid var(--ink);background:var(--ink);color:var(--cream);
+  font-weight:700;font-size:12px;letter-spacing:.06em;
+}
+.nav-cta::before{content:'';width:9px;height:9px;background:#25D366;border-radius:50%}
+.nav-burger{display:none}
+
+@media (max-width:880px){
+  .nav-inner{padding:14px 20px;gap:12px}
+  .nav-links,.nav-cta{display:none}
+  .nav-burger{display:inline-flex;margin-left:auto;font-size:20px;font-weight:900}
+}
+
+/* ─── Display (condensed) ───
+   transform: scaleX(.78) shrinks visual width but NOT the layout box.
+   Compensate by setting width:128.205% (=1/.78) so the scaled element
+   visually fills exactly 100% of its parent. Parent must constrain it. */
+.display{
+  font-weight:900;text-transform:uppercase;
+  line-height:.86;letter-spacing:-.03em;
+  font-family:Satoshi,sans-serif;
+  display:block;
+  width:128.205%;
+  transform:scaleX(.78);transform-origin:left top;
+  margin:0;
+  overflow-wrap:break-word;
+  word-break:normal;
+}
+.display.center{transform-origin:center top;margin-left:auto;margin-right:auto}
+
+.eyebrow{
+  font-size:12px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;
+}
+
+/* ─── Hero ─── */
+.hero{
+  background:var(--sage);color:var(--ink);
+  padding:48px 48px 0;
+  position:relative;overflow:hidden;
+}
+.hero-grid{
+  max-width:1440px;margin:0 auto;
+  display:grid;grid-template-columns:1fr 280px;gap:48px;align-items:end;
+  padding-bottom:24px;
+}
+.hero-eye{display:flex;align-items:center;gap:14px;margin-bottom:24px}
+.hero-eye .dot{width:10px;height:10px;background:var(--ink);border-radius:50%}
+.hero-title{
+  font-size:clamp(72px,11vw,180px);
+  line-height:.82;
+  margin-bottom:8px;
+}
+.hero-meta{
+  display:flex;flex-direction:column;gap:12px;
+  padding-bottom:14px;font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+}
+.hero-meta div{display:flex;justify-content:space-between;gap:14px;border-bottom:1.5px solid var(--ink);padding-bottom:10px}
+.hero-meta div:last-child{border-bottom:0}
+.hero-meta b{font-weight:900}
+
+.hero-rule{border-top:1.5px solid var(--ink);margin-top:8px}
+
+.hero-sub{
+  max-width:1440px;margin:0 auto;
+  display:grid;grid-template-columns:1.4fr 1fr;gap:48px;
+  padding:28px 0 56px;
+}
+.hero-sub p{font-size:22px;line-height:1.35;max-width:52ch;font-weight:500}
+.hero-stats{
+  display:flex;flex-direction:column;gap:14px;
+  align-self:end;
+}
+.hero-stat{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1.5px solid var(--ink);padding:8px 0;font-size:13px;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+.hero-stat b{font-size:22px;font-weight:900;letter-spacing:-.02em;text-transform:none}
+.hero-stat small{font-weight:500;font-size:11px}
+
+@media (max-width:900px){
+  .hero{padding:28px 20px 0}
+  .hero-grid{grid-template-columns:1fr;gap:18px}
+  .hero-sub{grid-template-columns:1fr;gap:24px;padding:22px 0 36px}
+  .hero-sub p{font-size:18px}
+  .hero-meta{flex-direction:row;flex-wrap:wrap;gap:10px 22px;padding-bottom:0}
+  .hero-meta div{border-bottom:0;padding-bottom:0;font-size:11px}
+}
+
+/* ─── Formula section wrapper ─── */
+.formula{
+  padding:72px 48px 88px;
+  position:relative;
+  border-top:1.5px solid var(--ink);
+}
+.formula .inner{
+  max-width:1440px;margin:0 auto;
+  display:grid;grid-template-columns:320px 1fr 340px;gap:56px;
+  align-items:start;
+}
+.formula.alt{background:var(--cream);color:var(--ink)}
+.formula.alt .cta-pill{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+.formula.dark{background:var(--ink);color:var(--peach)}
+.formula.dark .menu-col h5{color:#ecb07044}
+.formula.dark .price-sub small,.formula.dark .note{color:#ecb070aa}
+.formula.dark .cta-pill{background:var(--peach);color:var(--ink);border-color:var(--peach)}
+.formula.dark .rule-line{background:var(--peach);opacity:.4}
+.formula.sage{background:var(--sage);color:var(--ink)}
+.formula.salmon{background:var(--salmon);color:var(--ink)}
+
+.formula-head{position:sticky;top:80px}
+.formula-num{
+  font-weight:900;font-size:11px;letter-spacing:.3em;text-transform:uppercase;
+  margin-bottom:14px;display:flex;align-items:center;gap:10px;
+}
+.formula-num::before{content:'';width:24px;height:1.5px;background:currentColor}
+.formula-name{
+  font-size:clamp(40px,3.8vw,58px);line-height:.92;
+  letter-spacing:-.03em;
+  margin-bottom:20px;
+  transform:none;
+  width:auto;
+  overflow-wrap:normal;
+  word-break:normal;
+  hyphens:none;
+}
+.formula-desc{font-size:16px;line-height:1.5;max-width:30ch;font-weight:400;opacity:.85}
+
+.price-block{margin-top:28px}
+.price-sub{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;opacity:.6;margin-bottom:4px}
+.price-big{font-size:48px;font-weight:900;letter-spacing:-.03em;line-height:1}
+.price-big small{font-size:14px;font-weight:500;letter-spacing:0;opacity:.6;margin-left:6px;text-transform:none}
+
+.menu-col{display:flex;flex-direction:column;gap:18px}
+.menu-col .group h5{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;opacity:.55;margin-bottom:8px}
+.menu-col ul{list-style:none;display:flex;flex-direction:column;gap:4px}
+.menu-col li{
+  font-size:15px;line-height:1.5;
+  padding:2px 0 2px 16px;
+  position:relative;
+}
+.menu-col li::before{content:'·';position:absolute;left:2px;font-weight:700;opacity:.5}
+.menu-col li b{font-weight:700}
+.menu-col .rule-line{height:1px;background:var(--ink);opacity:.12;margin:2px 0}
+
+.aside{display:flex;flex-direction:column;gap:22px}
+.illus{
+  aspect-ratio:4/3;
+  border:1.5px solid currentColor;
+  position:relative;
+  overflow:hidden;
+}
+.illus svg{position:absolute;inset:0;width:100%;height:100%}
+.illus.illus-photo{aspect-ratio:3/4;border-color:transparent;background:var(--ink)}
+.illus.illus-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.illus.illus-wide{aspect-ratio:4/3}
+.illus-duo{display:flex;flex-direction:column;gap:10px}
+.illus .tag{
+  position:absolute;bottom:10px;right:10px;
+  font-size:10px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;
+  opacity:.5;
+}
+.option-card{
+  border:1.5px solid currentColor;
+  padding:18px 20px;
+}
+.option-card .eye{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;opacity:.6;margin-bottom:8px}
+.option-card .opt-title{font-size:20px;font-weight:900;letter-spacing:-.01em;line-height:1.1;margin-bottom:6px;text-transform:uppercase}
+.option-card .opt-desc{font-size:13px;line-height:1.5;opacity:.75}
+.option-card .opt-price{font-size:15px;font-weight:900;margin-top:10px}
+
+.cta-pill{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:14px 22px;border:1.5px solid var(--ink);
+  background:var(--ink);color:var(--cream);
+  font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+}
+.cta-pill::before{content:'';width:10px;height:10px;background:#25D366;border-radius:50%}
+.cta-ghost{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:12px 20px;border:1.5px solid currentColor;
+  font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+}
+
+/* Déjeuner sub-formulas (inline 3-col mini-table) */
+.subs{
+  grid-column:2 / span 2;
+  margin-top:28px;
+  border-top:1.5px solid currentColor;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:0;
+}
+.sub{
+  padding:22px 22px 26px;
+  border-right:1.5px solid currentColor;
+}
+.sub:last-child{border-right:0}
+.sub.pop{background:var(--crimson);color:var(--cream)}
+.sub.pop .sub-name,.sub.pop .sub-price{color:var(--cream)}
+.sub.pop .sub-items li::before{color:var(--salmon)}
+.sub-eye{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;opacity:.6;margin-bottom:6px;display:flex;justify-content:space-between}
+.sub-eye .badge{background:currentColor;color:var(--crimson);padding:2px 8px;font-size:9px;letter-spacing:.14em}
+.sub.pop .sub-eye .badge{color:var(--crimson);background:var(--cream)}
+.sub-name{font-size:30px;font-weight:900;letter-spacing:-.02em;text-transform:uppercase;line-height:.95;margin-bottom:4px}
+.sub-price{font-size:22px;font-weight:900;letter-spacing:-.02em;margin-bottom:14px}
+.sub-price small{font-size:11px;font-weight:500;letter-spacing:0;opacity:.6;margin-left:4px;text-transform:none}
+.sub-items{list-style:none;display:flex;flex-direction:column;gap:4px}
+.sub-items li{font-size:13px;padding-left:12px;position:relative;line-height:1.5;opacity:.88}
+.sub-items li::before{content:'·';position:absolute;left:2px;opacity:.5}
+.sub-items li b{font-weight:700;opacity:1}
+
+@media (max-width:1100px){
+  .formula{padding:56px 20px 64px}
+  .formula .inner{grid-template-columns:1fr;gap:28px}
+  .formula-head{position:static}
+  .subs{grid-column:1;grid-template-columns:1fr;border-top:1.5px solid currentColor}
+  .sub{border-right:0;border-bottom:1.5px solid currentColor}
+  .sub:last-child{border-bottom:0}
+  .hero-title{letter-spacing:-.04em}
+}
+
+/* ─── FAQ ─── */
+.faq{
+  background:var(--offwhite);color:var(--ink);
+  padding:80px 48px 96px;
+  border-top:1.5px solid var(--ink);
+}
+.faq-inner{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:360px 1fr;gap:80px}
+.faq h2{font-size:clamp(44px,5vw,76px);line-height:.9;margin-bottom:18px}
+.faq-intro{font-size:15px;line-height:1.55;opacity:.75;max-width:28ch;margin-bottom:24px}
+.faq-list details{
+  border-top:1.5px solid var(--ink);padding:18px 0;
+}
+.faq-list details:last-child{border-bottom:1.5px solid var(--ink)}
+.faq-list summary{
+  list-style:none;cursor:pointer;
+  font-size:20px;font-weight:700;letter-spacing:-.01em;
+  display:flex;justify-content:space-between;align-items:center;gap:20px;
+}
+.faq-list summary::-webkit-details-marker{display:none}
+.faq-list summary::after{content:'+';font-size:28px;font-weight:900;transition:transform 220ms cubic-bezier(.2,.7,.2,1)}
+.faq-list details[open] summary::after{content:'−'}
+.faq-list .ans{font-size:15px;line-height:1.55;opacity:.8;max-width:60ch;padding-top:12px}
+
+@media (max-width:900px){
+  .faq{padding:56px 20px 64px}
+  .faq-inner{grid-template-columns:1fr;gap:28px}
+}
+
+/* ─── Closing CTA strip ─── */
+.closer{
+  background:var(--ink);color:var(--cream);
+  padding:96px 48px;
+  border-top:1.5px solid var(--ink);
+  position:relative;overflow:hidden;
+}
+.closer-inner{
+  max-width:1440px;margin:0 auto;
+  display:grid;grid-template-columns:1fr auto;gap:56px;align-items:end;
+}
+.closer h2{
+  font-size:clamp(72px,11vw,184px);line-height:.82;letter-spacing:-.03em;
+  color:var(--salmon);
+}
+.closer .right{display:flex;flex-direction:column;gap:18px;align-items:flex-end;text-align:right}
+.closer .right .eye{color:var(--peach);opacity:.7}
+.closer .right .phone{font-size:28px;font-weight:900;letter-spacing:-.01em}
+.closer .cta-pill{background:var(--salmon);color:var(--ink);border-color:var(--salmon);padding:16px 26px;font-size:14px}
+.closer-alt{font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.6;font-weight:500}
+
+@media (max-width:900px){
+  .closer{padding:56px 20px}
+  .closer-inner{grid-template-columns:1fr;gap:24px}
+  .closer .right{align-items:flex-start;text-align:left}
+}
+
+/* ─── Footer ─── */
+.foot{
+  background:var(--cream);color:var(--ink);
+  padding:36px 48px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:11px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;
+  border-top:1.5px solid var(--ink);
+}
+.foot b{font-weight:900}
+@media (max-width:800px){.foot{padding:24px 20px;flex-wrap:wrap;gap:12px}}
+
+/* ─── Misc ─── */
+.note{font-size:11.5px;line-height:1.5;opacity:.6;font-style:italic}
+.kbr{display:block;height:0}
+
+/* scale hero display on narrow, don't let it exceed container */
+@media (max-width:500px){
+  .hero-title{font-size:78px}
+  .formula-name{font-size:54px}
+  .hero-sub p{font-size:17px}
+}
+</style>
+</head>
+<body>
+
+<!-- ─── NAV ─── -->
+<header class="nav">
+  <div class="nav-inner">
+    <a class="nav-logo" href="/"><img src="assets/kafe-wordmark-ink.png" alt="Kafé"></a>
+    <nav class="nav-links">
+      <a href="#">Le café</a>
+      <a href="#">Carte</a>
+      <a href="#" aria-current="page">Traiteur</a>
+      <a href="#">Nous trouver</a>
+    </nav>
+    <a class="nav-cta" href="https://wa.me/33664976390">WhatsApp · Demander un devis</a>
+    <button class="nav-burger" aria-label="Menu">☰</button>
+  </div>
+</header>
+
+<!-- ─── HERO ─── -->
+<section class="hero">
+  <div class="hero-grid">
+    <div>
+      <div class="hero-eye">
+        <span class="dot"></span>
+        <span class="eyebrow">Menu traiteur · Paris 10<sup>e</sup></span>
+      </div>
+      <h1 class="display hero-title">Menu<br>traiteur</h1>
+    </div>
+    <div class="hero-meta">
+      <div><span>Ouverture</span><b>Lun — Ven</b></div>
+      <div><span>Livraison</span><b>Paris 10 · 11</b></div>
+      <div><span>Délai</span><b>J-1 · 18h</b></div>
+      <div><span>Minimum</span><b>8 pers.</b></div>
+    </div>
+  </div>
+  <div class="hero-rule"></div>
+  <div class="hero-sub">
+    <p>Petits-déjeuners, déjeuners et pauses gourmandes pour vos équipes. Produits frais, maison, livrés dans la matinée — pensés comme chez nous.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><span>À partir de</span><b>12€<small> / pers.</small></b></div>
+      <div class="hero-stat"><span>Trois formules</span><b>01 · 02 · 03</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FORMULE 01 — PETIT DÉJEUNER ─── -->
+<section class="formula alt" id="petit-dejeuner">
+  <div class="inner">
+    <div class="formula-head">
+      <div class="formula-num">Formule 01</div>
+      <h2 class="display formula-name">Petit<br>déjeuner</h2>
+      <p class="formula-desc">Un réveil doux et gourmand pour vos équipes. Produits frais, maison, servis en assortiment.</p>
+      <div class="price-block">
+        <div class="price-sub">À partir de</div>
+        <div class="price-big">12€<small>/ personne</small></div>
+      </div>
+    </div>
+
+    <div class="menu-col">
+      <div class="group">
+        <h5>Sucré — bols &amp; assortiment</h5>
+        <ul>
+          <li><b>Skyr &amp; chia pudding</b> en assortiment, à garnir de nos <b>toppings maison</b> — granola, fruits frais, beurre de cacahuète</li>
+          <li><b>Scones</b> salés et sucrés, tout juste sortis du four</li>
+          <li><b>Compotée de fruits</b> maison</li>
+        </ul>
+      </div>
+      <div class="rule-line"></div>
+      <div class="group">
+        <h5>Salé &amp; protéines</h5>
+        <ul>
+          <li><b>Œufs durs fermiers</b>, fleur de sel &amp; piment d'Espelette</li>
+        </ul>
+      </div>
+      <div class="rule-line"></div>
+      <div class="group">
+        <h5>Boissons &amp; shots</h5>
+        <ul>
+          <li><b>Jus frais</b> pressés du jour</li>
+          <li><b>Shot de curcuma &amp; gingembre</b></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="aside">
+      <div class="illus illus-photo">
+        <img src="assets/petit-dejeuner-skyr-chia.jpg" alt="Assortiment de skyr & chia pudding avec fruits frais">
+      </div>
+      <div class="option-card">
+        <div class="eye">Option · en sus</div>
+        <div class="opt-title">Thermos<br>café Fève</div>
+        <div class="opt-desc">Café de spécialité torréfié par Fève, filtré le matin même et servi en thermos de 2&nbsp;L à disposition.</div>
+        <div class="opt-price">+ en sus</div>
+      </div>
+      <a class="cta-pill" href="https://wa.me/33664976390?text=Bonjour%20Kaf%C3%A9%2C%20je%20souhaiterais%20commander%20le%20petit%20d%C3%A9jeuner%20traiteur.">
+        Demander un devis
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FORMULE 02 — DÉJEUNER ─── -->
+<section class="formula sage" id="dejeuner">
+  <div class="inner">
+    <div class="formula-head">
+      <div class="formula-num">Formule 02</div>
+      <h2 class="display formula-name">Déjeuner</h2>
+      <p class="formula-desc">Triangles de pain au levain bio, hots, salades fraîches, desserts maison. Trois formules, selon l'appétit.</p>
+      <div class="price-block">
+        <div class="price-sub">À partir de</div>
+        <div class="price-big">15€<small>/ personne</small></div>
+      </div>
+    </div>
+
+    <div class="menu-col">
+      <div class="group">
+        <h5>Ce que tout le monde partage</h5>
+        <ul>
+          <li><b>Triangles de pain au levain</b> bio, préparés le matin</li>
+          <li><b>Nos hots</b> — grilled cheese, croque-monsieur</li>
+          <li><b>Eau</b> plate ou pétillante, à volonté</li>
+        </ul>
+      </div>
+      <div class="rule-line"></div>
+      <div class="group">
+        <h5>Ce qui change d'une formule à l'autre</h5>
+        <ul>
+          <li><b>Nombre de triangles</b> &amp; variétés (pastrami, bang bang, english…)</li>
+          <li>Présence d'une <b>salade parisienne</b> ou d'un assortiment de 2 salades du moment</li>
+          <li><b>Dessert</b> maison, <b>café Fève</b> en thermos, <b>pause goûter</b> l'après-midi</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="aside">
+      <div class="illus illus-photo">
+        <img src="assets/dejeuner-triangles.jpg" alt="Triangles de pain au levain assortis">
+      </div>
+      <a class="cta-pill" href="https://wa.me/33664976390?text=Bonjour%20Kaf%C3%A9%2C%20je%20souhaiterais%20commander%20la%20formule%20d%C3%A9jeuner.">
+        Demander un devis
+      </a>
+      <p class="note">Choisissez votre formule ci-dessous &amp; précisez-la dans votre message.</p>
+    </div>
+
+    <!-- 3 sub-formulas, inline -->
+    <div class="subs">
+      <div class="sub">
+        <div class="sub-eye"><span>Essentielle</span></div>
+        <div class="sub-name">Essentielle</div>
+        <div class="sub-price">15€<small>/ pers.</small></div>
+        <ul class="sub-items">
+          <li><b>3 triangles</b> — jambon Paris, rillette truite, english (vg)</li>
+          <li>2 hots — grilled cheese, croque</li>
+          <li>Cookies — sésame choco, matcha, pistache</li>
+          <li>Eau plate ou pétillante</li>
+        </ul>
+      </div>
+      <div class="sub pop">
+        <div class="sub-eye"><span>Gourmande</span><span class="badge">Populaire</span></div>
+        <div class="sub-name">Gourmande</div>
+        <div class="sub-price">19€<small>/ pers.</small></div>
+        <ul class="sub-items">
+          <li><b>4 triangles</b> — + pastrami &amp; bang bang</li>
+          <li>Salade parisienne</li>
+          <li>Dessert — fondant, <b>cheesecake basque</b>, cookies, madeleines</li>
+          <li>Charitea, Lemonaid, eau · <b>barista chez Kafé</b> 😊 (à venir chercher)</li>
+        </ul>
+      </div>
+      <div class="sub">
+        <div class="sub-eye"><span>Plénière</span></div>
+        <div class="sub-name">Plénière</div>
+        <div class="sub-price">28€<small>/ pers.</small></div>
+        <ul class="sub-items">
+          <li>Triangles &amp; hots en assortiment</li>
+          <li><b>Assortiment de 2 salades</b> du moment</li>
+          <li><b>Thermos café Fève</b> — Colombie, pomme verte &amp; noisette</li>
+          <li><b>Pause goûter</b> l'après-midi — cheesecake, gâteau orange, banana bread, madeleines, granola</li>
+          <li>Charitea, Lemonaid, eau · <b>barista chez Kafé</b> 😊 (à venir chercher)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FORMULE 03 — PAUSE GOURMANDE ─── -->
+<section class="formula salmon" id="pause-gourmande">
+  <div class="inner">
+    <div class="formula-head">
+      <div class="formula-num">Formule 03</div>
+      <h2 class="display formula-name">Pause<br>gourmande</h2>
+      <p class="formula-desc">Un assortiment de toutes nos pâtisseries maison pour les pauses de l'après-midi. Sucré, généreux, partageur.</p>
+      <div class="price-block">
+        <div class="price-sub">À partir de</div>
+        <div class="price-big">12€<small>/ personne</small></div>
+      </div>
+    </div>
+
+    <div class="menu-col">
+      <div class="group">
+        <h5>Gâteaux &amp; tartes</h5>
+        <ul>
+          <li><b>Cheesecake basque</b></li>
+          <li><b>Fondant chocolat</b> fleur de sel</li>
+          <li><b>Gâteau à l'orange</b></li>
+          <li><b>Banana bread</b></li>
+        </ul>
+      </div>
+      <div class="rule-line"></div>
+      <div class="group">
+        <h5>Petits plaisirs</h5>
+        <ul>
+          <li><b>Cookies</b> — sésame choco, matcha, pistache</li>
+          <li><b>Madeleines</b> citron</li>
+          <li><b>Scones</b> sucrés</li>
+          <li><b>Barres de granola</b> maison</li>
+        </ul>
+      </div>
+      <div class="rule-line"></div>
+      <div class="group">
+        <h5>Boissons</h5>
+        <ul>
+          <li><b>Jus frais</b> pressés du jour</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="aside">
+      <div class="illus illus-photo illus-wide">
+        <img src="assets/pause-cookie-pistache.jpg" alt="Cookie pistache de Kafé">
+      </div>
+      <div class="option-card">
+        <div class="eye">Option · en sus</div>
+        <div class="opt-title">Thermos<br>café Fève</div>
+        <div class="opt-desc">Grand cru Colombie — pomme verte, noisette. Servi en thermos de 2&nbsp;L à disposition.</div>
+        <div class="opt-price">+ en sus</div>
+      </div>
+      <a class="cta-pill" href="https://wa.me/33664976390?text=Bonjour%20Kaf%C3%A9%2C%20je%20souhaiterais%20commander%20la%20pause%20gourmande.">
+        Demander un devis
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FAQ ─── -->
+<section class="faq">
+  <div class="faq-inner">
+    <div>
+      <h2 class="display">Questions<br>fréquentes</h2>
+      <p class="faq-intro">Pas de réponse ici ? Écrivez-nous sur WhatsApp, c'est plus rapide.</p>
+      <a class="cta-ghost" href="https://wa.me/33664976390">Nous écrire →</a>
+    </div>
+    <div class="faq-list">
+      <details open>
+        <summary>Jusqu'à quand puis-je commander ?</summary>
+        <p class="ans">La veille avant 18h, par WhatsApp. Pour des commandes de plus de 50 personnes, on préfère s'y prendre 2 à 3 jours à l'avance pour caler la cuisine.</p>
+      </details>
+      <details>
+        <summary>Où livrez-vous ?</summary>
+        <p class="ans">Paris 10<sup>e</sup> et 11<sup>e</sup> principalement, gratuitement à moins de 250&nbsp;m de la boutique (12 rue Martel). Au-delà, on se déplace avec une livraison forfaitaire — on vous dit tout à la demande.</p>
+      </details>
+      <details>
+        <summary>Et les régimes (végé, sans gluten, allergies) ?</summary>
+        <p class="ans">Toutes nos formules ont une option végétarienne (triangle English, salades, desserts sans protéine animale). Pour les allergies, précisez-les dans votre message — on adapte au cas par cas.</p>
+      </details>
+      <details>
+        <summary>Quel est le minimum de commande ?</summary>
+        <p class="ans">8 personnes. En dessous, on vous invite à passer boutique — on vous gardera vos triangles au chaud.</p>
+      </details>
+      <details>
+        <summary>Puis-je mélanger les formules ?</summary>
+        <p class="ans">Oui. Un petit déjeuner pour la réunion du matin, une pause gourmande l'après-midi — on compose. Précisez l'horaire de chaque livraison dans votre demande.</p>
+      </details>
+      <details>
+        <summary>Comment je paie ?</summary>
+        <p class="ans">Virement ou carte à réception, facture envoyée par email. Pas d'acompte pour les commandes jusqu'à 500€.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CLOSING CTA ─── -->
+<section class="closer">
+  <div class="closer-inner">
+    <h2 class="display">Votre<br>fix<br>traiteur.</h2>
+    <div class="right">
+      <span class="eyebrow eye">WhatsApp · 7j/7</span>
+      <span class="phone">+33 6 64 97 63 90</span>
+      <a class="cta-pill" href="https://wa.me/33664976390">Demander un devis</a>
+      <span class="closer-alt">Ou par email — <a href="mailto:traiteur@kafe.paris" style="text-decoration:underline;text-underline-offset:3px">traiteur@kafe.paris</a></span>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer class="foot">
+  <span><b>Kafé</b> · 12 rue Martel · Paris 10<sup>e</sup></span>
+  <span>kafe.paris</span>
+  <span>© 2026</span>
+</footer>
+
+</body>
+</html>
