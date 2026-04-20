@@ -244,12 +244,14 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 }
 .sub{
   padding:22px 22px 26px;
-  border-right:1.5px solid currentColor;
 }
-.sub:last-child{border-right:0}
+.sub.light{background:var(--cream);color:var(--ink)}
 .sub.pop{background:var(--crimson);color:var(--cream)}
 .sub.pop .sub-name,.sub.pop .sub-price{color:var(--cream)}
 .sub.pop .sub-items li::before{color:var(--salmon)}
+.sub.deep{background:var(--earth);color:var(--cream)}
+.sub.deep .sub-name,.sub.deep .sub-price{color:var(--cream)}
+.sub.deep .sub-items li::before{color:var(--peach)}
 .sub-eye{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;opacity:.6;margin-bottom:6px;display:flex;justify-content:space-between}
 .sub-eye .badge{background:currentColor;color:var(--crimson);padding:2px 8px;font-size:9px;letter-spacing:.14em}
 .sub.pop .sub-eye .badge{color:var(--crimson);background:var(--cream)}
@@ -278,7 +280,7 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
   border-top:1.5px solid var(--ink);
 }
 .faq-inner{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:360px 1fr;gap:80px}
-.faq h2{font-size:clamp(44px,5vw,76px);line-height:.9;margin-bottom:18px}
+.faq h2{font-size:clamp(36px,4vw,56px);line-height:.9;margin-bottom:18px;overflow-wrap:normal;word-break:keep-all}
 .faq-intro{font-size:15px;line-height:1.55;opacity:.75;max-width:28ch;margin-bottom:24px}
 .faq-list details{
   border-top:1.5px solid var(--ink);padding:18px 0;
@@ -481,7 +483,7 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 
     <!-- 3 sub-formulas, inline -->
     <div class="subs">
-      <div class="sub">
+      <div class="sub light">
         <div class="sub-eye"><span>Essentielle</span></div>
         <div class="sub-name">Essentielle</div>
         <div class="sub-price">15€<small>/ pers.</small></div>
@@ -503,7 +505,7 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
           <li>Charitea, Lemonaid, eau · <b>barista chez Kafé</b> 😊 (à venir chercher)</li>
         </ul>
       </div>
-      <div class="sub">
+      <div class="sub deep">
         <div class="sub-eye"><span>Plénière</span></div>
         <div class="sub-name">Plénière</div>
         <div class="sub-price">28€<small>/ pers.</small></div>
