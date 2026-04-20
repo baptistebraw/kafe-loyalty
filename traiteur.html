@@ -15,7 +15,9 @@
   --ink:#1A1A1A;
   --cream:#F3E4C3;
   --offwhite:#EFEAE0;
+  --sage-pale:#D8E4DC;
   --sage:#A5BFB5;
+  --sage-deep:#728A7E;
   --grass:#5AA04A;
   --crimson:#D83250;
   --salmon:#F5A8B0;
@@ -145,14 +147,12 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
   display:grid;grid-template-columns:320px 1fr 340px;gap:56px;
   align-items:start;
 }
-.formula.alt{background:var(--cream);color:var(--ink)}
-.formula.dark{background:var(--ink);color:var(--peach)}
-.formula.dark .menu-col h5{color:#ecb07044}
-.formula.dark .price-sub small,.formula.dark .note{color:#ecb070aa}
-.formula.dark .cta-pill{background:var(--peach);color:var(--ink);border-color:var(--peach)}
-.formula.dark .rule-line{background:var(--peach);opacity:.4}
+.formula.alt{background:var(--sage-pale);color:var(--ink)}
 .formula.sage{background:var(--sage);color:var(--ink)}
-.formula.salmon{background:var(--salmon);color:var(--ink)}
+.formula.deep{background:var(--sage-deep);color:var(--cream)}
+.formula.deep .menu-col h5{color:#f3e4c377}
+.formula.deep .price-sub small,.formula.deep .note{color:#f3e4c3aa}
+.formula.deep .rule-line{background:var(--cream);opacity:.4}
 
 .formula-head{position:sticky;top:80px}
 .formula-num{
@@ -520,7 +520,7 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 </section>
 
 <!-- ─── FORMULE 03 — PAUSE GOURMANDE ─── -->
-<section class="formula salmon" id="pause-gourmande">
+<section class="formula deep" id="pause-gourmande">
   <div class="inner">
     <div class="formula-head">
       <div class="formula-num">Formule 03</div>
