@@ -349,9 +349,106 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
   .formula-name{font-size:54px}
   .hero-sub p{font-size:17px}
 }
+
+/* ─── Print button (écran uniquement) ─── */
+.print-fab{
+  position:fixed;top:18px;right:18px;z-index:50;
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 14px;border:1.5px solid var(--ink);background:var(--cream);color:var(--ink);
+  font-family:Satoshi,sans-serif;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.12);
+}
+.print-fab:hover{background:var(--peach)}
+
+/* ─── Print ─── */
+@media print{
+  @page{size:A4;margin:12mm}
+  *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important}
+  html,body{background:#fff !important}
+  .print-fab,.nav,.cta-pill,.cta-ghost,.nav-cta,.nav-burger{display:none !important}
+
+  /* Hero — compact */
+  .hero{padding:0 0 14px !important}
+  .hero-grid{padding-bottom:12px;gap:24px;grid-template-columns:1fr 240px}
+  .hero-logo{height:32px;margin-bottom:14px}
+  .hero-title{font-size:72px !important;line-height:.85 !important}
+  .hero-meta{gap:6px;font-size:10px;padding-bottom:6px}
+  .hero-meta div{padding-bottom:6px}
+  .hero-sub{padding:12px 0 16px;gap:24px}
+  .hero-sub p{font-size:13px;line-height:1.4;max-width:none}
+  .hero-stat{padding:5px 0;font-size:10px}
+  .hero-stat b{font-size:15px}
+
+  /* Formulas — chacune sur sa page */
+  .formula{padding:18px 0 20px !important;page-break-inside:avoid;break-inside:avoid}
+  #dejeuner,#pause-gourmande,.faq{page-break-before:always;break-before:page}
+  .formula .inner{grid-template-columns:220px 1fr 220px !important;gap:22px !important}
+  .formula-head{position:static !important;top:auto !important}
+  .formula-num{font-size:10px;margin-bottom:8px}
+  .formula-name{font-size:36px !important;line-height:.95 !important;margin-bottom:10px !important}
+  .formula-desc{font-size:12px;line-height:1.4}
+  .price-block{margin-top:14px}
+  .price-big{font-size:32px !important}
+  .price-big small{font-size:11px}
+
+  .menu-col{gap:10px}
+  .menu-col .group h5{font-size:9px;margin-bottom:5px}
+  .menu-col li{font-size:12px;line-height:1.4;padding:1px 0 1px 14px}
+
+  .aside{gap:12px}
+  .illus{aspect-ratio:4/3}
+  .illus.illus-photo{aspect-ratio:4/3}
+  .option-card{padding:10px 12px}
+  .option-card .opt-title{font-size:14px}
+  .option-card .opt-desc{font-size:10px;line-height:1.4}
+  .option-card .opt-price{font-size:12px;margin-top:6px}
+  .opt-logos{padding-bottom:8px;margin-bottom:8px}
+  .opt-logos img{height:16px}
+
+  /* Sub-formulas (déjeuner) */
+  .subs{margin-top:16px !important;grid-column:1 / -1}
+  .sub{padding:12px 12px 14px}
+  .sub-eye{font-size:9px;margin-bottom:4px}
+  .sub-name{font-size:20px !important;margin-bottom:2px}
+  .sub-price{font-size:15px !important;margin-bottom:8px}
+  .sub-items li{font-size:11px;line-height:1.4;padding-left:10px}
+
+  /* FAQ — toutes ouvertes */
+  .faq{padding:18px 0 !important}
+  .faq-inner{grid-template-columns:1fr !important;gap:14px !important}
+  .faq h2{font-size:34px !important;margin-bottom:10px}
+  .faq-intro{font-size:12px;margin-bottom:0;max-width:none}
+  .faq-list details[open] summary::after,.faq-list summary::after{content:'' !important;display:none}
+  .faq-list details{padding:10px 0;page-break-inside:avoid;break-inside:avoid}
+  .faq-list summary{font-size:14px;cursor:default}
+  .faq-list .ans{font-size:12px;line-height:1.5;padding-top:6px;display:block !important}
+
+  /* Footer */
+  .foot{padding:12px 0;font-size:9px}
+}
 </style>
 </head>
 <body>
+
+<button class="print-fab" onclick="printMenu()" title="Imprimer le menu">&#128424; Imprimer</button>
+
+<script>
+function printMenu(){
+  // ouvre tous les <details> avant impression, remet l'état après
+  const all = document.querySelectorAll('.faq-list details');
+  const prev = [...all].map(d => d.open);
+  all.forEach(d => d.open = true);
+  const restore = () => {
+    all.forEach((d, i) => d.open = prev[i]);
+    window.removeEventListener('afterprint', restore);
+  };
+  window.addEventListener('afterprint', restore);
+  window.print();
+}
+window.addEventListener('beforeprint', () => {
+  document.querySelectorAll('.faq-list details').forEach(d => d.open = true);
+});
+</script>
 
 <!-- ─── HERO ─── -->
 <section class="hero">
