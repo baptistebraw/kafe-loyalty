@@ -39,13 +39,13 @@ body{padding:40px 20px}
   border-bottom:1.5px solid var(--ink);
   padding-bottom:22px;margin-bottom:22px;
 }
-.brand{display:flex;flex-direction:column;gap:4px}
+.brand{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 .brand .mark{
-  font-weight:900;font-size:28px;letter-spacing:-.02em;line-height:1;
+  height:34px;width:auto;display:block;
 }
 .brand .tag{
   font-size:10px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;
-  color:var(--sage-deep);margin-top:2px;
+  color:var(--sage-deep);
 }
 .head-right{text-align:right;display:flex;flex-direction:column;gap:6px}
 .head-right .lbl{
@@ -189,6 +189,7 @@ body{padding:40px 20px}
   display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
 }
 .foot b{color:var(--ink);font-weight:700}
+.foot .foot-logo{height:18px;width:auto;display:inline-block;vertical-align:middle;margin-right:6px}
 
 /* ─── Print button ─── */
 .print-fab{
@@ -274,7 +275,7 @@ body{padding:40px 20px}
   <!-- ─── Entête ─── -->
   <div class="head">
     <div class="brand">
-      <div class="mark">KAFÉ</div>
+      <img class="mark" src="assets/kafe-wordmark-ink.png" alt="Kafé">
       <div class="tag">Traiteur · Paris 10e</div>
     </div>
     <div class="head-right">
@@ -289,9 +290,9 @@ body{padding:40px 20px}
   <div class="parties">
     <div class="party">
       <h4>Émetteur</h4>
-      <b>Kafé — ALP</b>
+      <b>Kafé</b>
       12 rue Martel, 75010 Paris<br>
-      contact@kafe.paris · +33 6 64 97 63 90<br>
+      baptiste@kafe.paris · +33 6 64 97 63 90<br>
       <span class="muted">SIRET : <span contenteditable="true" data-placeholder="à compléter"></span> · TVA : <span contenteditable="true" data-placeholder="à compléter"></span></span>
     </div>
     <div class="party">
@@ -325,7 +326,7 @@ body{padding:40px 20px}
     <div class="line">
       <div class="desc">
         <b>Bar à dips &amp; pain au levain</b>
-        <div class="detail">Houmous citron-cumin, tarama maison, tzatziki menthe, labneh huile d'olive citron vert. Pain au levain Archibald tranché, gressins maison, pickles de saison. Servi sur plateaux céramique.</div>
+        <div class="detail">Houmous citron-cumin, tarama maison, tzatziki menthe, labneh huile d'olive citron vert. Pain au levain tranché, gressins maison, pickles de saison. Servi sur plateaux céramique.</div>
       </div>
       <div class="tot">50,00 €</div>
     </div>
@@ -333,7 +334,7 @@ body{padding:40px 20px}
     <div class="line">
       <div class="desc">
         <b>Triangles au levain bio petit épeautre</b>
-        <div class="detail">Assortiment des six recettes, dressés en panière kraft&nbsp;: jambon Paris beurre demi-sel, sardine citron confit &amp; câpres, English (vg), bang bang, BLT, 100&nbsp;% végétal.</div>
+        <div class="detail">Assortiment de six recettes, dressés sur plateau traiteur.</div>
       </div>
       <div class="tot">340,00 €</div>
     </div>
@@ -341,7 +342,7 @@ body{padding:40px 20px}
     <div class="line">
       <div class="desc">
         <b>Trois salades grand format à partager</b>
-        <div class="detail">Servies en saladier céramique. Parisienne (jambon, emmental, œuf mollet, croûtons levain) · César maison (poulet rôti, sauce anchois, parmesan) · Tomate-Burrata, basilic frais, huile d'olive bio.</div>
+        <div class="detail">Servies en saladier céramique&nbsp;: Parisienne, César maison, Tomate-Burrata.</div>
       </div>
       <div class="tot">340,00 €</div>
     </div>
@@ -349,7 +350,7 @@ body{padding:40px 20px}
     <div class="line">
       <div class="desc">
         <b>Assortiment de desserts maison</b>
-        <div class="detail">Quatre gâteaux entiers à trancher&nbsp;: mi-cuit chocolat huile d'olive &amp; fleur de sel, gâteau basque, gâteau à l'orange, carrot cake glaçage cream cheese. Plus 5 chia pudding lait de coco &amp; fruits frais <em>(sans gluten, sans lactose)</em>.</div>
+        <div class="detail">Mi-cuit chocolat huile d'olive &amp; fleur de sel, gâteau basque, gâteau à l'orange, carrot cake glaçage cream cheese. Chia pudding lait de coco &amp; fruits frais <em>(sans gluten, sans lactose)</em>.</div>
       </div>
       <div class="tot">220,00 €</div>
     </div>
@@ -367,20 +368,20 @@ body{padding:40px 20px}
         <b>Eau plate &amp; gazeuse à volonté</b>
         <div class="detail">Carafes, verres inclus.</div>
       </div>
-      <div class="tot">26,82 €</div>
+      <div class="tot">30,00 €</div>
     </div>
 
     <div class="sub-tot">
       <span class="lbl">Sous-total HT</span>
-      <span class="val strong">1 026,82 €</span>
+      <span class="val strong">1 030,00 €</span>
     </div>
     <div class="sub-tot">
       <span class="lbl">TVA 10 %</span>
-      <span class="val">102,68 €</span>
+      <span class="val">103,00 €</span>
     </div>
     <div class="sub-tot">
       <span class="lbl">Sous-total TTC</span>
-      <span class="val strong">1 129,50 €</span>
+      <span class="val strong">1 133,00 €</span>
     </div>
   </div>
 
@@ -393,7 +394,7 @@ body{padding:40px 20px}
     <div class="line">
       <div class="desc">
         <b>Sélection de vins rouge &amp; blanc</b>
-        <div class="detail">Format 75 cl, service en carafe ou bouteille.</div>
+        <div class="detail">Format 75 cl, service en bouteille.</div>
       </div>
       <div class="tot">360,00 €</div>
     </div>
@@ -423,15 +424,15 @@ body{padding:40px 20px}
   <!-- ─── Totaux ─── -->
   <div class="totals">
     <div class="left">
-      <div class="row"><span>Total HT</span><b>1 586,82 €</b></div>
-      <div class="row"><span>TVA 10 %</span><b>102,68 €</b></div>
+      <div class="row"><span>Total HT</span><b>1 590,00 €</b></div>
+      <div class="row"><span>TVA 10 %</span><b>103,00 €</b></div>
       <div class="row"><span>TVA 20 %</span><b>112,00 €</b></div>
-      <div class="row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(0,0,0,.2)"><span>Total TVA</span><b>214,68 €</b></div>
+      <div class="row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(0,0,0,.2)"><span>Total TVA</span><b>215,00 €</b></div>
     </div>
     <div class="right">
       <div class="eye">Total TTC</div>
-      <div class="big">1 801,50<small>€</small></div>
-      <div class="per">soit 45,04 € TTC par personne · tout inclus</div>
+      <div class="big">1 805,00<small>€</small></div>
+      <div class="per">soit 45,13 € TTC par personne · tout inclus</div>
     </div>
   </div>
 
@@ -444,7 +445,7 @@ body{padding:40px 20px}
         <li>Devis valable 30 jours à compter de la date d'émission</li>
         <li>Confirmation définitive du nombre de convives 5 jours avant la date</li>
         <li>Soirée sur place à Kafé, 12 rue Martel (Paris 10e)</li>
-        <li>Règlement par virement, carte ou espèces</li>
+        <li>Règlement par virement</li>
       </ul>
     </div>
     <div>
@@ -467,7 +468,7 @@ body{padding:40px 20px}
       <div class="fields"><span>Date</span><span>·</span><span>Signature &amp; cachet</span></div>
     </div>
     <div class="sign-box">
-      <h4>Kafé — ALP</h4>
+      <h4>Kafé</h4>
       <div class="hint">Baptiste Braux, Directeur Général</div>
       <div class="sign-line"></div>
       <div class="fields"><span>Date</span><span>·</span><span>Signature</span></div>
@@ -476,8 +477,8 @@ body{padding:40px 20px}
 
   <!-- ─── Footer ─── -->
   <div class="foot">
-    <span><b>Kafé — ALP</b> · 12 rue Martel, 75010 Paris · kafe.paris</span>
-    <span>contact@kafe.paris · +33 6 64 97 63 90</span>
+    <span><img class="foot-logo" src="assets/kafe-wordmark-ink.png" alt="Kafé"> · 12 rue Martel, 75010 Paris · kafe.paris</span>
+    <span>baptiste@kafe.paris · +33 6 64 97 63 90</span>
   </div>
 
 </div>
