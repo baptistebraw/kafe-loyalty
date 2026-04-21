@@ -136,20 +136,25 @@ body{padding:40px 20px}
   border:1.5px solid var(--ink);
   padding:16px 20px;
   background:var(--cream);
-  display:grid;grid-template-columns:1fr 1fr;gap:18px;
-  align-items:center;
 }
-.totals .left{font-size:11px;line-height:1.6}
-.totals .left .row{display:flex;justify-content:space-between;gap:14px}
-.totals .left .row b{font-weight:700;font-variant-numeric:tabular-nums}
-.totals .right{text-align:right}
-.totals .right .eye{font-size:10px;font-weight:900;letter-spacing:.3em;text-transform:uppercase;color:var(--sage-deep);margin-bottom:4px}
-.totals .right .big{
-  font-size:38px;font-weight:900;letter-spacing:-.03em;line-height:1;
+.totals-row{
+  display:grid;grid-template-columns:1fr 1fr;gap:18px;
+  margin-bottom:12px;
+}
+.totals-col .eye{font-size:10px;font-weight:900;letter-spacing:.3em;text-transform:uppercase;color:var(--sage-deep);margin-bottom:4px}
+.totals-col .big{
+  font-size:24px;font-weight:900;letter-spacing:-.02em;line-height:1;
   font-variant-numeric:tabular-nums;
 }
-.totals .right .big small{font-size:14px;font-weight:500;margin-left:4px;letter-spacing:0}
-.totals .right .per{font-size:11px;color:#555;margin-top:4px}
+.totals-col .big small{font-size:12px;font-weight:500;margin-left:3px;letter-spacing:0}
+.totals-col.right{text-align:right}
+.totals-vat{
+  display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  padding-top:10px;border-top:1px solid rgba(0,0,0,.18);
+  font-size:10.5px;color:#555;
+}
+.totals-vat b{font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+.totals-vat .per{color:var(--ink);font-weight:700}
 
 /* ─── Conditions ─── */
 .conditions{
@@ -248,7 +253,7 @@ body{padding:40px 20px}
   .parties,.event{margin-bottom:14px}
   .blurb{padding:10px 0;margin-bottom:14px;font-size:11px}
   .totals{margin-top:14px;padding:12px 16px}
-  .totals .right .big{font-size:30px}
+  .totals-col .big{font-size:20px}
   .conditions{margin-top:16px}
   .sign{margin-top:18px;padding-top:14px}
   .sign-box .hint{margin-bottom:24px}
@@ -423,16 +428,21 @@ body{padding:40px 20px}
 
   <!-- ─── Totaux ─── -->
   <div class="totals">
-    <div class="left">
-      <div class="row"><span>Total HT</span><b>1 410,91 €</b></div>
-      <div class="row"><span>TVA 10 %</span><b>93,09 €</b></div>
-      <div class="row"><span>TVA 20 %</span><b>96,00 €</b></div>
-      <div class="row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(0,0,0,.2)"><span>Total TVA</span><b>189,09 €</b></div>
+    <div class="totals-row">
+      <div class="totals-col left">
+        <div class="eye">Total HT</div>
+        <div class="big">1 410,91<small>€</small></div>
+      </div>
+      <div class="totals-col right">
+        <div class="eye">Total TTC</div>
+        <div class="big">1 600,00<small>€</small></div>
+      </div>
     </div>
-    <div class="right">
-      <div class="eye">Total TTC</div>
-      <div class="big">1 600,00<small>€</small></div>
-      <div class="per">soit 40,00 € TTC par personne · tout inclus</div>
+    <div class="totals-vat">
+      <span>TVA 10 %&nbsp;: <b>93,09 €</b></span>
+      <span>TVA 20 %&nbsp;: <b>96,00 €</b></span>
+      <span>Total TVA&nbsp;: <b>189,09 €</b></span>
+      <span class="per">40,00 € TTC / personne</span>
     </div>
   </div>
 
