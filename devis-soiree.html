@@ -312,7 +312,7 @@ body{padding:40px 20px}
   <!-- ─── Event block ─── -->
   <div class="event">
     <div class="title"><div class="eye">Prestation</div><div class="val" contenteditable="true">Soirée traiteur</div></div>
-    <div><div class="eye">Personnes</div><div class="val" contenteditable="true">40</div></div>
+    <div><div class="eye">Personnes</div><div class="val" contenteditable="true" id="pers-count">40</div></div>
     <div><div class="eye">Date</div><div class="val" contenteditable="true" data-placeholder="à compléter"></div></div>
     <div><div class="eye">Accueil</div><div class="val" contenteditable="true">à partir de 18h</div></div>
   </div>
@@ -333,7 +333,7 @@ body{padding:40px 20px}
         <b>Bar à dips</b>
         <div class="detail">Houmous citron-cumin, tarama maison, tzatziki menthe, labneh huile d'olive citron vert. Pain tranché, gressins maison, pickles de saison. Servi sur plateaux céramique.</div>
       </div>
-      <div class="tot">50,00 €</div>
+      <div class="tot" contenteditable="true" data-vat="10">50,00 €</div>
     </div>
 
     <div class="line">
@@ -341,7 +341,7 @@ body{padding:40px 20px}
         <b>Triangles au levain bio petit épeautre</b>
         <div class="detail">Assortiment de six recettes, dressés sur plateau traiteur.</div>
       </div>
-      <div class="tot">320,00 €</div>
+      <div class="tot" contenteditable="true" data-vat="10">320,00 €</div>
     </div>
 
     <div class="line">
@@ -349,7 +349,7 @@ body{padding:40px 20px}
         <b>Salades grand format à partager</b>
         <div class="detail">Servies en saladier céramique&nbsp;: Parisienne, César maison, Tomate-Burrata.</div>
       </div>
-      <div class="tot">320,00 €</div>
+      <div class="tot" contenteditable="true" data-vat="10">320,00 €</div>
     </div>
 
     <div class="line">
@@ -357,7 +357,7 @@ body{padding:40px 20px}
         <b>Assortiment de desserts maison</b>
         <div class="detail">Mi-cuit chocolat huile d'olive &amp; fleur de sel, gâteau basque, gâteau à l'orange, carrot cake glaçage cream cheese. Chia pudding lait de coco &amp; fruits frais <em>(sans gluten, sans lactose)</em>.</div>
       </div>
-      <div class="tot">180,00 €</div>
+      <div class="tot" contenteditable="true" data-vat="10">180,00 €</div>
     </div>
 
     <div class="line">
@@ -365,7 +365,7 @@ body{padding:40px 20px}
         <b>Thés glacés infusés maison</b>
         <div class="detail">Trois infusions cold-brew maison servies en grandes carafes, renouvelées durant la soirée&nbsp;: hibiscus-framboise, pêche-romarin, menthe-citron vert. Glaçons, rondelles d'agrumes et herbes fraîches.</div>
       </div>
-      <div class="tot">30,91 €</div>
+      <div class="tot" contenteditable="true" data-vat="10">30,91 €</div>
     </div>
 
     <div class="line">
@@ -373,20 +373,20 @@ body{padding:40px 20px}
         <b>Eau plate &amp; gazeuse à volonté</b>
         <div class="detail">Carafes, verres inclus.</div>
       </div>
-      <div class="tot">30,00 €</div>
+      <div class="tot" contenteditable="true" data-vat="10">30,00 €</div>
     </div>
 
     <div class="sub-tot">
       <span class="lbl">Sous-total HT</span>
-      <span class="val strong">930,91 €</span>
+      <span class="val strong" id="sub-food-ht">930,91 €</span>
     </div>
     <div class="sub-tot">
       <span class="lbl">TVA 10 %</span>
-      <span class="val">93,09 €</span>
+      <span class="val" id="sub-food-tva">93,09 €</span>
     </div>
     <div class="sub-tot">
       <span class="lbl">Sous-total TTC</span>
-      <span class="val strong">1 024,00 €</span>
+      <span class="val strong" id="sub-food-ttc">1 024,00 €</span>
     </div>
   </div>
 
@@ -401,7 +401,7 @@ body{padding:40px 20px}
         <b>Sélection de vins rouge &amp; blanc</b>
         <div class="detail">Format 75 cl, service en bouteille.</div>
       </div>
-      <div class="tot">300,00 €</div>
+      <div class="tot" contenteditable="true" data-vat="20">300,00 €</div>
     </div>
 
     <div class="line">
@@ -409,20 +409,20 @@ body{padding:40px 20px}
         <b>Bières</b>
         <div class="detail">Assortiment, format 33 cl.</div>
       </div>
-      <div class="tot">180,00 €</div>
+      <div class="tot" contenteditable="true" data-vat="20">180,00 €</div>
     </div>
 
     <div class="sub-tot">
       <span class="lbl">Sous-total HT</span>
-      <span class="val strong">480,00 €</span>
+      <span class="val strong" id="sub-alcool-ht">480,00 €</span>
     </div>
     <div class="sub-tot">
       <span class="lbl">TVA 20 %</span>
-      <span class="val">96,00 €</span>
+      <span class="val" id="sub-alcool-tva">96,00 €</span>
     </div>
     <div class="sub-tot">
       <span class="lbl">Sous-total TTC</span>
-      <span class="val strong">576,00 €</span>
+      <span class="val strong" id="sub-alcool-ttc">576,00 €</span>
     </div>
   </div>
 
@@ -431,18 +431,18 @@ body{padding:40px 20px}
     <div class="totals-row">
       <div class="totals-col left">
         <div class="eye">Total HT</div>
-        <div class="big">1 410,91<small>€</small></div>
+        <div class="big"><span id="total-ht">1 410,91</span><small>€</small></div>
       </div>
       <div class="totals-col right">
         <div class="eye">Total TTC</div>
-        <div class="big">1 600,00<small>€</small></div>
+        <div class="big"><span id="total-ttc">1 600,00</span><small>€</small></div>
       </div>
     </div>
     <div class="totals-vat">
-      <span>TVA 10 %&nbsp;: <b>93,09 €</b></span>
-      <span>TVA 20 %&nbsp;: <b>96,00 €</b></span>
-      <span>Total TVA&nbsp;: <b>189,09 €</b></span>
-      <span class="per">40,00 € TTC / personne</span>
+      <span>TVA 10 %&nbsp;: <b id="total-tva-10">93,09 €</b></span>
+      <span>TVA 20 %&nbsp;: <b id="total-tva-20">96,00 €</b></span>
+      <span>Total TVA&nbsp;: <b id="total-tva">189,09 €</b></span>
+      <span class="per" id="per-pers">40,00 € TTC / personne</span>
     </div>
   </div>
 
@@ -492,6 +492,61 @@ body{padding:40px 20px}
   </div>
 
 </div>
+
+<script>
+(function(){
+  function parseFR(s){
+    var n = parseFloat(String(s).replace(/[\s€]/g,'').replace(',', '.'));
+    return isNaN(n) ? 0 : n;
+  }
+  function fmt(n){
+    return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function setText(id, v){
+    var el = document.getElementById(id);
+    if (el) el.textContent = v;
+  }
+  function recalc(){
+    var foodHT = 0, alcoolHT = 0;
+    document.querySelectorAll('.tot[data-vat="10"]').forEach(function(el){ foodHT += parseFR(el.textContent); });
+    document.querySelectorAll('.tot[data-vat="20"]').forEach(function(el){ alcoolHT += parseFR(el.textContent); });
+    var foodTVA = Math.round(foodHT * 10) / 100;
+    var alcoolTVA = Math.round(alcoolHT * 20) / 100;
+    var foodTTC = foodHT + foodTVA;
+    var alcoolTTC = alcoolHT + alcoolTVA;
+    var totalHT = foodHT + alcoolHT;
+    var totalTVA = foodTVA + alcoolTVA;
+    var totalTTC = totalHT + totalTVA;
+    var persEl = document.getElementById('pers-count');
+    var pers = persEl ? parseFR(persEl.textContent) : 40;
+    var perPers = pers > 0 ? totalTTC / pers : 0;
+
+    setText('sub-food-ht',    fmt(foodHT)    + ' €');
+    setText('sub-food-tva',   fmt(foodTVA)   + ' €');
+    setText('sub-food-ttc',   fmt(foodTTC)   + ' €');
+    setText('sub-alcool-ht',  fmt(alcoolHT)  + ' €');
+    setText('sub-alcool-tva', fmt(alcoolTVA) + ' €');
+    setText('sub-alcool-ttc', fmt(alcoolTTC) + ' €');
+    setText('total-ht',       fmt(totalHT));
+    setText('total-ttc',      fmt(totalTTC));
+    setText('total-tva-10',   fmt(foodTVA)   + ' €');
+    setText('total-tva-20',   fmt(alcoolTVA) + ' €');
+    setText('total-tva',      fmt(totalTVA)  + ' €');
+    setText('per-pers',       fmt(perPers)   + ' € TTC / personne');
+  }
+  function normalize(el){
+    var n = parseFR(el.textContent);
+    el.textContent = fmt(n) + ' €';
+  }
+  document.querySelectorAll('.tot[data-vat]').forEach(function(el){
+    el.addEventListener('input', recalc);
+    el.addEventListener('blur', function(){ normalize(el); recalc(); });
+    el.addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); el.blur(); } });
+  });
+  var pc = document.getElementById('pers-count');
+  if (pc) pc.addEventListener('input', recalc);
+})();
+</script>
 
 </body>
 </html>
