@@ -55,6 +55,32 @@ hr.divider { border:none; border-top:0.5px solid rgba(0,0,0,.08); margin:10px 0;
 .login-box button:hover { background:#333; }
 .login-error { display:none; font-size:11px; color:#c0392b; margin-top:8px; }
 #app { display:none; }
+.print-btn { background:#eceae3; border:none; border-radius:6px; height:30px; padding:0 12px; font-family:inherit; font-size:12px; cursor:pointer; color:#555; margin-left:6px; }
+.print-btn:hover { background:#ddd8cc; }
+
+@media print {
+  @page { size: A4; margin: 10mm; }
+  html, body { background: #fff !important; padding: 0 !important; margin: 0 !important; max-width: none !important; }
+  body { font-size: 11px; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  #login-screen { display: none !important; }
+  #app { display: block !important; }
+  .week-nav button, #syncBtn, .print-btn { display: none !important; }
+  .week-nav select { border: none; background: transparent; padding: 0; font-size: 12px; }
+  .header-row { margin-bottom: 10px; }
+  h1 { font-size: 18px; }
+  .subtitle { font-size: 11px; margin-bottom: 12px; }
+  .kpi, .card, .insight-card { break-inside: avoid; page-break-inside: avoid; box-shadow: none; }
+  .card { border: 0.5px solid rgba(0,0,0,.2); }
+  .grid4 { gap: 6px; margin-bottom: 10px; }
+  .grid2 { gap: 10px; margin-bottom: 10px; }
+  .insights { gap: 8px; margin-bottom: 10px; }
+  .kpi { padding: 8px 10px; }
+  .kpi-value { font-size: 18px; }
+  .card { padding: 10px 12px; }
+  canvas { max-width: 100% !important; }
+  a[href]::after { content: ''; }
+}
 </style>
 </head>
 <body>
@@ -81,6 +107,7 @@ hr.divider { border:none; border-top:0.5px solid rgba(0,0,0,.08); margin:10px 0;
     <select id="weekSelect" onchange="onWeekChange()"></select>
     <button onclick="nextWeek()">&#8250;</button>
     <button id="syncBtn" onclick="syncSquare()" title="Sync Square" style="width:auto !important;padding:0 12px !important;font-size:12px;margin-left:6px;">&#8635; Sync</button>
+    <button class="print-btn" onclick="window.print()" title="Imprimer">&#128424; Imprimer</button>
   </div>
 </div>
 
@@ -757,6 +784,17 @@ function renderInsights(data, prevData) {
     `<div class="insight-card"><div class="insight-icon">${ins.icon}</div><div class="insight-title">${ins.title}</div><div class="insight-body">${ins.body}</div></div>`
   ).join('');
 }
+
+window.addEventListener('beforeprint', () => {
+  if (window.Chart && Chart.instances) {
+    Object.values(Chart.instances).forEach(c => { try { c.resize(); } catch (e) {} });
+  }
+});
+window.addEventListener('afterprint', () => {
+  if (window.Chart && Chart.instances) {
+    Object.values(Chart.instances).forEach(c => { try { c.resize(); } catch (e) {} });
+  }
+});
 
 // Boot — loadData is called after auth check above
 </script>
