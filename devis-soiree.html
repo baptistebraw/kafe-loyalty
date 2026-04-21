@@ -108,7 +108,7 @@ body{padding:40px 20px}
 .section-title::after{content:'';flex:1;height:1.5px;background:var(--ink);opacity:.2}
 
 .line{
-  display:grid;grid-template-columns:1fr 110px 110px;gap:16px;
+  display:grid;grid-template-columns:1fr 130px;gap:16px;
   padding:10px 0;
   border-bottom:1px solid rgba(0,0,0,.1);
   align-items:start;
@@ -119,16 +119,14 @@ body{padding:40px 20px}
 }
 .line .desc b{font-size:13px;font-weight:700;display:block;margin-bottom:3px}
 .line .desc .detail{font-size:11px;line-height:1.5;color:#555}
-.line .qty{font-size:11px;color:#555;text-align:right;padding-top:1px}
-.line .qty .main{font-weight:700;color:var(--ink);font-size:12px;display:block}
 .line .tot{font-size:13px;font-weight:700;text-align:right;padding-top:1px;font-variant-numeric:tabular-nums}
 
 .sub-tot{
-  display:grid;grid-template-columns:1fr 110px 110px;gap:16px;
+  display:grid;grid-template-columns:1fr 130px;gap:16px;
   padding:8px 0 14px;
   font-size:11px;
 }
-.sub-tot .lbl{grid-column:2 / 3;text-align:right;color:#777;font-weight:500}
+.sub-tot .lbl{text-align:right;color:#777;font-weight:500}
 .sub-tot .val{text-align:right;font-variant-numeric:tabular-nums}
 .sub-tot .val.strong{font-weight:700}
 
@@ -225,7 +223,7 @@ body{padding:40px 20px}
   .head-right .row{justify-content:flex-start}
   .parties,.conditions,.sign,.totals{grid-template-columns:1fr}
   .event{grid-template-columns:1fr 1fr;gap:12px}
-  .line,.line.hdr,.sub-tot{grid-template-columns:1fr 90px 90px;gap:10px}
+  .line,.line.hdr,.sub-tot{grid-template-columns:1fr 100px;gap:10px}
 }
 
 /* ─── Print ─── */
@@ -322,14 +320,13 @@ body{padding:40px 20px}
   <div class="section">
     <h3 class="section-title">Prestations alimentaires · TVA 10 %</h3>
 
-    <div class="line hdr"><div>Désignation</div><div style="text-align:right">Quantité</div><div style="text-align:right">Montant HT</div></div>
+    <div class="line hdr"><div>Désignation</div><div style="text-align:right">Montant HT</div></div>
 
     <div class="line">
       <div class="desc">
         <b>Bar à dips &amp; pain au levain</b>
         <div class="detail">Houmous citron-cumin, tarama maison, tzatziki menthe, labneh huile d'olive citron vert. Pain au levain Archibald tranché, gressins maison, pickles de saison. Servi sur plateaux céramique.</div>
       </div>
-      <div class="qty"><span class="main">Forfait</span>40 pers.</div>
       <div class="tot">50,00 €</div>
     </div>
 
@@ -338,8 +335,7 @@ body{padding:40px 20px}
         <b>Triangles au levain bio petit épeautre</b>
         <div class="detail">Assortiment des six recettes, dressés en panière kraft&nbsp;: jambon Paris beurre demi-sel, sardine citron confit &amp; câpres, English (vg), bang bang, BLT, 100&nbsp;% végétal.</div>
       </div>
-      <div class="qty"><span class="main">40 &times; 10,00 €</span>par personne</div>
-      <div class="tot">400,00 €</div>
+      <div class="tot">340,00 €</div>
     </div>
 
     <div class="line">
@@ -347,8 +343,7 @@ body{padding:40px 20px}
         <b>Trois salades grand format à partager</b>
         <div class="detail">Servies en saladier céramique. Parisienne (jambon, emmental, œuf mollet, croûtons levain) · César maison (poulet rôti, sauce anchois, parmesan) · Tomate-Burrata, basilic frais, huile d'olive bio.</div>
       </div>
-      <div class="qty"><span class="main">40 &times; 10,00 €</span>3 saladiers partagés</div>
-      <div class="tot">400,00 €</div>
+      <div class="tot">340,00 €</div>
     </div>
 
     <div class="line">
@@ -356,7 +351,6 @@ body{padding:40px 20px}
         <b>Assortiment de desserts maison</b>
         <div class="detail">Quatre gâteaux entiers à trancher&nbsp;: mi-cuit chocolat huile d'olive &amp; fleur de sel, gâteau basque, gâteau à l'orange, carrot cake glaçage cream cheese. Plus 5 chia pudding lait de coco &amp; fruits frais <em>(sans gluten, sans lactose)</em>.</div>
       </div>
-      <div class="qty"><span class="main">4 &times; 50,00 €</span>+ 5 chia pudding</div>
       <div class="tot">220,00 €</div>
     </div>
 
@@ -365,7 +359,6 @@ body{padding:40px 20px}
         <b>Thés glacés infusés maison</b>
         <div class="detail">Trois infusions cold-brew maison servies en grandes carafes, renouvelées durant la soirée&nbsp;: hibiscus-framboise, pêche-romarin, menthe-citron vert. Glaçons, rondelles d'agrumes et herbes fraîches.</div>
       </div>
-      <div class="qty"><span class="main">Forfait</span>40 pers.</div>
       <div class="tot">50,00 €</div>
     </div>
 
@@ -374,21 +367,20 @@ body{padding:40px 20px}
         <b>Eau plate &amp; gazeuse à volonté</b>
         <div class="detail">Carafes, verres inclus.</div>
       </div>
-      <div class="qty"><span class="main">Forfait</span></div>
       <div class="tot">26,82 €</div>
     </div>
 
     <div class="sub-tot">
       <span class="lbl">Sous-total HT</span>
-      <span class="val strong">1 146,82 €</span>
+      <span class="val strong">1 026,82 €</span>
     </div>
     <div class="sub-tot">
       <span class="lbl">TVA 10 %</span>
-      <span class="val">114,68 €</span>
+      <span class="val">102,68 €</span>
     </div>
     <div class="sub-tot">
       <span class="lbl">Sous-total TTC</span>
-      <span class="val strong">1 261,50 €</span>
+      <span class="val strong">1 129,50 €</span>
     </div>
   </div>
 
@@ -396,15 +388,14 @@ body{padding:40px 20px}
   <div class="section" style="margin-top:18px">
     <h3 class="section-title">Boissons alcoolisées · TVA 20 %</h3>
 
-    <div class="line hdr"><div>Désignation</div><div style="text-align:right">Quantité</div><div style="text-align:right">Montant HT</div></div>
+    <div class="line hdr"><div>Désignation</div><div style="text-align:right">Montant HT</div></div>
 
     <div class="line">
       <div class="desc">
         <b>Sélection de vins rouge &amp; blanc</b>
         <div class="detail">Format 75 cl, service en carafe ou bouteille.</div>
       </div>
-      <div class="qty"><span class="main">12 &times; 50,00 €</span>bouteilles 75 cl</div>
-      <div class="tot">600,00 €</div>
+      <div class="tot">360,00 €</div>
     </div>
 
     <div class="line">
@@ -412,36 +403,35 @@ body{padding:40px 20px}
         <b>Bières</b>
         <div class="detail">Assortiment, format 33 cl.</div>
       </div>
-      <div class="qty"><span class="main">40 &times; 5,00 €</span>bouteilles 33 cl</div>
       <div class="tot">200,00 €</div>
     </div>
 
     <div class="sub-tot">
       <span class="lbl">Sous-total HT</span>
-      <span class="val strong">800,00 €</span>
+      <span class="val strong">560,00 €</span>
     </div>
     <div class="sub-tot">
       <span class="lbl">TVA 20 %</span>
-      <span class="val">160,00 €</span>
+      <span class="val">112,00 €</span>
     </div>
     <div class="sub-tot">
       <span class="lbl">Sous-total TTC</span>
-      <span class="val strong">960,00 €</span>
+      <span class="val strong">672,00 €</span>
     </div>
   </div>
 
   <!-- ─── Totaux ─── -->
   <div class="totals">
     <div class="left">
-      <div class="row"><span>Total HT</span><b>1 946,82 €</b></div>
-      <div class="row"><span>TVA 10 %</span><b>114,68 €</b></div>
-      <div class="row"><span>TVA 20 %</span><b>160,00 €</b></div>
-      <div class="row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(0,0,0,.2)"><span>Total TVA</span><b>274,68 €</b></div>
+      <div class="row"><span>Total HT</span><b>1 586,82 €</b></div>
+      <div class="row"><span>TVA 10 %</span><b>102,68 €</b></div>
+      <div class="row"><span>TVA 20 %</span><b>112,00 €</b></div>
+      <div class="row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(0,0,0,.2)"><span>Total TVA</span><b>214,68 €</b></div>
     </div>
     <div class="right">
       <div class="eye">Total TTC</div>
-      <div class="big">2 221,50<small>€</small></div>
-      <div class="per">soit 55,54 € TTC par personne · tout inclus</div>
+      <div class="big">1 801,50<small>€</small></div>
+      <div class="per">soit 45,04 € TTC par personne · tout inclus</div>
     </div>
   </div>
 
