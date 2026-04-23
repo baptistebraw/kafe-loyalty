@@ -43,6 +43,7 @@ hr.divider { border:none; border-top:0.5px solid rgba(0,0,0,.08); margin:10px 0;
   .grid4 { grid-template-columns: repeat(2,1fr); }
   .grid2 { grid-template-columns: 1fr; }
   .insights { grid-template-columns: 1fr; }
+  .focus-food-grid { grid-template-columns: 1fr !important; }
   body { padding: 16px; }
 }
 #login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
@@ -408,6 +409,13 @@ function render() {
   html += '<div class="card"><div class="section-title">Mix catégories — CA</div><div style="display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center;"><div style="position:relative;height:150px;"><canvas id="catChart"></canvas></div><div id="catLegend"></div></div></div>';
   html += '</div>';
 
+  // Focus food — sandwichs & salades
+  html += '<div class="card" style="margin-bottom:16px;"><div class="section-title">Focus food — Sandwichs &amp; Salades · évolution quotidienne</div>';
+  html += '<div class="focus-food-grid" style="display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:20px;align-items:stretch;">';
+  html += '<div style="position:relative;width:100%;height:220px;"><canvas id="focusFoodChart"></canvas></div>';
+  html += '<div id="focusFoodStats"></div>';
+  html += '</div></div>';
+
   // Top 10 global
   html += '<div class="card" style="margin-bottom:16px;"><div class="section-title">Top 10 produits — CA</div><div id="top10Items"></div></div>';
 
@@ -431,8 +439,90 @@ function render() {
   renderHourlyChart(data);
   renderWeekProgression();
   renderCategories(data);
+  renderFocusFood(data, prevData);
   renderProducts(data);
   renderInsights(data, prevData);
+}
+
+function renderFocusFood(data, prevData) {
+  const SAND_PATTERNS = ['Triangle', 'Combo Triangle'];
+  const SAL_PATTERNS = ['Salade'];
+  const isSandwich = r => matchesAny(r.item, SAND_PATTERNS);
+  const isSalade   = r => matchesAny(r.item, SAL_PATTERNS);
+
+  const sortedDates = [...new Set(data.map(r => r.date))].sort();
+  const byDate = {};
+  sortedDates.forEach(d => { byDate[d] = { sandwich: 0, sandwichCA: 0, salade: 0, saladeCA: 0 }; });
+  data.forEach(r => {
+    if (!byDate[r.date]) return;
+    if (isSandwich(r)) { byDate[r.date].sandwich += Number(r.qty); byDate[r.date].sandwichCA += Number(r.net_sales); }
+    else if (isSalade(r)) { byDate[r.date].salade += Number(r.qty); byDate[r.date].saladeCA += Number(r.net_sales); }
+  });
+
+  const labels = sortedDates.map(d => { const [y,m,dd] = d.split('-'); return parseInt(dd) + '/' + parseInt(m); });
+  const sandQty = sortedDates.map(d => byDate[d].sandwich);
+  const salQty  = sortedDates.map(d => byDate[d].salade);
+
+  new Chart(document.getElementById('focusFoodChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Sandwichs', data: sandQty, borderColor: COLORS.green, backgroundColor: COLORS.green + '22', tension: 0.35, fill: true, pointRadius: 3, borderWidth: 2 },
+        { label: 'Salades',   data: salQty,  borderColor: COLORS.orange, backgroundColor: COLORS.orange + '22', tension: 0.35, fill: true, pointRadius: 3, borderWidth: 2 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 10, boxHeight: 10, padding: 12 } },
+        tooltip: { callbacks: { label: v => v.dataset.label + ' : ' + v.raw + ' unités' } }
+      },
+      scales: {
+        x: { ticks: { font: { size: 10 }, color: '#888', autoSkip: true, maxRotation: 0 }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { font: { size: 10 }, color: '#888', precision: 0 }, grid: { color: 'rgba(0,0,0,.06)' } }
+      }
+    }
+  });
+
+  const nDays = sortedDates.length || 1;
+  const totalCA    = data.reduce((s, r) => s + Number(r.net_sales), 0);
+  const totalSand  = sandQty.reduce((a, b) => a + b, 0);
+  const totalSandCA = sortedDates.reduce((s, d) => s + byDate[d].sandwichCA, 0);
+  const totalSal   = salQty.reduce((a, b) => a + b, 0);
+  const totalSalCA = sortedDates.reduce((s, d) => s + byDate[d].saladeCA, 0);
+
+  let sandTrend = '', salTrend = '';
+  if (prevData) {
+    const pDays = [...new Set(prevData.map(r => r.date))].length || 1;
+    const pSand = prevData.filter(isSandwich).reduce((s, r) => s + Number(r.qty), 0);
+    const pSal  = prevData.filter(isSalade).reduce((s, r) => s + Number(r.qty), 0);
+    if (pSand > 0) sandTrend = pctChange(totalSand / nDays, pSand / pDays) + ' vs sem. préc.';
+    if (pSal  > 0) salTrend  = pctChange(totalSal  / nDays, pSal  / pDays) + ' vs sem. préc.';
+  }
+
+  const sandPctCA = totalCA ? Math.round(totalSandCA / totalCA * 100) : 0;
+  const salPctCA  = totalCA ? Math.round(totalSalCA  / totalCA * 100) : 0;
+  const foodPctCA = totalCA ? Math.round((totalSandCA + totalSalCA) / totalCA * 100) : 0;
+
+  document.getElementById('focusFoodStats').innerHTML = `
+    <div style="padding:12px 14px;border-radius:8px;background:${COLORS.green}14;margin-bottom:8px;">
+      <div style="font-size:11px;color:${COLORS.green};font-weight:500;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">Sandwichs</div>
+      <div style="font-size:22px;font-weight:500;">${Math.round(totalSand)} <span style="font-size:11px;color:#777;font-weight:400;">· ${(totalSand/nDays).toFixed(1)}/j</span></div>
+      <div style="font-size:11px;color:#777;margin-top:2px;">${fmtEuro(totalSandCA)} · ${sandPctCA}% du CA</div>
+      ${sandTrend ? `<div style="font-size:11px;color:${COLORS.green};margin-top:3px;font-weight:500;">${sandTrend}</div>` : ''}
+    </div>
+    <div style="padding:12px 14px;border-radius:8px;background:${COLORS.orange}14;margin-bottom:8px;">
+      <div style="font-size:11px;color:${COLORS.orange};font-weight:500;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">Salades</div>
+      <div style="font-size:22px;font-weight:500;">${Math.round(totalSal)} <span style="font-size:11px;color:#777;font-weight:400;">· ${(totalSal/nDays).toFixed(1)}/j</span></div>
+      <div style="font-size:11px;color:#777;margin-top:2px;">${fmtEuro(totalSalCA)} · ${salPctCA}% du CA</div>
+      ${salTrend ? `<div style="font-size:11px;color:${COLORS.orange};margin-top:3px;font-weight:500;">${salTrend}</div>` : ''}
+    </div>
+    <div style="padding:10px 14px;border-radius:8px;background:#1a1a1a;color:#fff;">
+      <div style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;opacity:.7;">Part CA sandwichs + salades</div>
+      <div style="font-size:20px;font-weight:500;margin-top:2px;">${foodPctCA}%</div>
+    </div>
+  `;
 }
 
 function formatDateISO(iso) {
