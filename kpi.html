@@ -188,6 +188,9 @@ function normalizeItem(name) {
 let allData = [];
 let weeks = [];
 let selectedWeek = 'all';
+let focusFoodSelection = '__default__';
+let focusFoodChart = null;
+let focusFoodCtx = null;
 
 function getISOWeek(d) {
   const date = new Date(d);
@@ -409,8 +412,12 @@ function render() {
   html += '<div class="card"><div class="section-title">Mix catégories — CA</div><div style="display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center;"><div style="position:relative;height:150px;"><canvas id="catChart"></canvas></div><div id="catLegend"></div></div></div>';
   html += '</div>';
 
-  // Focus food — sandwichs & salades
-  html += '<div class="card" style="margin-bottom:16px;"><div class="section-title">Focus food — Sandwichs &amp; Salades · évolution quotidienne</div>';
+  // Focus food — évolution quotidienne (selector + chart)
+  html += '<div class="card" style="margin-bottom:16px;">';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap;">';
+  html += '<div class="section-title" style="margin-bottom:0;">Focus food · évolution quotidienne</div>';
+  html += '<select id="focusFoodSelector" onchange="onFocusFoodChange()" style="font-family:inherit;font-size:11px;background:#fff;border:0.5px solid rgba(0,0,0,.15);border-radius:6px;padding:4px 8px;color:#1a1a1a;cursor:pointer;max-width:260px;"></select>';
+  html += '</div>';
   html += '<div class="focus-food-grid" style="display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:20px;align-items:stretch;">';
   html += '<div style="position:relative;width:100%;height:220px;"><canvas id="focusFoodChart"></canvas></div>';
   html += '<div id="focusFoodStats"></div>';
@@ -444,7 +451,55 @@ function render() {
   renderInsights(data, prevData);
 }
 
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 function renderFocusFood(data, prevData) {
+  focusFoodCtx = { data, prevData };
+
+  // Build sorted list of unique items by CA desc (for the selector)
+  const itemTotals = {};
+  data.forEach(r => {
+    if (classifyItem(r) === 'Ignoré') return;
+    itemTotals[r.item] = (itemTotals[r.item] || 0) + Number(r.net_sales);
+  });
+  const sortedItems = Object.entries(itemTotals).sort((a, b) => b[1] - a[1]).map(([n]) => n);
+
+  // If current selection no longer exists in data, fall back to default
+  if (focusFoodSelection !== '__default__' && !(focusFoodSelection in itemTotals)) {
+    focusFoodSelection = '__default__';
+  }
+
+  // Populate selector
+  const sel = document.getElementById('focusFoodSelector');
+  if (sel) {
+    let opts = '<option value="__default__">Sandwichs &amp; Salades</option>';
+    sortedItems.forEach(it => { opts += `<option value="${escapeHtml(it)}">${escapeHtml(it)}</option>`; });
+    sel.innerHTML = opts;
+    sel.value = focusFoodSelection;
+  }
+
+  // Destroy any previous chart on this canvas
+  const canvas = document.getElementById('focusFoodChart');
+  const existing = canvas && Chart.getChart ? Chart.getChart(canvas) : null;
+  if (existing) { try { existing.destroy(); } catch(_){} }
+  focusFoodChart = null;
+
+  if (focusFoodSelection === '__default__') {
+    renderFocusFoodDefault(data, prevData);
+  } else {
+    renderFocusFoodItem(data, prevData, focusFoodSelection);
+  }
+}
+
+function onFocusFoodChange() {
+  const sel = document.getElementById('focusFoodSelector');
+  focusFoodSelection = sel.value;
+  if (focusFoodCtx) renderFocusFood(focusFoodCtx.data, focusFoodCtx.prevData);
+}
+
+function renderFocusFoodDefault(data, prevData) {
   const SAND_PATTERNS = ['Triangle', 'Combo Triangle'];
   const SAL_PATTERNS = ['Salade'];
   const isSandwich = r => matchesAny(r.item, SAND_PATTERNS);
@@ -463,7 +518,7 @@ function renderFocusFood(data, prevData) {
   const sandQty = sortedDates.map(d => byDate[d].sandwich);
   const salQty  = sortedDates.map(d => byDate[d].salade);
 
-  new Chart(document.getElementById('focusFoodChart'), {
+  focusFoodChart = new Chart(document.getElementById('focusFoodChart'), {
     type: 'line',
     data: {
       labels,
@@ -521,6 +576,74 @@ function renderFocusFood(data, prevData) {
     <div style="padding:10px 14px;border-radius:8px;background:#1a1a1a;color:#fff;">
       <div style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;opacity:.7;">Part CA sandwichs + salades</div>
       <div style="font-size:20px;font-weight:500;margin-top:2px;">${foodPctCA}%</div>
+    </div>
+  `;
+}
+
+function renderFocusFoodItem(data, prevData, item) {
+  const sortedDates = [...new Set(data.map(r => r.date))].sort();
+  const byDate = {};
+  sortedDates.forEach(d => { byDate[d] = { qty: 0, ca: 0 }; });
+  data.forEach(r => {
+    if (r.item !== item) return;
+    if (!byDate[r.date]) return;
+    byDate[r.date].qty += Number(r.qty);
+    byDate[r.date].ca  += Number(r.net_sales);
+  });
+
+  const labels = sortedDates.map(d => { const [y,m,dd] = d.split('-'); return parseInt(dd) + '/' + parseInt(m); });
+  const qtySeries = sortedDates.map(d => byDate[d].qty);
+
+  focusFoodChart = new Chart(document.getElementById('focusFoodChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: item, data: qtySeries, borderColor: COLORS.blue, backgroundColor: COLORS.blue + '22', tension: 0.35, fill: true, pointRadius: 3, borderWidth: 2 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 10, boxHeight: 10, padding: 12 } },
+        tooltip: { callbacks: { label: v => v.dataset.label + ' : ' + v.raw + ' unités' } }
+      },
+      scales: {
+        x: { ticks: { font: { size: 10 }, color: '#888', autoSkip: true, maxRotation: 0 }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { font: { size: 10 }, color: '#888', precision: 0 }, grid: { color: 'rgba(0,0,0,.06)' } }
+      }
+    }
+  });
+
+  const nDays = sortedDates.length || 1;
+  const totalCA = data.reduce((s, r) => s + Number(r.net_sales), 0);
+  const totalQty = qtySeries.reduce((a, b) => a + b, 0);
+  const totalItemCA = sortedDates.reduce((s, d) => s + byDate[d].ca, 0);
+  const itemPctCA = totalCA ? Math.round(totalItemCA / totalCA * 100) : 0;
+  const avgPrice = totalQty ? totalItemCA / totalQty : 0;
+  const activeDays = sortedDates.filter(d => byDate[d].qty > 0).length;
+
+  let trend = '';
+  if (prevData) {
+    const pDays = [...new Set(prevData.map(r => r.date))].length || 1;
+    const pQty = prevData.filter(r => r.item === item).reduce((s, r) => s + Number(r.qty), 0);
+    if (pQty > 0) trend = pctChange(totalQty / nDays, pQty / pDays) + ' vs sem. préc.';
+  }
+
+  document.getElementById('focusFoodStats').innerHTML = `
+    <div style="padding:12px 14px;border-radius:8px;background:${COLORS.blue}14;margin-bottom:8px;">
+      <div style="font-size:11px;color:${COLORS.blue};font-weight:500;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;word-break:break-word;">${escapeHtml(item)}</div>
+      <div style="font-size:22px;font-weight:500;">${Math.round(totalQty)} <span style="font-size:11px;color:#777;font-weight:400;">· ${(totalQty/nDays).toFixed(1)}/j</span></div>
+      <div style="font-size:11px;color:#777;margin-top:2px;">${fmtEuro(totalItemCA)} · ${itemPctCA}% du CA</div>
+      ${trend ? `<div style="font-size:11px;color:${COLORS.blue};margin-top:3px;font-weight:500;">${trend}</div>` : ''}
+    </div>
+    <div style="padding:10px 14px;border-radius:8px;background:#eceae3;margin-bottom:8px;">
+      <div style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:#777;">Prix moyen unité</div>
+      <div style="font-size:18px;font-weight:500;margin-top:2px;">${fmtEuroDec(avgPrice)}</div>
+    </div>
+    <div style="padding:10px 14px;border-radius:8px;background:#1a1a1a;color:#fff;">
+      <div style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;opacity:.7;">Jours avec ventes</div>
+      <div style="font-size:18px;font-weight:500;margin-top:2px;">${activeDays} / ${nDays}</div>
     </div>
   `;
 }
