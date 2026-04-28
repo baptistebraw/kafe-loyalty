@@ -480,7 +480,9 @@
 
     const { data, error } = await sb.from('loyalty_cards').select('*').eq('code', code).single();
 
-    if (error || !data) { showState('s-error'); return; }
+    // Carte introuvable (supprimée de la DB ou code inconnu) → on redirige vers l'inscription
+    // pour que les QR déjà imprimés restent utiles.
+    if (error || !data) { location.replace('https://loyalty.kafe.paris/join.html'); return; }
     if (data.status === 'active') { showState('s-already'); return; }
     if (data.status === 'disabled') {
       showState('s-error');
