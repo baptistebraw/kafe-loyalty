@@ -13,7 +13,28 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 3px; }
 .week-nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .week-nav button { background: #eceae3; border: none; border-radius: 6px; width: 30px; height: 30px; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #555; }
 .week-nav button:hover { background: #ddd8cc; }
-.week-nav select, .week-nav input[type=date] { font-family: inherit; font-size: 13px; background: #fff; border: 0.5px solid rgba(0,0,0,.15); border-radius: 6px; padding: 5px 10px; color: #1a1a1a; cursor: pointer; }
+.week-nav select, .week-nav input[type=date], .week-nav input[type=month] { font-family: inherit; font-size: 13px; background: #fff; border: 0.5px solid rgba(0,0,0,.15); border-radius: 6px; padding: 5px 10px; color: #1a1a1a; cursor: pointer; }
+.finance-form { background: #fafaf7; border: 0.5px dashed rgba(0,0,0,.18); border-radius: 8px; padding: 14px 16px; margin-top: 10px; }
+.finance-form .grid-form { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px 14px; }
+.finance-form label { font-size: 11px; color: #666; display: block; margin-bottom: 3px; text-transform: uppercase; letter-spacing: .03em; }
+.finance-form input, .finance-form textarea { width: 100%; font-family: inherit; font-size: 13px; padding: 6px 8px; border: 0.5px solid rgba(0,0,0,.15); border-radius: 5px; background: #fff; color: #1a1a1a; }
+.finance-form textarea { resize: vertical; min-height: 50px; }
+.finance-form .actions { margin-top: 12px; display: flex; gap: 8px; align-items: center; }
+.finance-form .actions button { font-family: inherit; font-size: 12px; padding: 6px 14px; border: none; border-radius: 5px; cursor: pointer; }
+.btn-primary { background: #1a1a1a; color: #fff; }
+.btn-primary:hover { background: #333; }
+.btn-secondary { background: #eceae3; color: #555; }
+.btn-secondary:hover { background: #ddd8cc; }
+.pl-row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 13px; border-bottom: 0.5px solid rgba(0,0,0,.06); }
+.pl-row.subtotal { font-weight: 500; border-bottom: 1px solid rgba(0,0,0,.15); }
+.pl-row.total { font-weight: 500; font-size: 14px; border-bottom: none; padding-top: 10px; }
+.pl-row .pl-label { color: #555; }
+.pl-row .pl-value { color: #1a1a1a; font-variant-numeric: tabular-nums; }
+.pl-row.neg .pl-value { color: #c0392b; }
+.alert-row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 6px; }
+.alert-warn { background: #c0392b14; color: #c0392b; }
+.alert-ok { background: #1D9E7514; color: #1D9E75; }
+.alert-info { background: #88878014; color: #555; }
 .view-toggle { display: flex; gap: 0; background: #eceae3; border-radius: 6px; padding: 2px; margin-right: 4px; }
 .view-toggle button { background: transparent; border: none; padding: 0 12px; height: 26px; width: auto; font-family: inherit; font-size: 12px; border-radius: 4px; cursor: pointer; color: #555; display: flex; align-items: center; }
 .view-toggle button.active { background: #fff; color: #1a1a1a; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
@@ -133,6 +154,7 @@ hr.divider { border:none; border-top:0.5px solid rgba(0,0,0,.08); margin:10px 0;
       <button id="vtWeekly" onclick="setView('weekly')" class="active">Hebdo</button>
       <button id="vtDaily" onclick="setView('daily')">Jour</button>
       <button id="vtCumul" onclick="setView('cumul')">Cumul</button>
+      <button id="vtFinance" onclick="setView('finance')">Finance</button>
     </div>
     <span id="weekNavGroup" class="nav-group">
       <button onclick="prevWeek()">&#8249;</button>
@@ -143,6 +165,11 @@ hr.divider { border:none; border-top:0.5px solid rgba(0,0,0,.08); margin:10px 0;
       <button onclick="prevDay()">&#8249;</button>
       <input type="date" id="daySelect" onchange="onDayChange()">
       <button onclick="nextDay()">&#8250;</button>
+    </span>
+    <span id="monthNavGroup" class="nav-group" style="display:none;">
+      <button onclick="prevMonth()">&#8249;</button>
+      <input type="month" id="monthSelect" onchange="onMonthChange()">
+      <button onclick="nextMonth()">&#8250;</button>
     </span>
     <button id="syncBtn" onclick="syncSquare()" title="Sync Square" style="width:auto !important;padding:0 12px !important;font-size:12px;margin-left:6px;">&#8635; Sync</button>
     <button class="print-btn" onclick="window.print()" title="Imprimer">&#128424; Imprimer</button>
@@ -228,8 +255,11 @@ let selectedWeek = 'all';
 let focusFoodSelection = '__default__';
 let focusFoodChart = null;
 let focusFoodCtx = null;
-let viewMode = 'weekly'; // 'weekly' | 'daily' | 'cumul'
+let viewMode = 'weekly'; // 'weekly' | 'daily' | 'cumul' | 'finance'
 let selectedDate = null; // 'YYYY-MM-DD'
+let selectedMonth = null; // 'YYYY-MM'
+let monthlyCosts = {}; // keyed by 'YYYY-MM'
+let budgetTargets = {}; // keyed by 'YYYY-MM'
 
 function getISOWeek(d) {
   const date = new Date(d);
@@ -388,13 +418,14 @@ function getDataDates() {
 
 function setView(mode) {
   viewMode = mode;
-  ['Weekly','Daily','Cumul'].forEach(m => {
+  ['Weekly','Daily','Cumul','Finance'].forEach(m => {
     const el = document.getElementById('vt' + m);
     if (el) el.classList.toggle('active', mode === m.toLowerCase());
   });
   const showWeeklyNav = (mode === 'weekly' || mode === 'cumul');
   document.getElementById('weekNavGroup').style.display = showWeeklyNav ? '' : 'none';
   document.getElementById('dayNavGroup').style.display = (mode === 'daily') ? '' : 'none';
+  document.getElementById('monthNavGroup').style.display = (mode === 'finance') ? '' : 'none';
 
   if (mode === 'cumul') {
     selectedWeek = 'all';
@@ -411,7 +442,41 @@ function setView(mode) {
     }
     const dEl = document.getElementById('daySelect');
     if (dEl && selectedDate) dEl.value = selectedDate;
+  } else if (mode === 'finance') {
+    if (!selectedMonth) {
+      const ds = getDataDates();
+      selectedMonth = ds.length ? ds[ds.length - 1].slice(0, 7) : new Date().toISOString().slice(0, 7);
+    }
+    const mEl = document.getElementById('monthSelect');
+    if (mEl) mEl.value = selectedMonth;
+    loadFinanceData().then(() => render());
+    return;
   }
+  render();
+}
+
+function onMonthChange() {
+  const v = document.getElementById('monthSelect').value;
+  if (v) { selectedMonth = v; render(); }
+}
+
+function shiftMonth(monthStr, delta) {
+  const [y, m] = monthStr.split('-').map(Number);
+  const dt = new Date(y, m - 1 + delta, 1);
+  return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0');
+}
+
+function prevMonth() {
+  if (!selectedMonth) return;
+  selectedMonth = shiftMonth(selectedMonth, -1);
+  document.getElementById('monthSelect').value = selectedMonth;
+  render();
+}
+
+function nextMonth() {
+  if (!selectedMonth) return;
+  selectedMonth = shiftMonth(selectedMonth, 1);
+  document.getElementById('monthSelect').value = selectedMonth;
   render();
 }
 
@@ -447,8 +512,23 @@ function render() {
     if (titleEl) titleEl.textContent = 'Kafé · Vue journalière';
     return renderDailyView();
   }
+  if (viewMode === 'finance') {
+    if (titleEl) titleEl.textContent = 'Kafé · Finance';
+    return renderFinanceView();
+  }
   if (titleEl) titleEl.textContent = 'Kafé · KPI Dashboard';
   return renderWeeklyView();
+}
+
+async function loadFinanceData() {
+  const [{ data: costs }, { data: budget }] = await Promise.all([
+    sb.from('monthly_costs').select('*'),
+    sb.from('budget_targets').select('*')
+  ]);
+  monthlyCosts = {};
+  (costs || []).forEach(r => { monthlyCosts[r.month] = r; });
+  budgetTargets = {};
+  (budget || []).forEach(r => { budgetTargets[r.month] = r; });
 }
 
 function renderWeeklyView() {
@@ -1519,6 +1599,313 @@ function renderDailyFocus(dayData, histData, histDayCount) {
     block('Triangles signature', COLORS.green, isSandwich, true) +
     block('Salades', COLORS.orange, isSalade, true) +
     block('Petit-déj protéiné (Chia / Skyr / œuf)', COLORS.blue, isProt, false);
+}
+
+// ============ FINANCE VIEW ============
+
+function fmtMonthLong(monthStr) {
+  const [y, m] = monthStr.split('-').map(Number);
+  return MONTH_NAMES[m - 1] + ' ' + y;
+}
+
+function shiftMonthRange(monthStr, count) {
+  // returns array of months from (monthStr - count + 1) up to monthStr inclusive
+  const out = [];
+  for (let i = count - 1; i >= 0; i--) out.push(shiftMonth(monthStr, -i));
+  return out;
+}
+
+function getMonthSales(monthStr) {
+  // returns rows from allData for the given month, ignoring 'Ignoré'
+  return allData.filter(r => r.date && r.date.startsWith(monthStr) && classifyItem(r) !== 'Ignoré');
+}
+
+function caForMonth(monthStr) {
+  return getMonthSales(monthStr).reduce((s, r) => s + Number(r.net_sales), 0);
+}
+
+function caBaristaForMonth(monthStr) {
+  return getMonthSales(monthStr).filter(r => classifyItem(r) === 'Boissons barista').reduce((s, r) => s + Number(r.net_sales), 0);
+}
+
+function caFoodPatisForMonth(monthStr) {
+  return getMonthSales(monthStr).filter(r => ['Food frigo', 'Pâtisserie'].includes(classifyItem(r))).reduce((s, r) => s + Number(r.net_sales), 0);
+}
+
+function daysOpenForMonth(monthStr) {
+  return new Set(allData.filter(r => r.date && r.date.startsWith(monthStr)).map(r => r.date)).size;
+}
+
+function computePL(monthStr) {
+  const c = monthlyCosts[monthStr] || {};
+  const b = budgetTargets[monthStr] || {};
+  const ca = caForMonth(monthStr);
+  const caBarista = caBaristaForMonth(monthStr);
+  const caFoodPatis = caFoodPatisForMonth(monthStr);
+  const cogs = Number(c.cogs_barista || 0) + Number(c.cogs_food_patis || 0);
+  const labor = Number(c.labor_salaries || 0) + Number(c.labor_freelance || 0);
+  const fixed = Number(c.rent || 0) + Number(c.fixed_charges || 0);
+  const other = Number(c.other_costs || 0);
+  const grossMargin = ca - cogs;
+  const ebitda = ca - cogs - labor - fixed - other;
+  const grossPct = ca ? grossMargin / ca * 100 : 0;
+  const primePct = ca ? (cogs + labor) / ca * 100 : 0;
+  const ebitdaPct = ca ? ebitda / ca * 100 : 0;
+  const foodCostBaristaPct = caBarista ? Number(c.cogs_barista || 0) / caBarista * 100 : 0;
+  const foodCostFoodPatisPct = caFoodPatis ? Number(c.cogs_food_patis || 0) / caFoodPatis * 100 : 0;
+  const days = daysOpenForMonth(monthStr);
+  // breakeven: traiter labor + fixed + other comme fixes ; COGS variable proportionnel au CA
+  const variableContribPct = ca ? (1 - cogs / ca) : 0;
+  const fixedTotal = labor + fixed + other;
+  const breakevenMonth = variableContribPct > 0 ? fixedTotal / variableContribPct : 0;
+  const breakevenDay = days ? breakevenMonth / days : (variableContribPct > 0 ? fixedTotal / 22 / variableContribPct : 0);
+  return { ca, caBarista, caFoodPatis, cogs, labor, fixed, other, grossMargin, ebitda, grossPct, primePct, ebitdaPct, foodCostBaristaPct, foodCostFoodPatisPct, days, breakevenMonth, breakevenDay, costs: c, budget: b };
+}
+
+function renderFinanceView() {
+  if (!selectedMonth) selectedMonth = new Date().toISOString().slice(0, 7);
+  const mEl = document.getElementById('monthSelect');
+  if (mEl) mEl.value = selectedMonth;
+
+  const pl = computePL(selectedMonth);
+  document.getElementById('subtitle').textContent =
+    fmtMonthLong(selectedMonth) +
+    ' · ' + (pl.days ? `${pl.days} jour${pl.days > 1 ? 's' : ''} d'ouverture` : 'Pas encore de ventes ce mois') +
+    ((pl.costs && pl.costs.month) ? ' · Coûts saisis' : ' · Coûts non saisis');
+
+  let html = '';
+
+  // ===== Section A — Bilan mensuel =====
+  // KPI cards
+  html += '<div class="grid4" style="margin-bottom:16px;">';
+  html += `<div class="kpi"><div class="kpi-label">CA réel</div><div class="kpi-value">${fmtEuro(pl.ca)}</div><div class="kpi-sub">${pl.budget && pl.budget.ca_target ? 'Cible : ' + fmtEuro(pl.budget.ca_target) + ' (' + (pl.budget.ca_target ? Math.round(pl.ca / pl.budget.ca_target * 100) : 0) + '%)' : 'Pas de cible'}</div></div>`;
+  html += `<div class="kpi"><div class="kpi-label">EBITDA</div><div class="kpi-value">${fmtEuro(pl.ebitda)}</div><div class="kpi-sub">${pl.ebitdaPct.toFixed(1)}%${pl.budget && pl.budget.ebitda_pct_target ? ' · cible ' + Number(pl.budget.ebitda_pct_target).toFixed(0) + '%' : ''}</div></div>`;
+  html += `<div class="kpi"><div class="kpi-label">Marge brute</div><div class="kpi-value">${pl.grossPct.toFixed(1)}%</div><div class="kpi-sub">${fmtEuro(pl.grossMargin)}</div></div>`;
+  html += `<div class="kpi"><div class="kpi-label">Prime cost</div><div class="kpi-value">${pl.primePct.toFixed(1)}%</div><div class="kpi-sub">Bench restau 60–65%</div></div>`;
+  html += '</div>';
+
+  // Alerts
+  const alerts = [];
+  if (pl.ca > 0 && (!pl.costs || !pl.costs.month)) {
+    alerts.push({ type: 'info', msg: 'Saisis les coûts du mois pour activer le P&L et les ratios.' });
+  }
+  if (pl.costs && pl.costs.month) {
+    if (pl.primePct > 65) alerts.push({ type: 'warn', msg: `Prime cost à ${pl.primePct.toFixed(0)}% — au-dessus du benchmark 65%.` });
+    else if (pl.primePct > 0) alerts.push({ type: 'ok', msg: `Prime cost ${pl.primePct.toFixed(0)}% — dans le bench.` });
+    if (pl.foodCostBaristaPct > 25 && pl.caBarista > 0) alerts.push({ type: 'warn', msg: `Food cost barista ${pl.foodCostBaristaPct.toFixed(0)}% — au-dessus du seuil 25%.` });
+    if (pl.foodCostFoodPatisPct > 35 && pl.caFoodPatis > 0) alerts.push({ type: 'warn', msg: `Food cost food/pâtisserie ${pl.foodCostFoodPatisPct.toFixed(0)}% — au-dessus du seuil 35%.` });
+  }
+  if (alerts.length) {
+    html += '<div style="margin-bottom:16px;">' + alerts.map(a => `<div class="alert-row alert-${a.type}">${escapeHtml(a.msg)}</div>`).join('') + '</div>';
+  }
+
+  // P&L breakdown + saisie form
+  html += '<div class="grid2" style="margin-bottom:16px;">';
+  html += '<div class="card"><div class="section-title">P&amp;L · ' + escapeHtml(fmtMonthLong(selectedMonth)) + '</div>';
+  html += renderPLBreakdown(pl);
+  html += '</div>';
+
+  // Detail card right
+  html += '<div class="card"><div class="section-title">Détail par catégorie</div>';
+  html += `<div class="pl-row"><span class="pl-label">CA barista</span><span class="pl-value">${fmtEuro(pl.caBarista)}</span></div>`;
+  html += `<div class="pl-row"><span class="pl-label">COGS barista</span><span class="pl-value">${fmtEuro(pl.costs.cogs_barista || 0)}</span></div>`;
+  html += `<div class="pl-row subtotal"><span class="pl-label">Food cost barista</span><span class="pl-value">${pl.caBarista ? pl.foodCostBaristaPct.toFixed(1) + '%' : '–'}</span></div>`;
+  html += '<div style="height:8px;"></div>';
+  html += `<div class="pl-row"><span class="pl-label">CA food + pâtisserie</span><span class="pl-value">${fmtEuro(pl.caFoodPatis)}</span></div>`;
+  html += `<div class="pl-row"><span class="pl-label">COGS food + pâtisserie</span><span class="pl-value">${fmtEuro(pl.costs.cogs_food_patis || 0)}</span></div>`;
+  html += `<div class="pl-row subtotal"><span class="pl-label">Food cost food/pâtisserie</span><span class="pl-value">${pl.caFoodPatis ? pl.foodCostFoodPatisPct.toFixed(1) + '%' : '–'}</span></div>`;
+  html += '</div>';
+  html += '</div>';
+
+  // Saisie form (collapsible)
+  html += '<div class="card" style="margin-bottom:16px;"><div style="display:flex;justify-content:space-between;align-items:center;"><div class="section-title" style="margin-bottom:0;">Saisie des coûts · ' + escapeHtml(fmtMonthLong(selectedMonth)) + '</div><button class="btn-secondary" style="font-size:11px;padding:5px 10px;border:none;border-radius:5px;cursor:pointer;font-family:inherit;" onclick="toggleFinanceForm()">Modifier</button></div>';
+  html += '<div id="financeForm" style="display:none;">' + renderSaisieForm(pl.costs) + '</div></div>';
+
+  // ===== Section B — Trends 12 derniers mois =====
+  html += '<div class="card" style="margin-bottom:16px;"><div class="section-title">Trends · 12 derniers mois</div><div style="position:relative;width:100%;height:240px;"><canvas id="trendsChart"></canvas></div><div id="trendsNote" style="margin-top:8px;font-size:11px;color:#777;"></div></div>';
+
+  // ===== Section C — Pilotage hebdo & breakeven =====
+  html += '<div class="grid2"><div class="card"><div class="section-title">Breakeven · ' + escapeHtml(fmtMonthLong(selectedMonth)) + '</div><div id="breakevenContent"></div></div>';
+  html += '<div class="card"><div class="section-title">Pilotage semaine en cours</div><div id="weekPaceContent"></div></div></div>';
+
+  document.getElementById('content').innerHTML = html;
+
+  renderTrendsChart();
+  renderBreakeven(pl);
+  renderWeekPace(pl);
+}
+
+function renderPLBreakdown(pl) {
+  let html = '';
+  html += `<div class="pl-row"><span class="pl-label">Chiffre d'affaires</span><span class="pl-value">${fmtEuro(pl.ca)}</span></div>`;
+  html += `<div class="pl-row neg"><span class="pl-label">− COGS barista</span><span class="pl-value">${fmtEuro(pl.costs.cogs_barista || 0)}</span></div>`;
+  html += `<div class="pl-row neg"><span class="pl-label">− COGS food + pâtisserie</span><span class="pl-value">${fmtEuro(pl.costs.cogs_food_patis || 0)}</span></div>`;
+  html += `<div class="pl-row subtotal"><span class="pl-label">= Marge brute</span><span class="pl-value">${fmtEuro(pl.grossMargin)} · ${pl.grossPct.toFixed(1)}%</span></div>`;
+  html += `<div class="pl-row neg"><span class="pl-label">− Salaires (coût employeur)</span><span class="pl-value">${fmtEuro(pl.costs.labor_salaries || 0)}</span></div>`;
+  html += `<div class="pl-row neg"><span class="pl-label">− Freelance</span><span class="pl-value">${fmtEuro(pl.costs.labor_freelance || 0)}</span></div>`;
+  html += `<div class="pl-row neg"><span class="pl-label">− Loyer</span><span class="pl-value">${fmtEuro(pl.costs.rent || 0)}</span></div>`;
+  html += `<div class="pl-row neg"><span class="pl-label">− Charges fixes</span><span class="pl-value">${fmtEuro(pl.costs.fixed_charges || 0)}</span></div>`;
+  html += `<div class="pl-row neg"><span class="pl-label">− Autres</span><span class="pl-value">${fmtEuro(pl.costs.other_costs || 0)}</span></div>`;
+  html += `<div class="pl-row total"><span class="pl-label">= EBITDA</span><span class="pl-value" style="${pl.ebitda < 0 ? 'color:#c0392b;' : 'color:#1D9E75;'}">${fmtEuro(pl.ebitda)} · ${pl.ebitdaPct.toFixed(1)}%</span></div>`;
+  return html;
+}
+
+function renderSaisieForm(c) {
+  c = c || {};
+  const fields = [
+    ['cogs_barista', 'COGS barista (€)'],
+    ['cogs_food_patis', 'COGS food + pâtisserie (€)'],
+    ['labor_salaries', 'Salaires — coût employeur (€)'],
+    ['labor_freelance', 'Freelance (€)'],
+    ['rent', 'Loyer (€)'],
+    ['fixed_charges', 'Charges fixes (€)'],
+    ['other_costs', 'Autres (€)']
+  ];
+  let html = '<div class="finance-form">';
+  html += '<div class="grid-form">';
+  fields.forEach(([key, label]) => {
+    html += `<div><label>${label}</label><input type="number" step="0.01" id="f-${key}" value="${c[key] != null ? c[key] : ''}" placeholder="0"></div>`;
+  });
+  html += '</div>';
+  html += `<div style="margin-top:10px;"><label>Notes</label><textarea id="f-notes" placeholder="Contexte du mois (incidents, événements, etc.)">${escapeHtml(c.notes || '')}</textarea></div>`;
+  html += '<div class="actions"><button class="btn-primary" onclick="saveCosts()">Enregistrer</button><button class="btn-secondary" onclick="toggleFinanceForm()">Annuler</button><span id="saveStatus" style="font-size:11px;color:#777;"></span></div>';
+  html += '</div>';
+  return html;
+}
+
+function toggleFinanceForm() {
+  const f = document.getElementById('financeForm');
+  if (f) f.style.display = (f.style.display === 'none' || !f.style.display) ? 'block' : 'none';
+}
+
+async function saveCosts() {
+  const status = document.getElementById('saveStatus');
+  status.textContent = 'Enregistrement...';
+  const payload = {
+    month: selectedMonth,
+    cogs_barista: Number(document.getElementById('f-cogs_barista').value || 0),
+    cogs_food_patis: Number(document.getElementById('f-cogs_food_patis').value || 0),
+    labor_salaries: Number(document.getElementById('f-labor_salaries').value || 0),
+    labor_freelance: Number(document.getElementById('f-labor_freelance').value || 0),
+    rent: Number(document.getElementById('f-rent').value || 0),
+    fixed_charges: Number(document.getElementById('f-fixed_charges').value || 0),
+    other_costs: Number(document.getElementById('f-other_costs').value || 0),
+    notes: document.getElementById('f-notes').value || null,
+    updated_at: new Date().toISOString()
+  };
+  const { error } = await sb.from('monthly_costs').upsert(payload, { onConflict: 'month' });
+  if (error) {
+    status.textContent = 'Erreur : ' + error.message;
+    status.style.color = '#c0392b';
+    return;
+  }
+  monthlyCosts[selectedMonth] = payload;
+  status.textContent = '✓ Enregistré';
+  status.style.color = '#1D9E75';
+  setTimeout(() => render(), 400);
+}
+
+function renderTrendsChart() {
+  const months = shiftMonthRange(selectedMonth, 12);
+  const caSeries = months.map(m => caForMonth(m));
+  const ebitdaSeries = months.map(m => {
+    const pl = computePL(m);
+    return (pl.costs && pl.costs.month) ? pl.ebitda : null;
+  });
+  const targetSeries = months.map(m => budgetTargets[m] && budgetTargets[m].ca_target ? Number(budgetTargets[m].ca_target) : null);
+
+  const labels = months.map(m => {
+    const [y, mo] = m.split('-');
+    return MONTH_NAMES[parseInt(mo) - 1].slice(0, 3) + ' ' + y.slice(2);
+  });
+
+  const canvas = document.getElementById('trendsChart');
+  if (!canvas) return;
+  const existing = Chart.getChart ? Chart.getChart(canvas) : null;
+  if (existing) { try { existing.destroy(); } catch(_){} }
+
+  const datasets = [
+    { type: 'bar', label: 'CA', data: caSeries, backgroundColor: COLORS.blue + 'cc', borderColor: COLORS.blue, borderWidth: 1, borderRadius: 3, yAxisID: 'y' },
+    { type: 'line', label: 'EBITDA', data: ebitdaSeries, borderColor: COLORS.green, backgroundColor: 'transparent', borderWidth: 2, pointRadius: 3, tension: 0.25, yAxisID: 'y', spanGaps: false }
+  ];
+  if (targetSeries.some(v => v !== null)) {
+    datasets.push({ type: 'line', label: 'CA cible', data: targetSeries, borderColor: COLORS.gray, backgroundColor: 'transparent', borderWidth: 1.5, borderDash: [5, 4], pointRadius: 2, tension: 0, yAxisID: 'y', spanGaps: true });
+  }
+
+  new Chart(canvas, {
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 10, boxHeight: 10, padding: 12 } },
+        tooltip: { callbacks: { label: v => v.dataset.label + ' : ' + (v.raw == null ? '–' : Math.round(v.raw) + ' €') } }
+      },
+      scales: {
+        x: { ticks: { font: { size: 10 }, color: '#888' }, grid: { display: false } },
+        y: { ticks: { font: { size: 10 }, color: '#888', callback: v => v + '€' }, grid: { color: 'rgba(0,0,0,.06)' } }
+      }
+    }
+  });
+
+  const monthsWithCosts = months.filter(m => monthlyCosts[m]).length;
+  document.getElementById('trendsNote').textContent =
+    `Période ${labels[0]} → ${labels[labels.length - 1]} · ${monthsWithCosts}/12 mois avec coûts saisis`;
+}
+
+function renderBreakeven(pl) {
+  const el = document.getElementById('breakevenContent');
+  if (!pl.costs || !pl.costs.month) {
+    el.innerHTML = '<div style="font-size:13px;color:#999;">Saisis les coûts du mois pour calculer le breakeven.</div>';
+    return;
+  }
+  const status = pl.ebitda >= 0
+    ? `<span class="alert-row alert-ok" style="display:inline-flex;">Mois rentable · EBITDA ${fmtEuro(pl.ebitda)}</span>`
+    : `<span class="alert-row alert-warn" style="display:inline-flex;">Sous breakeven · EBITDA ${fmtEuro(pl.ebitda)}</span>`;
+  const dailyPace = pl.days ? pl.ca / pl.days : 0;
+  const gap = pl.breakevenDay - dailyPace;
+  el.innerHTML = `
+    <div style="font-size:24px;font-weight:500;">${fmtEuro(pl.breakevenDay)}<span style="font-size:12px;color:#777;font-weight:400;"> / jour</span></div>
+    <div style="font-size:11px;color:#777;margin-top:2px;">CA/jour à atteindre pour couvrir tous les coûts</div>
+    <hr class="divider">
+    <div class="pl-row"><span class="pl-label">Breakeven mensuel</span><span class="pl-value">${fmtEuro(pl.breakevenMonth)}</span></div>
+    <div class="pl-row"><span class="pl-label">CA réel / jour (moy.)</span><span class="pl-value">${fmtEuro(dailyPace)}</span></div>
+    <div class="pl-row"><span class="pl-label">Écart</span><span class="pl-value" style="${gap > 0 ? 'color:#c0392b;' : 'color:#1D9E75;'}">${gap > 0 ? '−' : '+'}${fmtEuro(Math.abs(gap))} / jour</span></div>
+    <div style="margin-top:10px;">${status}</div>
+  `;
+}
+
+function renderWeekPace(pl) {
+  const el = document.getElementById('weekPaceContent');
+  // Find the most recent week in this month
+  const monthDates = [...new Set(allData.filter(r => r.date && r.date.startsWith(selectedMonth)).map(r => r.date))].sort();
+  if (!monthDates.length) {
+    el.innerHTML = '<div style="font-size:13px;color:#999;">Pas de ventes ce mois.</div>';
+    return;
+  }
+  const lastDate = monthDates[monthDates.length - 1];
+  const lastWeek = getISOWeek(lastDate);
+  const weekKey = lastWeek.year + '-W' + String(lastWeek.week).padStart(2, '0');
+  const weekRows = allData.filter(r => {
+    const w = getISOWeek(r.date);
+    return (w.year + '-W' + String(w.week).padStart(2, '0')) === weekKey && classifyItem(r) !== 'Ignoré';
+  });
+  const weekDates = [...new Set(weekRows.map(r => r.date))];
+  const weekCA = weekRows.reduce((s, r) => s + Number(r.net_sales), 0);
+  const weekDays = weekDates.length;
+  const weekPace = weekDays ? weekCA / weekDays : 0;
+  const breakevenWeek = pl.breakevenDay * 5; // hebdo sur 5j ouvrés
+  const variation = pl.breakevenDay ? ((weekPace - pl.breakevenDay) / pl.breakevenDay * 100) : 0;
+
+  el.innerHTML = `
+    <div style="font-size:11px;color:#777;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">Sem. ${lastWeek.week} · ${weekDays}j</div>
+    <div style="font-size:22px;font-weight:500;">${fmtEuro(weekCA)}</div>
+    <div style="font-size:11px;color:#777;margin-top:2px;">${fmtEuro(weekPace)}/jour en moyenne</div>
+    <hr class="divider">
+    ${pl.costs && pl.costs.month ? `
+    <div class="pl-row"><span class="pl-label">Breakeven hebdo (5j)</span><span class="pl-value">${fmtEuro(breakevenWeek)}</span></div>
+    <div class="pl-row"><span class="pl-label">Pace vs breakeven/jour</span><span class="pl-value" style="${variation < 0 ? 'color:#c0392b;' : 'color:#1D9E75;'}">${variation >= 0 ? '+' : ''}${variation.toFixed(0)}%</span></div>
+    ` : '<div style="font-size:12px;color:#999;">Saisis les coûts pour comparer au breakeven.</div>'}
+  `;
 }
 
 // Boot — loadData is called after auth check above
