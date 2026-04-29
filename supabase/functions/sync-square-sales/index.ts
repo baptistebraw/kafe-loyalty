@@ -141,32 +141,58 @@ Deno.serve(async (req) => {
     // 1. Fetch les commandes Square
     const orders = await fetchOrders(startAt, endAt);
 
-    // 2. Transformer en lignes
+    // 2. Transformer en lignes (sales) + pourboires (order_tips)
     const rows = orders.flatMap(orderToRows);
 
-    if (rows.length === 0) {
-      return new Response(
-        JSON.stringify({ ok: true, message: 'Aucune vente sur cette période', orders: 0, rows: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const tipRows = orders
+      .filter(o => o.created_at)
+      .map(o => {
+        const { date, time } = parseDateTime(o.created_at);
+        return {
+          order_id: o.id,
+          date,
+          time,
+          tip_amount: cents(o.total_tip_money),
+        };
+      });
 
-    // 3. Upsert dans Supabase par batch de 100
     const sb = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
     let inserted = 0;
     let skipped = 0;
+    let tipsUpserted = 0;
+    let tipsSum = 0;
 
-    for (let i = 0; i < rows.length; i += 100) {
-      const batch = rows.slice(i, i + 100);
-      const { data, error } = await sb
-        .from('sales')
-        .upsert(batch, { onConflict: 'transaction_id,item,time', ignoreDuplicates: true });
+    if (rows.length > 0) {
+      // 3a. Upsert dans sales par batch de 100
+      for (let i = 0; i < rows.length; i += 100) {
+        const batch = rows.slice(i, i + 100);
+        const { error } = await sb
+          .from('sales')
+          .upsert(batch, { onConflict: 'transaction_id,item,time', ignoreDuplicates: true });
 
-      if (error) {
-        console.error('Upsert error:', error);
-        skipped += batch.length;
-      } else {
-        inserted += batch.length;
+        if (error) {
+          console.error('sales upsert error:', error);
+          skipped += batch.length;
+        } else {
+          inserted += batch.length;
+        }
+      }
+    }
+
+    // 3b. Upsert pourboires (un seul row par ordre, on update si tip change)
+    if (tipRows.length > 0) {
+      for (let i = 0; i < tipRows.length; i += 100) {
+        const batch = tipRows.slice(i, i + 100);
+        const { error } = await sb
+          .from('order_tips')
+          .upsert(batch, { onConflict: 'order_id' });
+
+        if (error) {
+          console.error('order_tips upsert error:', error);
+        } else {
+          tipsUpserted += batch.length;
+          tipsSum += batch.reduce((s, r) => s + Number(r.tip_amount || 0), 0);
+        }
       }
     }
 
@@ -178,6 +204,8 @@ Deno.serve(async (req) => {
         rows: rows.length,
         inserted,
         skipped,
+        tips_upserted: tipsUpserted,
+        tips_total_eur: Math.round(tipsSum * 100) / 100,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

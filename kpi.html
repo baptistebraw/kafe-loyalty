@@ -260,6 +260,8 @@ let selectedDate = null; // 'YYYY-MM-DD'
 let selectedMonth = null; // 'YYYY-MM'
 let monthlyCosts = {}; // keyed by 'YYYY-MM'
 let budgetTargets = {}; // keyed by 'YYYY-MM'
+let monthlyTips = {}; // keyed by 'YYYY-MM' → total EUR
+const TEAM_MEMBERS = ['Lionel', 'Lucie', 'Laura', 'Tristan'];
 
 function getISOWeek(d) {
   const date = new Date(d);
@@ -521,14 +523,21 @@ function render() {
 }
 
 async function loadFinanceData() {
-  const [{ data: costs }, { data: budget }] = await Promise.all([
+  const [{ data: costs }, { data: budget }, { data: tips }] = await Promise.all([
     sb.from('monthly_costs').select('*'),
-    sb.from('budget_targets').select('*')
+    sb.from('budget_targets').select('*'),
+    sb.from('order_tips').select('date, tip_amount')
   ]);
   monthlyCosts = {};
   (costs || []).forEach(r => { monthlyCosts[r.month] = r; });
   budgetTargets = {};
   (budget || []).forEach(r => { budgetTargets[r.month] = r; });
+  monthlyTips = {};
+  (tips || []).forEach(r => {
+    const m = r.date ? r.date.slice(0, 7) : null;
+    if (!m) return;
+    monthlyTips[m] = (monthlyTips[m] || 0) + Number(r.tip_amount || 0);
+  });
 }
 
 function renderWeeklyView() {
@@ -1659,7 +1668,15 @@ function computePL(monthStr) {
   const fixedTotal = labor + fixed + other;
   const breakevenMonth = variableContribPct > 0 ? fixedTotal / variableContribPct : 0;
   const breakevenDay = days ? breakevenMonth / days : (variableContribPct > 0 ? fixedTotal / 22 / variableContribPct : 0);
-  return { ca, caBarista, caFoodPatis, cogs, labor, fixed, other, grossMargin, ebitda, grossPct, primePct, ebitdaPct, foodCostBaristaPct, foodCostFoodPatisPct, days, breakevenMonth, breakevenDay, costs: c, budget: b };
+  // Pourboires + répartition
+  const tipsTotal = Number(monthlyTips[monthStr] || 0);
+  const teamDays = (c.team_days && typeof c.team_days === 'object') ? c.team_days : {};
+  const totalDays = Object.values(teamDays).reduce((s, v) => s + Number(v || 0), 0);
+  const tipPerDay = totalDays ? tipsTotal / totalDays : 0;
+  const distribution = {};
+  Object.entries(teamDays).forEach(([name, d]) => { distribution[name] = Number(d || 0) * tipPerDay; });
+
+  return { ca, caBarista, caFoodPatis, cogs, labor, fixed, other, grossMargin, ebitda, grossPct, primePct, ebitdaPct, foodCostBaristaPct, foodCostFoodPatisPct, days, breakevenMonth, breakevenDay, costs: c, budget: b, tipsTotal, teamDays, totalDays, tipPerDay, distribution };
 }
 
 function renderFinanceView() {
@@ -1721,6 +1738,11 @@ function renderFinanceView() {
   html += '<div class="card" style="margin-bottom:16px;"><div style="display:flex;justify-content:space-between;align-items:center;"><div class="section-title" style="margin-bottom:0;">Saisie des coûts · ' + escapeHtml(fmtMonthLong(selectedMonth)) + '</div><button class="btn-secondary" style="font-size:11px;padding:5px 10px;border:none;border-radius:5px;cursor:pointer;font-family:inherit;" onclick="toggleFinanceForm()">Modifier</button></div>';
   html += '<div id="financeForm" style="display:none;">' + renderSaisieForm(pl.costs) + '</div></div>';
 
+  // ===== Section Pourboires & équipe =====
+  html += '<div class="card" style="margin-bottom:16px;"><div class="section-title">Pourboires &amp; répartition équipe · ' + escapeHtml(fmtMonthLong(selectedMonth)) + '</div>';
+  html += renderTipsSection(pl);
+  html += '</div>';
+
   // ===== Section B — Trends 12 derniers mois =====
   html += '<div class="card" style="margin-bottom:16px;"><div class="section-title">Trends · 12 derniers mois</div><div style="position:relative;width:100%;height:240px;"><canvas id="trendsChart"></canvas></div><div id="trendsNote" style="margin-top:8px;font-size:11px;color:#777;"></div></div>';
 
@@ -1761,15 +1783,61 @@ function renderSaisieForm(c) {
     ['fixed_charges', 'Charges fixes (€)'],
     ['other_costs', 'Autres (€)']
   ];
+  const teamDays = (c.team_days && typeof c.team_days === 'object') ? c.team_days : {};
   let html = '<div class="finance-form">';
   html += '<div class="grid-form">';
   fields.forEach(([key, label]) => {
     html += `<div><label>${label}</label><input type="number" step="0.01" id="f-${key}" value="${c[key] != null ? c[key] : ''}" placeholder="0"></div>`;
   });
   html += '</div>';
+  html += '<div style="margin-top:14px;"><div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px;font-weight:500;">Jours travaillés équipe (pour répartition pourboires)</div>';
+  html += '<div class="grid-form">';
+  TEAM_MEMBERS.forEach(name => {
+    const v = teamDays[name] != null ? teamDays[name] : '';
+    html += `<div><label>${escapeHtml(name)}</label><input type="number" step="1" min="0" id="f-team-${name}" value="${v}" placeholder="0"></div>`;
+  });
+  html += '</div></div>';
   html += `<div style="margin-top:10px;"><label>Notes</label><textarea id="f-notes" placeholder="Contexte du mois (incidents, événements, etc.)">${escapeHtml(c.notes || '')}</textarea></div>`;
   html += '<div class="actions"><button class="btn-primary" onclick="saveCosts()">Enregistrer</button><button class="btn-secondary" onclick="toggleFinanceForm()">Annuler</button><span id="saveStatus" style="font-size:11px;color:#777;"></span></div>';
   html += '</div>';
+  return html;
+}
+
+function renderTipsSection(pl) {
+  const tips = pl.tipsTotal;
+  const totalDays = pl.totalDays;
+  const tipPerDay = pl.tipPerDay;
+  let html = '';
+
+  // KPI line
+  html += '<div class="grid4" style="margin-bottom:14px;">';
+  html += `<div class="kpi"><div class="kpi-label">Pourboires du mois</div><div class="kpi-value">${fmtEuro(tips)}</div><div class="kpi-sub">${pl.ca ? (tips / pl.ca * 100).toFixed(1) + '% du CA' : 'auto Square'}</div></div>`;
+  html += `<div class="kpi"><div class="kpi-label">Jours travaillés total</div><div class="kpi-value">${totalDays || '–'}</div><div class="kpi-sub">${TEAM_MEMBERS.length} membres dans le pool</div></div>`;
+  html += `<div class="kpi"><div class="kpi-label">Part par jour</div><div class="kpi-value">${totalDays ? fmtEuroDec(tipPerDay) : '–'}</div><div class="kpi-sub">tips / jours travaillés</div></div>`;
+  const dailyAvg = pl.days ? tips / pl.days : 0;
+  html += `<div class="kpi"><div class="kpi-label">Tips moyen / jour ouvert</div><div class="kpi-value">${pl.days ? fmtEuroDec(dailyAvg) : '–'}</div><div class="kpi-sub">${pl.days || 0} jours d'ouverture</div></div>`;
+  html += '</div>';
+
+  // Distribution table
+  if (totalDays > 0 && tips > 0) {
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">';
+    TEAM_MEMBERS.forEach(name => {
+      const d = Number(pl.teamDays[name] || 0);
+      const part = pl.distribution[name] || 0;
+      const pct = tips ? (part / tips * 100) : 0;
+      html += `<div style="padding:12px 14px;border-radius:8px;background:#1D9E7514;">
+        <div style="font-size:11px;color:#1D9E75;font-weight:500;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">${escapeHtml(name)}</div>
+        <div style="font-size:20px;font-weight:500;">${fmtEuroDec(part)}</div>
+        <div style="font-size:11px;color:#777;margin-top:2px;">${d} jour${d > 1 ? 's' : ''} · ${pct.toFixed(1)}% du pot</div>
+      </div>`;
+    });
+    html += '</div>';
+  } else if (tips > 0) {
+    html += '<div class="alert-row alert-info">Saisis les jours travaillés de chaque membre dans le formulaire de saisie pour calculer la répartition.</div>';
+  } else {
+    html += '<div class="alert-row alert-info">Pas encore de pourboires synchronisés. Lance le sync Square ou attends qu\'il tourne.</div>';
+  }
+
   return html;
 }
 
@@ -1781,6 +1849,12 @@ function toggleFinanceForm() {
 async function saveCosts() {
   const status = document.getElementById('saveStatus');
   status.textContent = 'Enregistrement...';
+  const teamDays = {};
+  TEAM_MEMBERS.forEach(name => {
+    const el = document.getElementById('f-team-' + name);
+    const v = el && el.value !== '' ? Number(el.value) : 0;
+    if (v > 0) teamDays[name] = v;
+  });
   const payload = {
     month: selectedMonth,
     cogs_barista: Number(document.getElementById('f-cogs_barista').value || 0),
@@ -1790,6 +1864,7 @@ async function saveCosts() {
     rent: Number(document.getElementById('f-rent').value || 0),
     fixed_charges: Number(document.getElementById('f-fixed_charges').value || 0),
     other_costs: Number(document.getElementById('f-other_costs').value || 0),
+    team_days: teamDays,
     notes: document.getElementById('f-notes').value || null,
     updated_at: new Date().toISOString()
   };
