@@ -519,6 +519,9 @@ function renderWeeklyView() {
   html += '<div class="card"><div class="section-title">Items commandés par heure</div><div style="position:relative;width:100%;height:200px;"><canvas id="hourlyChart"></canvas></div><div id="hourlyNote" style="margin-top:8px;font-size:11px;color:#999;"></div></div>';
   html += '</div>';
 
+  // CA moyen par 30 min
+  html += '<div class="card" style="margin-bottom:16px;"><div class="section-title">CA moyen par tranche de 30 min</div><div style="position:relative;width:100%;height:220px;"><canvas id="halfHourChart"></canvas></div><div id="halfHourNote" style="margin-top:8px;font-size:11px;color:#999;"></div></div>';
+
   // Progression + Categories
   html += '<div class="grid2">';
   html += '<div class="card"><div class="section-title">Progression hebdomadaire</div><div id="weekProgression"></div></div>';
@@ -557,6 +560,7 @@ function renderWeeklyView() {
   // Render charts and sections
   renderDailyChart(data);
   renderHourlyChart(data);
+  renderHalfHourCA(data);
   renderWeekProgression();
   renderCategories(data);
   renderFocusFood(data, prevData);
@@ -861,6 +865,76 @@ function renderHourlyChart(data) {
   });
 
   document.getElementById('hourlyNote').textContent = `Pic à ${peakH}h = ${peakPct}% des items`;
+}
+
+function renderHalfHourCA(data) {
+  // 30-min slots from 8:00 to 17:30 (last slot 17:30-18:00)
+  const slots = [];
+  for (let h = 8; h < 18; h++) { slots.push(h * 60); slots.push(h * 60 + 30); }
+
+  // sum CA per (slot, date), then average across days
+  const slotByDate = {};
+  slots.forEach(s => slotByDate[s] = {});
+  data.forEach(r => {
+    const t = (r.time || '').split(':');
+    const h = parseInt(t[0]);
+    const m = parseInt(t[1] || '0');
+    if (isNaN(h) || h < 8 || h >= 18) return;
+    const slot = h * 60 + (m >= 30 ? 30 : 0);
+    if (!(slot in slotByDate)) return;
+    slotByDate[slot][r.date] = (slotByDate[slot][r.date] || 0) + Number(r.net_sales);
+  });
+
+  const allDates = [...new Set(data.map(r => r.date))];
+  const nDays = allDates.length || 1;
+
+  const labels = slots.map(s => {
+    const h = Math.floor(s / 60), m = s % 60;
+    return h + ':' + String(m).padStart(2, '0');
+  });
+  const values = slots.map(s => {
+    const sum = Object.values(slotByDate[s]).reduce((a, b) => a + b, 0);
+    return sum / nDays;
+  });
+
+  const total = values.reduce((a, b) => a + b, 0);
+  let peakIdx = 0, peakV = 0;
+  values.forEach((v, i) => { if (v > peakV) { peakV = v; peakIdx = i; } });
+  const peakPct = total ? Math.round(peakV / total * 100) : 0;
+  const peakLabel = labels[peakIdx];
+
+  const canvas = document.getElementById('halfHourChart');
+  if (!canvas) return;
+  const existing = Chart.getChart ? Chart.getChart(canvas) : null;
+  if (existing) { try { existing.destroy(); } catch(_){} }
+
+  new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: COLORS.green + 'bb',
+        borderColor: COLORS.green,
+        borderWidth: 1,
+        borderRadius: 3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: v => Math.round(v.raw) + ' € · moy. par jour' } }
+      },
+      scales: {
+        x: { ticks: { font: { size: 10 }, color: '#888', autoSkip: true, maxRotation: 0 }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { font: { size: 10 }, color: '#888', callback: v => v + '€' }, grid: { color: 'rgba(0,0,0,.06)' } }
+      }
+    }
+  });
+
+  document.getElementById('halfHourNote').textContent =
+    `Moyenne sur ${nDays} jour${nDays > 1 ? 's' : ''} · pic à ${peakLabel} = ${peakPct}% du CA journalier moyen`;
 }
 
 function renderWeekProgression() {
