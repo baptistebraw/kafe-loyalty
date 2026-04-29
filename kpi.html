@@ -523,21 +523,30 @@ function render() {
 }
 
 async function loadFinanceData() {
-  const [{ data: costs }, { data: budget }, { data: tips }] = await Promise.all([
+  const [{ data: costs }, { data: budget }] = await Promise.all([
     sb.from('monthly_costs').select('*'),
-    sb.from('budget_targets').select('*'),
-    sb.from('order_tips').select('date, tip_amount')
+    sb.from('budget_targets').select('*')
   ]);
   monthlyCosts = {};
   (costs || []).forEach(r => { monthlyCosts[r.month] = r; });
   budgetTargets = {};
   (budget || []).forEach(r => { budgetTargets[r.month] = r; });
+
+  // Tips paginés (Supabase coupe à 1000 par défaut)
   monthlyTips = {};
-  (tips || []).forEach(r => {
-    const m = r.date ? r.date.slice(0, 7) : null;
-    if (!m) return;
-    monthlyTips[m] = (monthlyTips[m] || 0) + Number(r.tip_amount || 0);
-  });
+  let from = 0;
+  const PAGE = 1000;
+  while (true) {
+    const { data, error } = await sb.from('order_tips').select('date, tip_amount').range(from, from + PAGE - 1);
+    if (error || !data || data.length === 0) break;
+    data.forEach(r => {
+      const m = r.date ? r.date.slice(0, 7) : null;
+      if (!m) return;
+      monthlyTips[m] = (monthlyTips[m] || 0) + Number(r.tip_amount || 0);
+    });
+    if (data.length < PAGE) break;
+    from += PAGE;
+  }
 }
 
 function renderWeeklyView() {
