@@ -222,6 +222,20 @@ const PATISSERIE_PATTERNS = ['Gâteaux','Cookies','Cookie','Granola Bar','Madele
 const FRIGO_PATTERNS = ['Jus','ChariTea','Lemonaid','Symbiose','Eau neuve','Archipel','Eau Plate','Eau Gazeuse'];
 // Items à ignorer (modificateurs, pas des produits)
 const IGNORE_ITEMS = ['Lait végétal'];
+const IGNORE_PATTERNS = [
+  /^ice$/i,
+  /^avoine$/i,
+  /^amande$/i,
+  /^coco$/i,
+  /^soja$/i,
+  /^lait\s+(avoine|amande|coco|soja|d['’]?avoine|d['’]?amande)$/i
+];
+
+function isIgnoredItem(item) {
+  if (!item) return true;
+  if (IGNORE_ITEMS.includes(item)) return true;
+  return IGNORE_PATTERNS.some(p => p.test(item.trim()));
+}
 
 function matchesAny(item, patterns) {
   return patterns.some(p => item === p || item.startsWith(p + ' '));
@@ -230,7 +244,7 @@ function matchesAny(item, patterns) {
 function classifyItem(row) {
   const item = row.item;
   const cat = row.category;
-  if (IGNORE_ITEMS.includes(item)) return 'Ignoré';
+  if (isIgnoredItem(item)) return 'Ignoré';
   if (cat === 'Café et thé' || matchesAny(item, BARISTA_PATTERNS)) return 'Boissons barista';
   if (matchesAny(item, FOOD_PATTERNS)) return 'Food frigo';
   if (matchesAny(item, PATISSERIE_PATTERNS)) return 'Pâtisserie';
