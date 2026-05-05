@@ -692,7 +692,8 @@ function renderFocusFood(data, prevData) {
   const sortedItems = Object.entries(itemTotals).sort((a, b) => b[1] - a[1]).map(([n]) => n);
 
   // If current selection no longer exists in data, fall back to default
-  if (focusFoodSelection !== '__default__' && !(focusFoodSelection in itemTotals)) {
+  const FOCUS_SENTINELS = new Set(['__default__', '__chia_skyr__']);
+  if (!FOCUS_SENTINELS.has(focusFoodSelection) && !(focusFoodSelection in itemTotals)) {
     focusFoodSelection = '__default__';
   }
 
