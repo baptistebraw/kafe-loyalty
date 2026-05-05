@@ -647,6 +647,13 @@ function renderWeeklyView() {
     html += '<div style="position:relative;width:100%;height:380px;"><canvas id="topGrowthChart"></canvas></div>';
     html += '<div id="topGrowthNote" style="margin-top:8px;font-size:11px;color:#999;line-height:1.5;"></div>';
     html += '</div>';
+
+    // Vue d'ensemble · ventes hebdo par item (cumul uniquement)
+    html += '<div class="card" style="margin-bottom:16px;">';
+    html += '<div class="section-title">Ventes hebdomadaires par item · vue d\'ensemble</div>';
+    html += '<div style="position:relative;width:100%;height:520px;"><canvas id="itemsWeeklyChart"></canvas></div>';
+    html += '<div id="itemsWeeklyNote" style="margin-top:8px;font-size:11px;color:#999;line-height:1.5;"></div>';
+    html += '</div>';
   }
 
   // Top products by category
@@ -673,6 +680,7 @@ function renderWeeklyView() {
   renderFocusFood(data, prevData);
   renderProducts(data);
   if (isAll) renderTopGrowth(data);
+  if (isAll) renderItemsWeeklyTrends(data);
   renderInsights(data, prevData);
 }
 
@@ -1388,6 +1396,115 @@ function renderTopGrowth(data) {
     noteEl.innerHTML =
       `Pente hebdo (régression linéaire) sur ${weekKeys.length} semaines, exprimée en % du volume hebdo moyen. ` +
       `Filtre : min ${MIN_TOTAL_QTY} unités cumulées. Items normalisés (Triangle, Combo Triangle, Chia bowl, Skyr, Salade, Chocolate Chaud agrégés).`;
+  }
+}
+
+function renderItemsWeeklyTrends(data) {
+  const canvas = document.getElementById('itemsWeeklyChart');
+  const noteEl = document.getElementById('itemsWeeklyNote');
+  if (!canvas) return;
+  const existing = Chart.getChart ? Chart.getChart(canvas) : null;
+  if (existing) { try { existing.destroy(); } catch(_){} }
+
+  // Semaines triées
+  const weekKeys = [...new Set(data.map(r => {
+    const w = getISOWeek(r.date);
+    return w.year + '-W' + String(w.week).padStart(2, '0');
+  }))].sort();
+
+  if (weekKeys.length < 2) {
+    if (noteEl) noteEl.textContent = 'Min 2 semaines requis pour afficher l\'évolution.';
+    return;
+  }
+
+  // qty par item normalisé × semaine + catégorie
+  const byItem = {};
+  data.forEach(r => {
+    const cat = classifyItem(r);
+    if (cat === 'Ignoré') return;
+    const norm = normalizeItem(r.item);
+    if (!norm) return;
+    const w = getISOWeek(r.date);
+    const wk = w.year + '-W' + String(w.week).padStart(2, '0');
+    if (!byItem[norm]) byItem[norm] = { byWeek: {}, total: 0, cat };
+    byItem[norm].byWeek[wk] = (byItem[norm].byWeek[wk] || 0) + Number(r.qty);
+    byItem[norm].total += Number(r.qty);
+  });
+
+  // Tri : catégorie puis volume desc dans la catégorie
+  const CAT_ORDER = ['Boissons barista', 'Food frigo', 'Pâtisserie', 'Boissons frigo', 'Autre'];
+  const CAT_PALETTE = {
+    'Boissons barista': COLORS.blue,
+    'Food frigo': COLORS.green,
+    'Pâtisserie': COLORS.orange,
+    'Boissons frigo': COLORS.gray,
+    'Autre': '#9b59b6'
+  };
+  const items = Object.entries(byItem).sort((a, b) => {
+    const ca = CAT_ORDER.indexOf(a[1].cat); const cb = CAT_ORDER.indexOf(b[1].cat);
+    if (ca !== cb) return (ca === -1 ? 99 : ca) - (cb === -1 ? 99 : cb);
+    return b[1].total - a[1].total;
+  });
+
+  // Compteur par catégorie pour varier la teinte
+  const catCount = {};
+  items.forEach(([_, v]) => { catCount[v.cat] = (catCount[v.cat] || 0) + 1; });
+  const catSeen = {};
+
+  function tint(hex, t) {
+    const h = hex.replace('#', '');
+    const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+    const mix = c => Math.round(c + (255 - c) * t).toString(16).padStart(2,'0');
+    return '#' + mix(r) + mix(g) + mix(b);
+  }
+
+  const labels = weekKeys.map(wk => 'S' + wk.split('-W')[1]);
+
+  const datasets = items.map(([item, v]) => {
+    const base = CAT_PALETTE[v.cat] || '#888';
+    const idx = (catSeen[v.cat] = (catSeen[v.cat] || 0) + 1);
+    const total = catCount[v.cat] || 1;
+    const t = total > 1 ? ((idx - 1) / (total - 1)) * 0.55 : 0;
+    const color = tint(base, t);
+    return {
+      label: item,
+      data: weekKeys.map(wk => v.byWeek[wk] || 0),
+      borderColor: color,
+      backgroundColor: color + '22',
+      borderWidth: 1.5,
+      tension: 0.3,
+      pointRadius: 2,
+      pointHoverRadius: 4,
+      fill: false
+    };
+  });
+
+  new Chart(canvas, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'nearest', intersect: false },
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { font: { size: 10 }, boxWidth: 8, boxHeight: 8, padding: 6 }
+        },
+        tooltip: {
+          callbacks: {
+            label: v => v.dataset.label + ' : ' + v.raw + ' u'
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { font: { size: 10 }, color: '#888' }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { font: { size: 10 }, color: '#888', precision: 0 }, grid: { color: 'rgba(0,0,0,.06)' } }
+      }
+    }
+  });
+
+  if (noteEl) {
+    noteEl.textContent = `${items.length} items normalisés sur ${weekKeys.length} semaines. Couleur par catégorie, variation de teinte par item. Clique un label pour masquer/afficher une ligne.`;
   }
 }
 
