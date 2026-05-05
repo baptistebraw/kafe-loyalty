@@ -640,6 +640,15 @@ function renderWeeklyView() {
   // Top 10 global
   html += '<div class="card" style="margin-bottom:16px;"><div class="section-title">Top 10 produits — CA</div><div id="top10Items"></div></div>';
 
+  // Top performers · croissance hebdomadaire (cumul uniquement)
+  if (isAll) {
+    html += '<div class="card" style="margin-bottom:16px;">';
+    html += '<div class="section-title">Top performers · croissance hebdomadaire</div>';
+    html += '<div style="position:relative;width:100%;height:380px;"><canvas id="topGrowthChart"></canvas></div>';
+    html += '<div id="topGrowthNote" style="margin-top:8px;font-size:11px;color:#999;line-height:1.5;"></div>';
+    html += '</div>';
+  }
+
   // Top products by category
   html += '<div class="grid2">';
   html += '<div class="card"><div class="section-title">Boissons barista</div><div id="baristaItems"></div></div>';
@@ -663,6 +672,7 @@ function renderWeeklyView() {
   renderCategories(data);
   renderFocusFood(data, prevData);
   renderProducts(data);
+  if (isAll) renderTopGrowth(data);
   renderInsights(data, prevData);
 }
 
@@ -690,6 +700,7 @@ function renderFocusFood(data, prevData) {
   const sel = document.getElementById('focusFoodSelector');
   if (sel) {
     let opts = '<option value="__default__">Sandwichs &amp; Salades</option>';
+    opts += '<option value="__chia_skyr__">Chia + Skyr (petit-déj protéiné)</option>';
     sortedItems.forEach(it => { opts += `<option value="${escapeHtml(it)}">${escapeHtml(it)}</option>`; });
     sel.innerHTML = opts;
     sel.value = focusFoodSelection;
@@ -703,6 +714,10 @@ function renderFocusFood(data, prevData) {
 
   if (focusFoodSelection === '__default__') {
     renderFocusFoodDefault(data, prevData);
+  } else if (focusFoodSelection === '__chia_skyr__') {
+    renderFocusFoodAggregate(data, prevData, 'Chia + Skyr',
+      r => r.item.startsWith('Chia') || r.item.startsWith('Skyr'),
+      COLORS.blue);
   } else {
     renderFocusFoodItem(data, prevData, focusFoodSelection);
   }
@@ -851,6 +866,79 @@ function renderFocusFoodItem(data, prevData, item) {
       <div style="font-size:22px;font-weight:500;">${Math.round(totalQty)} <span style="font-size:11px;color:#777;font-weight:400;">· ${(totalQty/nDays).toFixed(1)}/j</span></div>
       <div style="font-size:11px;color:#777;margin-top:2px;">${fmtEuro(totalItemCA)} · ${itemPctCA}% du CA</div>
       ${trend ? `<div style="font-size:11px;color:${COLORS.blue};margin-top:3px;font-weight:500;">${trend}</div>` : ''}
+    </div>
+    <div style="padding:10px 14px;border-radius:8px;background:#eceae3;margin-bottom:8px;">
+      <div style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:#777;">Prix moyen unité</div>
+      <div style="font-size:18px;font-weight:500;margin-top:2px;">${fmtEuroDec(avgPrice)}</div>
+    </div>
+    <div style="padding:10px 14px;border-radius:8px;background:#1a1a1a;color:#fff;">
+      <div style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;opacity:.7;">Jours avec ventes</div>
+      <div style="font-size:18px;font-weight:500;margin-top:2px;">${activeDays} / ${nDays}</div>
+    </div>
+  `;
+}
+
+function renderFocusFoodAggregate(data, prevData, label, predicate, color) {
+  const sortedDates = [...new Set(data.map(r => r.date))].sort();
+  const byDate = {};
+  sortedDates.forEach(d => { byDate[d] = { qty: 0, ca: 0 }; });
+  const matched = data.filter(predicate);
+  matched.forEach(r => {
+    if (!byDate[r.date]) return;
+    byDate[r.date].qty += Number(r.qty);
+    byDate[r.date].ca  += Number(r.net_sales);
+  });
+
+  const labels = sortedDates.map(d => { const [y,m,dd] = d.split('-'); return parseInt(dd) + '/' + parseInt(m); });
+  const qtySeries = sortedDates.map(d => byDate[d].qty);
+
+  focusFoodChart = new Chart(document.getElementById('focusFoodChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label, data: qtySeries, borderColor: color, backgroundColor: color + '22', tension: 0.35, fill: true, pointRadius: 3, borderWidth: 2 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 10, boxHeight: 10, padding: 12 } },
+        tooltip: { callbacks: { label: v => v.dataset.label + ' : ' + v.raw + ' unités' } }
+      },
+      scales: {
+        x: { ticks: { font: { size: 10 }, color: '#888', autoSkip: true, maxRotation: 0 }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { font: { size: 10 }, color: '#888', precision: 0 }, grid: { color: 'rgba(0,0,0,.06)' } }
+      }
+    }
+  });
+
+  const nDays = sortedDates.length || 1;
+  const totalCA = data.reduce((s, r) => s + Number(r.net_sales), 0);
+  const totalQty = qtySeries.reduce((a, b) => a + b, 0);
+  const totalAggCA = sortedDates.reduce((s, d) => s + byDate[d].ca, 0);
+  const aggPctCA = totalCA ? Math.round(totalAggCA / totalCA * 100) : 0;
+  const avgPrice = totalQty ? totalAggCA / totalQty : 0;
+  const activeDays = sortedDates.filter(d => byDate[d].qty > 0).length;
+
+  // Breakdown Chia vs Skyr
+  const chiaQty = matched.filter(r => r.item.startsWith('Chia')).reduce((s, r) => s + Number(r.qty), 0);
+  const skyrQty = matched.filter(r => r.item.startsWith('Skyr')).reduce((s, r) => s + Number(r.qty), 0);
+
+  let trend = '';
+  if (prevData) {
+    const pDays = [...new Set(prevData.map(r => r.date))].length || 1;
+    const pQty = prevData.filter(predicate).reduce((s, r) => s + Number(r.qty), 0);
+    if (pQty > 0) trend = pctChange(totalQty / nDays, pQty / pDays) + ' vs sem. préc.';
+  }
+
+  document.getElementById('focusFoodStats').innerHTML = `
+    <div style="padding:12px 14px;border-radius:8px;background:${color}14;margin-bottom:8px;">
+      <div style="font-size:11px;color:${color};font-weight:500;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;word-break:break-word;">${escapeHtml(label)}</div>
+      <div style="font-size:22px;font-weight:500;">${Math.round(totalQty)} <span style="font-size:11px;color:#777;font-weight:400;">· ${(totalQty/nDays).toFixed(1)}/j</span></div>
+      <div style="font-size:11px;color:#777;margin-top:2px;">${fmtEuro(totalAggCA)} · ${aggPctCA}% du CA</div>
+      <div style="font-size:11px;color:#777;margin-top:3px;">Chia ${Math.round(chiaQty)} · Skyr ${Math.round(skyrQty)}</div>
+      ${trend ? `<div style="font-size:11px;color:${color};margin-top:3px;font-weight:500;">${trend}</div>` : ''}
     </div>
     <div style="padding:10px 14px;border-radius:8px;background:#eceae3;margin-bottom:8px;">
       <div style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:#777;">Prix moyen unité</div>
@@ -1187,6 +1275,119 @@ function renderProducts(data) {
   renderBars('foodItems', getTopItems(data, 'Food frigo', 10), COLORS.green);
   renderBars('patisItems', getTopItems(data, 'Pâtisserie', 10), COLORS.orange);
   renderBars('frigoItems', getTopItems(data, 'Boissons frigo', 10), COLORS.gray);
+}
+
+function renderTopGrowth(data) {
+  const noteEl = document.getElementById('topGrowthNote');
+  const canvas = document.getElementById('topGrowthChart');
+  if (!canvas) return;
+  const existing = Chart.getChart ? Chart.getChart(canvas) : null;
+  if (existing) { try { existing.destroy(); } catch(_){} }
+
+  // Toutes les semaines présentes, triées
+  const weekKeys = [...new Set(data.map(r => {
+    const w = getISOWeek(r.date);
+    return w.year + '-W' + String(w.week).padStart(2, '0');
+  }))].sort();
+
+  if (weekKeys.length < 3) {
+    if (noteEl) noteEl.textContent = 'Pas assez de semaines (min 3) pour mesurer une tendance.';
+    return;
+  }
+
+  // qty par item normalisé × semaine
+  const byItemWeek = {};
+  data.forEach(r => {
+    const norm = normalizeItem(r.item);
+    if (!norm) return;
+    const w = getISOWeek(r.date);
+    const wk = w.year + '-W' + String(w.week).padStart(2, '0');
+    if (!byItemWeek[norm]) byItemWeek[norm] = {};
+    byItemWeek[norm][wk] = (byItemWeek[norm][wk] || 0) + Number(r.qty);
+  });
+
+  const MIN_TOTAL_QTY = 10;
+  const items = [];
+  Object.entries(byItemWeek).forEach(([item, byWk]) => {
+    const series = weekKeys.map(wk => byWk[wk] || 0);
+    const total = series.reduce((s, v) => s + v, 0);
+    if (total < MIN_TOTAL_QTY) return;
+    const n = series.length;
+    const xMean = (n - 1) / 2;
+    const yMean = total / n;
+    let num = 0, den = 0;
+    for (let i = 0; i < n; i++) {
+      num += (i - xMean) * (series[i] - yMean);
+      den += (i - xMean) * (i - xMean);
+    }
+    const slope = den ? num / den : 0;
+    const pctPerWeek = yMean ? (slope / yMean) * 100 : 0;
+    items.push({ item, series, total, slope, pctPerWeek, yMean });
+  });
+
+  if (!items.length) {
+    if (noteEl) noteEl.textContent = `Aucun item avec ≥ ${MIN_TOTAL_QTY} unités cumulées.`;
+    return;
+  }
+
+  const grimpants  = items.filter(it => it.pctPerWeek >  0).sort((a, b) => b.pctPerWeek - a.pctPerWeek).slice(0, 10);
+  const decrochants = items.filter(it => it.pctPerWeek <= 0).sort((a, b) => a.pctPerWeek - b.pctPerWeek).slice(0, 5);
+  const display = [...grimpants, ...decrochants];
+
+  const labels = display.map(it => it.item);
+  const values = display.map(it => Number(it.pctPerWeek.toFixed(1)));
+  const colors = display.map(it => it.pctPerWeek >= 0 ? COLORS.green + 'cc' : '#c0392bcc');
+  const borders = display.map(it => it.pctPerWeek >= 0 ? COLORS.green : '#c0392b');
+
+  new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: colors,
+        borderColor: borders,
+        borderWidth: 1,
+        borderRadius: 3
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: v => {
+              const it = display[v.dataIndex];
+              const sign = it.pctPerWeek >= 0 ? '+' : '';
+              return [
+                `${sign}${it.pctPerWeek.toFixed(1)} %/sem.`,
+                `${Math.round(it.total)} unités cumulées · ${it.yMean.toFixed(1)}/sem. moy.`,
+                `Pente : ${it.slope >= 0 ? '+' : ''}${it.slope.toFixed(2)} unités/sem.`
+              ];
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { font: { size: 10 }, color: '#888', callback: v => (v >= 0 ? '+' : '') + v + '%' },
+          grid: { color: 'rgba(0,0,0,.06)' }
+        },
+        y: {
+          ticks: { font: { size: 11 }, color: '#1a1a1a' },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+
+  if (noteEl) {
+    noteEl.innerHTML =
+      `Pente hebdo (régression linéaire) sur ${weekKeys.length} semaines, exprimée en % du volume hebdo moyen. ` +
+      `Filtre : min ${MIN_TOTAL_QTY} unités cumulées. Items normalisés (Triangle, Combo Triangle, Chia bowl, Skyr, Salade, Chocolate Chaud agrégés).`;
+  }
 }
 
 function renderInsights(data, prevData) {
