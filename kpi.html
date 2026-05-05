@@ -255,11 +255,13 @@ function classifyItem(row) {
 // Normalise les noms d'items pour regrouper les variantes
 function normalizeItem(name) {
   if (name === 'Triangle seul' || name === 'Triangle') return 'Triangle';
-  if (name.startsWith('Combo Triangle')) return 'Combo Triangle';
-  if (name.startsWith('Chia')) return 'Chia bowl';
-  if (name.startsWith('Skyr')) return 'Skyr';
+  if (name.startsWith('Combo Triangle')) return 'Triangle';
+  if (name.startsWith('Triangle')) return 'Triangle';
+  if (name.startsWith('Chia') || name.startsWith('Skyr')) return 'Chia + Skyr';
   if (name.startsWith('Salade')) return 'Salade';
   if (name.startsWith('Chocolate Chaud') || name === 'Chocolat') return 'Chocolate Chaud';
+  if (name.startsWith('Symbiose') || name.startsWith('ChariTea') ||
+      name.startsWith('Lemonaid') || name.startsWith('Archipel')) return 'Sodas & kombuchas';
   return name;
 }
 
@@ -1353,9 +1355,12 @@ function renderTopGrowth(data) {
     return;
   }
 
-  const grimpants  = items.filter(it => it.pctPerWeek >  0).sort((a, b) => b.pctPerWeek - a.pctPerWeek).slice(0, 10);
-  const decrochants = items.filter(it => it.pctPerWeek <= 0).sort((a, b) => a.pctPerWeek - b.pctPerWeek).slice(0, 5);
-  const display = [...grimpants, ...decrochants];
+  // Tous les items, triés par croissance desc (positifs en haut, négatifs en bas)
+  const display = items.slice().sort((a, b) => b.pctPerWeek - a.pctPerWeek);
+
+  // Hauteur dynamique : ~26px par barre + marges
+  const container = canvas.parentElement;
+  if (container) container.style.height = Math.max(380, display.length * 26 + 40) + 'px';
 
   const labels = display.map(it => it.item);
   const values = display.map(it => Number(it.pctPerWeek.toFixed(1)));
@@ -1409,7 +1414,7 @@ function renderTopGrowth(data) {
   if (noteEl) {
     noteEl.innerHTML =
       `Pente hebdo (régression linéaire) sur ${weekKeys.length} semaines, exprimée en % du volume hebdo moyen. ` +
-      `Filtre : min ${MIN_TOTAL_QTY} unités cumulées. Items normalisés (Triangle, Combo Triangle, Chia bowl, Skyr, Salade, Chocolate Chaud agrégés).`;
+      `Filtre : min ${MIN_TOTAL_QTY} unités cumulées. Items normalisés : Triangle (toutes variantes + combo), Chia + Skyr, Salade, Sodas & kombuchas (Symbiose, ChariTea, Lemonaid, Archipel), Chocolate Chaud.`;
   }
 }
 
