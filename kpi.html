@@ -1302,6 +1302,20 @@ function renderProducts(data) {
   renderBars('frigoItems', getTopItems(data, 'Boissons frigo', 10), COLORS.gray);
 }
 
+// Compte les jours ouverts par semaine ISO à partir des dates présentes
+function buildOpenDaysByWeek(data) {
+  const daysByWeek = {};
+  data.forEach(r => {
+    const w = getISOWeek(r.date);
+    const wk = w.year + '-W' + String(w.week).padStart(2, '0');
+    if (!daysByWeek[wk]) daysByWeek[wk] = new Set();
+    daysByWeek[wk].add(r.date);
+  });
+  const out = {};
+  Object.keys(daysByWeek).forEach(wk => { out[wk] = daysByWeek[wk].size; });
+  return out;
+}
+
 function renderTopGrowth(data) {
   const noteEl = document.getElementById('topGrowthNote');
   const canvas = document.getElementById('topGrowthChart');
@@ -1309,14 +1323,15 @@ function renderTopGrowth(data) {
   const existing = Chart.getChart ? Chart.getChart(canvas) : null;
   if (existing) { try { existing.destroy(); } catch(_){} }
 
-  // Toutes les semaines présentes, triées
-  const weekKeys = [...new Set(data.map(r => {
-    const w = getISOWeek(r.date);
-    return w.year + '-W' + String(w.week).padStart(2, '0');
-  }))].sort();
+  // Jours ouverts par semaine, puis filtre min 2 jours pour entrer dans la tendance
+  const MIN_OPEN_DAYS = 2;
+  const openByWeek = buildOpenDaysByWeek(data);
+  const allWeeks = Object.keys(openByWeek).sort();
+  const weekKeys = allWeeks.filter(wk => openByWeek[wk] >= MIN_OPEN_DAYS);
+  const droppedWeeks = allWeeks.length - weekKeys.length;
 
   if (weekKeys.length < 3) {
-    if (noteEl) noteEl.textContent = 'Pas assez de semaines (min 3) pour mesurer une tendance.';
+    if (noteEl) noteEl.textContent = `Pas assez de semaines pleines (min 3 avec ≥ ${MIN_OPEN_DAYS} jours ouverts) pour mesurer une tendance.`;
     return;
   }
 
@@ -1327,6 +1342,7 @@ function renderTopGrowth(data) {
     if (!norm) return;
     const w = getISOWeek(r.date);
     const wk = w.year + '-W' + String(w.week).padStart(2, '0');
+    if (!(wk in openByWeek) || openByWeek[wk] < MIN_OPEN_DAYS) return;
     if (!byItemWeek[norm]) byItemWeek[norm] = {};
     byItemWeek[norm][wk] = (byItemWeek[norm][wk] || 0) + Number(r.qty);
   });
@@ -1334,20 +1350,21 @@ function renderTopGrowth(data) {
   const MIN_TOTAL_QTY = 10;
   const items = [];
   Object.entries(byItemWeek).forEach(([item, byWk]) => {
-    const series = weekKeys.map(wk => byWk[wk] || 0);
-    const total = series.reduce((s, v) => s + v, 0);
-    if (total < MIN_TOTAL_QTY) return;
-    const n = series.length;
+    // Série normalisée : qty / jour-ouvert pour chaque semaine
+    const perDaySeries = weekKeys.map(wk => (byWk[wk] || 0) / openByWeek[wk]);
+    const totalQty = weekKeys.reduce((s, wk) => s + (byWk[wk] || 0), 0);
+    if (totalQty < MIN_TOTAL_QTY) return;
+    const n = perDaySeries.length;
     const xMean = (n - 1) / 2;
-    const yMean = total / n;
+    const yMean = perDaySeries.reduce((s, v) => s + v, 0) / n;
     let num = 0, den = 0;
     for (let i = 0; i < n; i++) {
-      num += (i - xMean) * (series[i] - yMean);
+      num += (i - xMean) * (perDaySeries[i] - yMean);
       den += (i - xMean) * (i - xMean);
     }
-    const slope = den ? num / den : 0;
+    const slope = den ? num / den : 0; // unités/jour gagnées par semaine de progression
     const pctPerWeek = yMean ? (slope / yMean) * 100 : 0;
-    items.push({ item, series, total, slope, pctPerWeek, yMean });
+    items.push({ item, total: totalQty, slope, pctPerWeek, yMean });
   });
 
   if (!items.length) {
@@ -1355,7 +1372,6 @@ function renderTopGrowth(data) {
     return;
   }
 
-  // Tous les items, triés par croissance desc (positifs en haut, négatifs en bas)
   const display = items.slice().sort((a, b) => b.pctPerWeek - a.pctPerWeek);
 
   // Hauteur dynamique : ~26px par barre + marges
@@ -1389,10 +1405,11 @@ function renderTopGrowth(data) {
             label: v => {
               const it = display[v.dataIndex];
               const sign = it.pctPerWeek >= 0 ? '+' : '';
+              const slopeSign = it.slope >= 0 ? '+' : '';
               return [
                 `${sign}${it.pctPerWeek.toFixed(1)} %/sem.`,
-                `${Math.round(it.total)} unités cumulées · ${it.yMean.toFixed(1)}/sem. moy.`,
-                `Pente : ${it.slope >= 0 ? '+' : ''}${it.slope.toFixed(2)} unités/sem.`
+                `${Math.round(it.total)} unités cumulées · ${it.yMean.toFixed(2)} u/jour moy.`,
+                `Pente : ${slopeSign}${it.slope.toFixed(3)} u/jour gagnées par semaine`
               ];
             }
           }
@@ -1412,8 +1429,9 @@ function renderTopGrowth(data) {
   });
 
   if (noteEl) {
+    const dropNote = droppedWeeks ? ` ${droppedWeeks} semaine${droppedWeeks > 1 ? 's' : ''} exclue${droppedWeeks > 1 ? 's' : ''} (< ${MIN_OPEN_DAYS} jours ouverts).` : '';
     noteEl.innerHTML =
-      `Pente hebdo (régression linéaire) sur ${weekKeys.length} semaines, exprimée en % du volume hebdo moyen. ` +
+      `Pente sur ${weekKeys.length} semaines, calculée sur la qty/jour-ouvert (gomme les fériés et la semaine en cours partielle).${dropNote} ` +
       `Filtre : min ${MIN_TOTAL_QTY} unités cumulées. Items normalisés : Triangle (toutes variantes + combo), Chia + Skyr, Salade, Sodas & kombuchas (Symbiose, ChariTea, Lemonaid, Archipel), Chocolate Chaud.`;
   }
 }
@@ -1425,14 +1443,15 @@ function renderItemsWeeklyTrends(data) {
   const existing = Chart.getChart ? Chart.getChart(canvas) : null;
   if (existing) { try { existing.destroy(); } catch(_){} }
 
-  // Semaines triées
-  const weekKeys = [...new Set(data.map(r => {
-    const w = getISOWeek(r.date);
-    return w.year + '-W' + String(w.week).padStart(2, '0');
-  }))].sort();
+  // Jours ouverts par semaine, filtre min 2 jours
+  const MIN_OPEN_DAYS = 2;
+  const openByWeek = buildOpenDaysByWeek(data);
+  const allWeeks = Object.keys(openByWeek).sort();
+  const weekKeys = allWeeks.filter(wk => openByWeek[wk] >= MIN_OPEN_DAYS);
+  const droppedWeeks = allWeeks.length - weekKeys.length;
 
   if (weekKeys.length < 2) {
-    if (noteEl) noteEl.textContent = 'Min 2 semaines requis pour afficher l\'évolution.';
+    if (noteEl) noteEl.textContent = `Min 2 semaines avec ≥ ${MIN_OPEN_DAYS} jours ouverts requis.`;
     return;
   }
 
@@ -1445,6 +1464,7 @@ function renderItemsWeeklyTrends(data) {
     if (!norm) return;
     const w = getISOWeek(r.date);
     const wk = w.year + '-W' + String(w.week).padStart(2, '0');
+    if (!(wk in openByWeek) || openByWeek[wk] < MIN_OPEN_DAYS) return;
     if (!byItem[norm]) byItem[norm] = { byWeek: {}, total: 0, cat };
     byItem[norm].byWeek[wk] = (byItem[norm].byWeek[wk] || 0) + Number(r.qty);
     byItem[norm].total += Number(r.qty);
@@ -1477,7 +1497,7 @@ function renderItemsWeeklyTrends(data) {
     return '#' + mix(r) + mix(g) + mix(b);
   }
 
-  const labels = weekKeys.map(wk => 'S' + wk.split('-W')[1]);
+  const labels = weekKeys.map(wk => 'S' + wk.split('-W')[1] + ' (' + openByWeek[wk] + 'j)');
 
   const datasets = items.map(([item, v]) => {
     const base = CAT_PALETTE[v.cat] || '#888';
@@ -1487,14 +1507,15 @@ function renderItemsWeeklyTrends(data) {
     const color = tint(base, t);
     return {
       label: item,
-      data: weekKeys.map(wk => v.byWeek[wk] || 0),
+      data: weekKeys.map(wk => Number(((v.byWeek[wk] || 0) / openByWeek[wk]).toFixed(2))),
       borderColor: color,
       backgroundColor: color + '22',
       borderWidth: 1.5,
       tension: 0.3,
       pointRadius: 2,
       pointHoverRadius: 4,
-      fill: false
+      fill: false,
+      _raw: weekKeys.map(wk => v.byWeek[wk] || 0)
     };
   });
 
@@ -1511,19 +1532,25 @@ function renderItemsWeeklyTrends(data) {
         },
         tooltip: {
           callbacks: {
-            label: v => v.dataset.label + ' : ' + v.raw + ' u'
+            label: v => {
+              const raw = v.dataset._raw ? v.dataset._raw[v.dataIndex] : null;
+              const days = openByWeek[weekKeys[v.dataIndex]];
+              const rawTxt = raw != null ? ` (${raw} u sur ${days}j)` : '';
+              return v.dataset.label + ' : ' + v.raw + ' u/jour' + rawTxt;
+            }
           }
         }
       },
       scales: {
         x: { ticks: { font: { size: 10 }, color: '#888' }, grid: { display: false } },
-        y: { beginAtZero: true, ticks: { font: { size: 10 }, color: '#888', precision: 0 }, grid: { color: 'rgba(0,0,0,.06)' } }
+        y: { beginAtZero: true, ticks: { font: { size: 10 }, color: '#888' }, grid: { color: 'rgba(0,0,0,.06)' }, title: { display: true, text: 'unités / jour ouvert', font: { size: 10 }, color: '#888' } }
       }
     }
   });
 
   if (noteEl) {
-    noteEl.textContent = `${items.length} items normalisés sur ${weekKeys.length} semaines. Couleur par catégorie, variation de teinte par item. Clique un label pour masquer/afficher une ligne.`;
+    const dropNote = droppedWeeks ? ` ${droppedWeeks} semaine${droppedWeeks > 1 ? 's' : ''} exclue${droppedWeeks > 1 ? 's' : ''} (< ${MIN_OPEN_DAYS} jours ouverts).` : '';
+    noteEl.textContent = `${items.length} items normalisés sur ${weekKeys.length} semaines, axe Y en unités/jour-ouvert (gomme fériés et semaine en cours partielle).${dropNote} Clique un label pour masquer/afficher une ligne.`;
   }
 }
 
